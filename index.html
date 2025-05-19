@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -12,55 +13,93 @@
       color: white;
       text-align: center;
     }
+
     .hero {
-      padding: 3rem 1rem 1rem;
+      padding: 3rem 1rem 2rem;
       background: rgba(0, 0, 0, 0.6);
     }
+
     .logo {
       width: 120px;
       height: auto;
     }
+
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    @media (min-width: 600px) {
+      .button-group {
+        flex-direction: row;
+        justify-content: center;
+      }
+    }
+
     .button {
       background: gold;
       color: black;
       padding: 0.75rem 1.5rem;
-      margin: 1rem;
       border: none;
       border-radius: 5px;
       text-decoration: none;
       font-weight: bold;
+      width: 80%;
+      max-width: 250px;
+      box-sizing: border-box;
     }
+
     .gallery {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
       gap: 1rem;
-      padding: 2rem;
+      padding: 2rem 1rem;
     }
+
     .gallery-item {
       background: rgba(0, 0, 0, 0.6);
       padding: 1rem;
       border-radius: 10px;
-      width: 250px;
+      width: 90%;
+      max-width: 250px;
+      box-sizing: border-box;
     }
+
     .gallery-item img {
       width: 100%;
       border-radius: 10px;
     }
+
     footer {
       padding: 1rem;
       background: rgba(0, 0, 0, 0.8);
+      font-size: 0.9rem;
+    }
+
+    footer a {
+      color: gold;
+      text-decoration: none;
     }
   </style>
 </head>
 <body>
+
   <div class="hero">
     <img src="logo.png" alt="Catfish Empire Logo" class="logo" onerror="this.style.display='none'" />
     <h1>Welcome to Catfish Empire™</h1>
     <p>Hardcore catfishing across the Carolinas. Gear. Catches. Merch. Coming soon.</p>
-    <a href="https://youtube.com/@CATFISHEMPIRE" target="_blank" class="button">Visit Our YouTube</a>
-    <a href="https://x.com/CATFISH_EMPIRE" target="_blank" class="button">Follow on X</a>
-  </div>  <div class="gallery">
+
+    <div class="button-group">
+      <a href="https://youtube.com/@CATFISHEMPIRE" target="_blank" class="button">Visit Our YouTube</a>
+      <a href="https://x.com/CATFISH_EMPIRE" target="_blank" class="button">Follow on X</a>
+    </div>
+  </div>
+
+  <div class="gallery">
     <div class="gallery-item">
       <img src="img1.jpg" alt="43 lb Flathead Catfish at Santee" />
       <p>43 lb Flathead Catfish — Caught at Santee</p>
@@ -81,11 +120,14 @@
       <img src="img5.jpeg" alt="43 lb Flathead Catfish at Santee" />
       <p>43 lb Flathead Catfish — Caught at Santee</p>
     </div>
-  </div>  <footer>
+  </div>
+
+  <footer>
     <p>&copy; 2025 Catfish Empire™. All rights reserved.</p>
-      <p style="margin-top: 1rem; font-size: 0.9rem;">
-      Owned and operated by <a href="https://richmediaempire.com" target="_blank" style="color: gold; text-decoration: none;">Rich Media Empire LLC</a>
+    <p style="margin-top: 1rem;">
+      Owned and operated by <a href="https://richmediaempire.com" target="_blank">Rich Media Empire LLC</a>
     </p>
   </footer>
+
 </body>
 </html>
