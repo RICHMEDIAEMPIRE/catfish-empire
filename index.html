@@ -20,21 +20,16 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: url('TM.png') no-repeat center top;
-      background-size: 90vh; /* smaller on mobile */
-      background-repeat: no-repeat;
+      background: url('TM.png') no-repeat center center;
+      background-size: contain; /* mobile: centered and proportionate */
       background-attachment: scroll;
       z-index: -1;
       opacity: 0.4;
     }
 
-    .spacer {
-      height: 50px;
-    }
-
     @media (min-width: 768px) {
       body::before {
-        background-size: 125vh; /* 25% bigger on desktop */
+        background-size: 125vh auto; /* desktop: 25% taller */
         background-position: center top;
         background-attachment: fixed;
       }
@@ -50,6 +45,10 @@
       .gallery-item {
         max-width: 500px;
       }
+    }
+
+    .spacer {
+      height: 50px;
     }
 
     .hero {
@@ -137,6 +136,7 @@
     </div>
   </div>
 
+  <!-- Spacer between hero and gallery -->
   <div class="spacer"></div>
 
   <div class="gallery">
