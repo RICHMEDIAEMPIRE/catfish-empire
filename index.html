@@ -6,12 +6,36 @@
   <title>Catfish Empire™</title>
   <style>
     body {
-      background: url('TM.png') no-repeat center center fixed;
-      background-size: cover;
+      background: url('TM.png') no-repeat center top;
+      background-size: contain;
+      background-attachment: scroll;
       margin: 0;
       font-family: Arial, sans-serif;
       color: white;
       text-align: center;
+    }
+
+    /* Desktop improvements */
+    @media (min-width: 768px) {
+      body {
+        background: url('TM.png') no-repeat center center fixed;
+        background-size: cover;
+        background-position: center top;
+        background-attachment: fixed;
+      }
+
+      .hero {
+        padding: 6rem 2rem 3rem;
+        background: rgba(0, 0, 0, 0.6);
+      }
+
+      .gallery {
+        padding: 3rem 2rem;
+      }
+
+      .gallery-item {
+        max-width: 300px;
+      }
     }
 
     .hero {
