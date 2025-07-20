@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel | Catfish Empire</title>
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+    }
+    input, select, button {
+      padding: 8px;
+      margin: 6px 0;
+      font-size: 1rem;
+      border-radius: 4px;
+    }
+    select, input {
+      width: 200px;
+    }
+    button {
+      background: gold;
+      border: none;
+      cursor: pointer;
+    }
+    .hidden {
+      display: none;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #222;
+      margin-top: 1rem;
+    }
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border: 1px solid #333;
+    }
+    th {
+      background: #333;
+    }
+    #message {
+      margin-top: 10px;
+      color: lightgreen;
+    }
+  </style>
+</head>
+<body>
+  <h1>Admin Login</h1>
+
+  <div id="login-section">
+    <input type="text" id="username" placeholder="Username"/><br/>
+    <input type="password" id="password" placeholder="Password"/><br/>
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div id="admin-panel" class="hidden">
+    <h2>Update Inventory</h2>
+
+    <label>Color:
+      <select id="color">
+        <option value="Blue">Blue</option>
+        <option value="Green">Green</option>
+        <option value="Red">Red</option>
+        <option value="Silver">Silver</option>
+        <option value="Black">Black</option>
+        <option value="Brown">Brown</option>
+      </select>
+    </label><br/>
+
+    <label>Qty:
+      <input type="number" id="qty" min="0"/>
+    </label><br/>
+
+    <button onclick="updateInventory()">Update Inventory</button>
+    <p id="message"></p>
+
+    <h2>Current Inventory</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Blue</th>
+          <th>Green</th>
+          <th>Red</th>
+          <th>Silver</th>
+          <th>Black</th>
+          <th>Brown</th>
+          <th>Total Stock</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td id="stock-Blue">-</td>
+          <td id="stock-Green">-</td>
+          <td id="stock-Red">-</td>
+          <td id="stock-Silver">-</td>
+          <td id="stock-Black">-</td>
+          <td id="stock-Brown">-</td>
+          <td id="total-stock">-</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <button onclick="logout()" style="margin-top: 20px;">Logout</button>
+  </div>
+
+  <script>
+    const backendURL = "https://catfish-stripe-backend.onrender.com";
+
+    function login() {
+      fetch(`${backendURL}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          username: document.getElementById("username").value,
+          password: document.getElementById("password").value
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById("login-section").classList.add("hidden");
+          document.getElementById("admin-panel").classList.remove("hidden");
+          fetchInventory();
+        } else {
+          alert("Login failed");
+        }
+      });
+    }
+
+    function fetchInventory() {
+      fetch(`${backendURL}/inventory`, {
+        method: "GET",
+        credentials: "include"
+      })
+      .then(res => res.json())
+      .then(data => {
+        let total = 0;
+        for (const [color, qty] of Object.entries(data)) {
+          document.getElementById(`stock-${color}`).textContent = qty;
+          total += parseInt(qty);
+        }
+        document.getElementById("total-stock").textContent = total;
+      });
+    }
+
+    function updateInventory() {
+      const color = document.getElementById("color").value;
+      const qty = parseInt(document.getElementById("qty").value);
+
+      if (!color || isNaN(qty)) {
+        alert("Please fill out both fields.");
+        return;
+      }
+
+      fetch(`${backendURL}/inventory`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ color, qty })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("message").textContent = data.success
+          ? "Inventory updated successfully"
+          : "Failed to update inventory";
+        fetchInventory();
+      });
+    }
+
+    function logout() {
+      fetch(`${backendURL}/logout`, {
+        method: "POST",
+        credentials: "include"
+      }).then(() => {
+        document.getElementById("admin-panel").classList.add("hidden");
+        document.getElementById("login-section").classList.remove("hidden");
+      });
+    }
+  </script>
+</body>
+</html>
