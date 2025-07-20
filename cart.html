@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Cart | Catfish Empire</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: black;
+      color: white;
+      margin: 0;
+      padding: 0;
+    }
+    nav {
+      background: #111;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid gold;
+    }
+    nav a {
+      color: gold;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    main {
+      max-width: 600px;
+      margin: 40px auto;
+      background: #111;
+      padding: 1rem;
+      border-radius: 10px;
+      border: 1px solid gold;
+    }
+    h1 {
+      color: gold;
+      text-align: center;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    button.remove {
+      background: crimson;
+      color: white;
+      border: none;
+      padding: 4px 10px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .summary {
+      margin-top: 20px;
+      font-size: 1.1rem;
+    }
+    #checkout {
+      margin-top: 20px;
+      width: 100%;
+      padding: 10px;
+      font-weight: bold;
+      font-size: 1.1rem;
+      background: darkgreen;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="storefront.html">← Back to Shop</a>
+    <a href="#">Cart (<span id="cart-count">0</span>)</a>
+  </nav>
+
+  <main>
+    <h1>Your Cart</h1>
+    <ul id="cart-list"></ul>
+    <div class="summary">
+      <p><strong>Subtotal:</strong> $<span id="subtotal">0.00</span></p>
+      <p style="font-size: 0.95rem; color: gray;">Tax and shipping calculated at checkout</p>
+    </div>
+    <button id="checkout">Checkout</button>
+  </main>
+
+  <script>
+    const BACKEND_URL = "https://catfish-stripe-backend.onrender.com";
+
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+    function updateCartCount() {
+      const total = cart.reduce((sum, item) => sum + item.qty, 0);
+      const countEl = document.getElementById("cart-count");
+      if (countEl) countEl.textContent = total;
+    }
+
+    function updateCartPage() {
+      const cartList = document.getElementById("cart-list");
+      const subtotalEl = document.getElementById("subtotal");
+
+      cartList.innerHTML = "";
+      let subtotal = 0;
+
+      if (cart.length === 0) {
+        localStorage.setItem("cart", JSON.stringify([]));
+        cartList.innerHTML = "<li>Your cart is empty.</li>";
+        subtotalEl.textContent = "0.00";
+        updateCartCount();
+        return;
+      }
+
+      cart.forEach((item, index) => {
+        const itemTotal = (item.qty * 14.99).toFixed(2);
+        subtotal += parseFloat(itemTotal);
+
+        const li = document.createElement("li");
+        li.innerHTML = `
+          ${item.qty}x ${item.color} - $${itemTotal}
+          <button class="remove" onclick="removeItem(${index})">Remove</button>
+        `;
+        cartList.appendChild(li);
+      });
+
+      subtotalEl.textContent = subtotal.toFixed(2);
+      localStorage.setItem("cart", JSON.stringify(cart));
+      updateCartCount();
+    }
+
+    function removeItem(index) {
+      cart.splice(index, 1);
+      localStorage.setItem("cart", JSON.stringify(cart));
+      updateCartPage();
+    }
+
+    document.getElementById("checkout").addEventListener("click", () => {
+      if (cart.length === 0) {
+        alert("Your cart is empty.");
+        return;
+      }
+
+      fetch(`${BACKEND_URL}/create-checkout-session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ items: cart })
+      })
+      .then(res => res.json())
+      .then(data => {
+        console.log("Stripe response:", data);
+        if (data.url) {
+          localStorage.removeItem("cart");
+          window.location = data.url;
+        } else {
+          alert("Checkout session failed to create.");
+        }
+      })
+      .catch(err => {
+        console.error("Error:", err);
+        alert("Failed to connect to payment server.");
+      });
+    });
+
+    updateCartPage();
+  </script>
+</body>
+</html>
