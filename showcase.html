@@ -2,211 +2,157 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Catfish Empire | Shop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Catfish Empire™ Sunglasses Gallery</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: black;
-      color: white;
       margin: 0;
-      padding: 0;
+      background-color: black;
+      font-family: Arial, sans-serif;
+      color: white;
+      overflow: hidden;
     }
-    nav {
-      background: #111;
-      padding: 1rem;
+
+    .viewer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid gold;
-    }
-    nav a {
-      color: gold;
-      text-decoration: none;
-      font-weight: bold;
-      font-size: 1.1rem;
-    }
-    h1 {
-      text-align: center;
-      color: gold;
-      margin-top: 1rem;
-    }
-    .product-list {
-      display: flex;
-      flex-wrap: wrap;
       justify-content: center;
-      gap: 2rem;
-      margin-top: 2rem;
-      padding: 0 20px 40px;
+      background: rgba(0,0,0,0.95);
+      z-index: 999;
     }
-    .product {
-      background: #222;
+
+    .viewer img {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 10px;
+    }
+
+    .nav-button {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 3rem;
+      color: gold;
+      background: none;
+      border: none;
+      cursor: pointer;
+      z-index: 1000;
+    }
+
+    .prev {
+      left: 10px;
+    }
+
+    .next {
+      right: 10px;
+    }
+
+    .close-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      font-size: 1.5rem;
+      background: gold;
+      color: black;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    .thumbnails {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
       padding: 1rem;
-      border-radius: 10px;
-      width: 250px;
-      text-align: center;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 1000;
     }
-    .product img {
-      width: 100%;
-      border-radius: 10px;
-    }
-    .product input[type=number] {
-      width: 100%;
-      padding: 0.5rem;
-      margin-top: 0.5rem;
-      box-sizing: border-box;
-    }
-    .product button {
-      background: gold;
-      border: none;
-      padding: 0.75rem;
-      margin-top: 0.5rem;
-      width: 100%;
-      font-weight: bold;
+
+    .thumbnails img {
+      width: 60px;
+      height: 40px;
+      object-fit: cover;
+      border: 2px solid transparent;
       cursor: pointer;
+      border-radius: 5px;
+      transition: transform 0.2s ease;
     }
-    .checkout-btn {
-      background: gold;
-      border: none;
-      padding: 1rem 2rem;
-      font-size: 1.2rem;
-      font-weight: bold;
-      cursor: pointer;
-      margin: 3rem auto;
-      display: block;
+
+    .thumbnails img:hover,
+    .thumbnails img.active {
+      border-color: gold;
+      transform: scale(1.1);
     }
   </style>
 </head>
 <body>
-  <nav>
-    <a href="https://catfishempire.com">Home</a>
-    <a href="cart.html">Cart (<span id="cart-count">0</span>)</a>
-  </nav>
 
-  <h1>Catfish Empire™ Sunglasses - $14.99 + Tax</h1>
+<div class="viewer">
+  <button class="nav-button prev" onclick="changeImage(-1)">❮</button>
+  <img id="mainImage" src="sunglasses-blue.jpg" alt="Sunglasses" />
+  <button class="nav-button next" onclick="changeImage(1)">❯</button>
+  <button class="close-btn" onclick="exitFullscreen()">Exit Fullscreen</button>
+</div>
 
-  <div class="product-list" id="product-list"></div>
+<div class="thumbnails" id="thumbs"></div>
 
-  <div>
-    <button class="checkout-btn" onclick="checkoutCart()">Checkout</button>
-  </div>
+<script>
+  const images = [
+    { src: 'sunglasses-blue.jpg', alt: 'Blue Sunglasses' },
+    { src: 'sunglasses-green.jpg', alt: 'Green Sunglasses' },
+    { src: 'sunglasses-red.jpg', alt: 'Red Sunglasses' },
+    { src: 'sunglasses-silver.jpg', alt: 'Silver Sunglasses' },
+    { src: 'sunglasses-black.jpg', alt: 'Black Sunglasses' },
+    { src: 'sunglasses-brown.jpg', alt: 'Brown Sunglasses' }
+  ];
 
-  <script>
-    const BACKEND_URL = "https://catfish-stripe-backend.onrender.com";
+  let currentIndex = 0;
+  const mainImage = document.getElementById('mainImage');
+  const thumbsContainer = document.getElementById('thumbs');
 
-    const products = [
-      { color: "Blue", image: "sunglasses-blue.jpg" },
-      { color: "Green", image: "sunglasses-green.jpg" },
-      { color: "Red", image: "sunglasses-red.jpg" },
-      { color: "Silver", image: "sunglasses-silver.jpg" },
-      { color: "Black", image: "sunglasses-black.jpg" },
-      { color: "Brown", image: "sunglasses-brown.jpg" }
-    ];
+  function showImage(index) {
+    currentIndex = index;
+    const { src, alt } = images[currentIndex];
+    mainImage.src = src;
+    mainImage.alt = alt;
+    updateActiveThumb();
+  }
 
-    let inventory = {};
-    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+  function changeImage(step) {
+    currentIndex = (currentIndex + step + images.length) % images.length;
+    showImage(currentIndex);
+  }
 
-    function updateLocalCart() {
-      localStorage.setItem("cart", JSON.stringify(cart));
-    }
+  function exitFullscreen() {
+    window.location.href = "index.html";
+  }
 
-    function updateCartCount() {
-      const total = cart.reduce((sum, item) => sum + item.qty, 0);
-      const countEl = document.getElementById("cart-count");
-      if (countEl) countEl.textContent = total;
-    }
+  function updateActiveThumb() {
+    document.querySelectorAll('.thumbnails img').forEach((img, i) => {
+      img.classList.toggle('active', i === currentIndex);
+    });
+  }
 
-    function addToCart(color, qty) {
-      if (!qty || qty < 1) return;
-      if (inventory[color] === undefined || qty > inventory[color]) {
-        alert(`Only ${inventory[color] || 0} ${color} in stock.`);
-        return;
-      }
+  // Build thumbnails
+  images.forEach((img, i) => {
+    const thumb = document.createElement('img');
+    thumb.src = img.src;
+    thumb.alt = img.alt;
+    thumb.onclick = () => showImage(i);
+    thumbsContainer.appendChild(thumb);
+  });
 
-      const existing = cart.find(item => item.color === color);
-      if (existing) {
-        if (existing.qty + qty > inventory[color]) {
-          alert(`Only ${inventory[color] - existing.qty} more ${color} available.`);
-          return;
-        }
-        existing.qty += qty;
-      } else {
-        cart.push({ color, qty });
-      }
-      updateLocalCart();
-      updateCartCount();
-      alert(`${qty}x ${color} sunglasses added to cart`);
-    }
+  showImage(currentIndex);
+</script>
 
-    function handleAdd(color) {
-      const qtyInput = document.getElementById(`qty-${color}`);
-      const qty = parseInt(qtyInput.value);
-      if (!qty || qty < 1) {
-        alert("Please enter a valid quantity.");
-        return;
-      }
-      addToCart(color, qty);
-    }
-
-    function createProductCard(product) {
-      const div = document.createElement("div");
-      div.className = "product";
-      const stockQty = inventory[product.color] ?? "Loading...";
-      div.innerHTML = `
-        <img src="${product.image}" alt="${product.color} Sunglasses" />
-        <h3>${product.color}</h3>
-        <p>In Stock: <span id="stock-${product.color}">${stockQty}</span></p>
-        <input type="number" min="1" value="1" id="qty-${product.color}" />
-        <button onclick="handleAdd('${product.color}')">Add to Cart</button>
-      `;
-      return div;
-    }
-
-    function loadInventoryAndRender() {
-      fetch(`${BACKEND_URL}/public-inventory`)
-        .then(res => res.json())
-        .then(data => {
-          inventory = data;
-          const list = document.getElementById("product-list");
-          list.innerHTML = "";
-          products.forEach(p => {
-            list.appendChild(createProductCard(p));
-          });
-        })
-        .catch(err => {
-          console.error("Failed to load inventory:", err);
-        });
-    }
-
-    function checkoutCart() {
-      if (!cart.length) {
-        alert("Your cart is empty.");
-        return;
-      }
-
-      fetch(`${BACKEND_URL}/create-checkout-session`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: cart })
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.url) {
-            localStorage.removeItem("cart");
-            window.location.href = data.url;
-          } else {
-            alert("Error creating checkout session");
-            console.log(data);
-          }
-        })
-        .catch(err => {
-          alert("Checkout failed.");
-          console.error(err);
-        });
-    }
-
-    loadInventoryAndRender();
-    updateCartCount();
-  </script>
 </body>
 </html>
