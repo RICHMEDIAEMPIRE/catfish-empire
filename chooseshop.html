@@ -26,25 +26,25 @@
       margin-bottom: 0.5rem;
     }
 
-    .banner {
-      width: 100%;
-      max-width: 900px;
+    .store-options {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      padding: 2rem 1rem;
+    }
+
+    .shop-block {
+      background: #222;
+      border-radius: 10px;
+      padding: 1rem;
+      max-width: 500px;
       margin: auto;
     }
 
-    .banner img {
+    .shop-block img {
       width: 100%;
       border-radius: 8px;
-      margin: 1rem auto;
-    }
-
-    .button-group {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1rem;
-      margin: 2rem auto;
-      max-width: 400px;
+      margin-bottom: 1rem;
     }
 
     .button {
@@ -56,8 +56,7 @@
       text-decoration: none;
       font-weight: bold;
       font-size: 1.1rem;
-      width: 100%;
-      box-sizing: border-box;
+      display: inline-block;
       transition: background 0.3s;
     }
 
@@ -76,14 +75,14 @@
       text-decoration: none;
     }
 
-    @media (min-width: 600px) {
-      .button-group {
+    @media (min-width: 768px) {
+      .store-options {
         flex-direction: row;
         justify-content: center;
       }
 
-      .button {
-        width: 180px;
+      .shop-block {
+        width: 45%;
       }
     }
   </style>
@@ -95,13 +94,16 @@
     <p>Choose your shop destination below</p>
   </header>
 
-  <div class="banner">
-    <img src="shopbanner.jpg" alt="Catfish Empire Shop Banner" />
-  </div>
+  <div class="store-options">
+    <div class="shop-block">
+      <img src="sunglasses.jpg" alt="CatfishEmpire.com Shop" />
+      <a href="showcase.html" class="button">CatfishEmpire.com Shop</a>
+    </div>
 
-  <div class="button-group">
-    <a href="showcase.html" class="button">Official Store</a>
-    <a href="https://www.etsy.com/shop/RICHMEDIAEMPIRE" class="button" target="_blank">Etsy Shop</a>
+    <div class="shop-block">
+      <img src="shopbanner.jpg" alt="Etsy Shop" />
+      <a href="https://www.etsy.com/shop/RICHMEDIAEMPIRE" target="_blank" class="button">Etsy Shop</a>
+    </div>
   </div>
 
   <footer>
