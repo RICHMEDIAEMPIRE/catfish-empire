@@ -7,10 +7,9 @@
   <style>
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      color: white;
-      text-align: center;
-      background-color: black;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #000;
+      color: #fff;
     }
 
     body::before {
@@ -24,97 +23,106 @@
       background-size: 80vh;
       background-attachment: scroll;
       z-index: -1;
-      opacity: 0.4;
+      opacity: 0.25;
     }
 
-    @media (min-width: 768px) {
-      body::before {
-        background-size: 105vh auto;
-        background-position: center top;
-        background-attachment: fixed;
-      }
-
-      .hero {
-        padding: 6rem 2rem 3rem;
-      }
-
-      .gallery {
-        padding: 3rem 2rem;
-      }
-
-      .gallery-item {
-        max-width: 500px;
-      }
-    }
-
-    .spacer {
-      height: 50px;
-    }
-
-    .hero {
-      padding: 3rem 1rem 2rem;
-      background: rgba(0, 0, 0, 0.6);
+    header {
+      text-align: center;
+      padding: 4rem 1rem 2rem;
+      background: rgba(0, 0, 0, 0.7);
     }
 
     .logo {
-      width: 120px;
+      max-width: 140px;
       height: auto;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin: 0.5rem 0;
+      color: gold;
+    }
+
+    p.subtext {
+      font-size: 1.2rem;
+      max-width: 600px;
+      margin: 0 auto 2rem;
     }
 
     .button-group {
       display: flex;
       flex-direction: column;
-      align-items: center;
       gap: 1rem;
-      margin-top: 1rem;
+      align-items: center;
+      margin-bottom: 3rem;
     }
 
-    @media (min-width: 600px) {
-      .button-group {
-        flex-direction: row;
-        justify-content: center;
-        flex-wrap: wrap;
-      }
-    }
-
-    .button {
+    .button-group a {
       background: gold;
       color: black;
-      padding: 0.75rem 1.5rem;
-      border: none;
-      border-radius: 5px;
+      padding: 0.8rem 1.5rem;
       text-decoration: none;
       font-weight: bold;
-      width: 80%;
+      border-radius: 5px;
+      transition: background 0.3s;
+      width: 90%;
       max-width: 250px;
-      box-sizing: border-box;
+      text-align: center;
+    }
+
+    .button-group a:hover {
+      background: #ffd700;
     }
 
     .gallery {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      display: grid;
+      grid-template-columns: 1fr;
       gap: 2rem;
       padding: 2rem 1rem;
+      max-width: 1200px;
+      margin: auto;
     }
 
     .gallery-item {
-      background: rgba(0, 0, 0, 0.6);
+      background: rgba(255, 255, 255, 0.05);
       padding: 1rem;
       border-radius: 10px;
-      width: 90%;
-      max-width: 500px;
-      box-sizing: border-box;
     }
 
     .gallery-item img {
       width: 100%;
       border-radius: 10px;
+      display: block;
+    }
+
+    .gallery-item p {
+      margin-top: 0.5rem;
+      font-weight: bold;
+    }
+
+    @media (min-width: 768px) {
+      body::before {
+        background-size: 100vh auto;
+        background-attachment: fixed;
+        background-position: center top;
+      }
+
+      .button-group {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .gallery {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
     }
 
     footer {
-      padding: 1rem;
-      background: rgba(0, 0, 0, 0.8);
+      text-align: center;
+      padding: 2rem 1rem;
+      background: rgba(0, 0, 0, 0.85);
       font-size: 0.9rem;
     }
 
@@ -122,56 +130,52 @@
       color: gold;
       text-decoration: none;
     }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
 
-  <div class="hero">
+  <header>
     <img src="logo.png" alt="Catfish Empire Logo" class="logo" onerror="this.style.display='none'" />
-    <h1>Welcome to Catfish Empire™</h1>
-    <p>Hardcore catfishing across the Carolinas. Gear. Catches. Merch. Coming soon.</p>
+    <h1>Catfish Empire™</h1>
+    <p class="subtext">Hardcore catfishing across the Carolinas. Gear. Catches. Merch. Coming soon.</p>
 
     <div class="button-group">
-      <a href="https://youtube.com/@CATFISHEMPIRE" target="_blank" class="button">Visit Our YouTube</a>
-      <a href="https://x.com/CATFISH_EMPIRE" target="_blank" class="button">Follow on X</a>
-      <a href="chooseshop.html" class="button">Shop the Empire</a>
+      <a href="https://youtube.com/@CATFISHEMPIRE" target="_blank">Visit Our YouTube</a>
+      <a href="https://x.com/CATFISH_EMPIRE" target="_blank">Follow on X</a>
+      <a href="chooseshop.html">Shop the Empire</a>
     </div>
-  </div>
+  </header>
 
-  <div class="spacer"></div><div class="spacer"></div><div class="spacer"></div>
-
-  <div class="gallery">
+  <section class="gallery">
     <div class="gallery-item">
       <img src="img1.jpg" alt="43 lb Flathead Catfish at Santee" />
       <p>43 lb Flathead Catfish — Caught at Santee</p>
     </div>
-
     <div class="gallery-item">
       <img src="img2.jpg" alt="43 lb Flathead Catfish at Santee" />
       <p>43 lb Flathead Catfish — Caught at Santee</p>
     </div>
-
     <div class="gallery-item">
       <img src="img3.jpg" alt="45 lb Blue Catfish at Santee" />
       <p>45 lb Blue Catfish — Caught at Santee</p>
     </div>
-
     <div class="gallery-item">
       <img src="img4.jpg" alt="38 lb Blue Catfish at Santee" />
       <p>38 lb Blue Catfish — Caught at Santee</p>
     </div>
-
     <div class="gallery-item">
       <img src="img5.jpeg" alt="43 lb Flathead Catfish at Santee" />
       <p>43 lb Flathead Catfish — Caught at Santee</p>
     </div>
-  </div>
+  </section>
 
   <footer>
     <p>&copy; 2025 Catfish Empire™. All rights reserved.</p>
-    <p style="margin-top: 1rem;">
-      Owned and operated by <a href="https://richmediaempire.com" target="_blank">Rich Media Empire LLC</a>
-    </p>
+    <p>Owned and operated by <a href="https://richmediaempire.com" target="_blank">Rich Media Empire LLC</a></p>
   </footer>
 
 </body>
