@@ -84,8 +84,8 @@
     <h1>Your Cart</h1>
     <ul id="cart-list"></ul>
     <div class="summary">
-      <p><strong>Total:</strong> $<span id="subtotal">0.00</span></p>
-      <p style="font-size: 0.95rem; color: gray;">Test Mode: No tax or shipping</p>
+      <p><strong>Subtotal:</strong> $<span id="subtotal">0.00</span></p>
+      <p style="font-size: 0.95rem; color: gray;">Tax and shipping calculated at checkout</p>
     </div>
     <button id="checkout">Checkout</button>
   </main>
@@ -116,7 +116,7 @@
       }
 
       cart.forEach((item, index) => {
-        const itemTotal = (item.qty * 0.5).toFixed(2);
+        const itemTotal = (item.qty * 14.99).toFixed(2);
         subtotal += parseFloat(itemTotal);
 
         const li = document.createElement("li");
