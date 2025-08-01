@@ -101,27 +101,14 @@
       justify-content: center;
     }
 
-    .youtube-subscribe a {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: red;
-      color: white;
-      font-weight: bold;
-      text-decoration: none;
-      padding: 0.8rem 1.5rem;
-      border-radius: 50px;
-      font-size: 1rem;
-      transition: background 0.3s;
+    .youtube-subscribe a img {
+      width: 40px;
+      height: 40px;
+      transition: transform 0.3s ease;
     }
 
-    .youtube-subscribe a:hover {
-      background: #cc0000;
-    }
-
-    .youtube-subscribe img {
-      width: 24px;
-      height: 24px;
+    .youtube-subscribe a:hover img {
+      transform: scale(1.1);
     }
 
     .video-section {
@@ -216,7 +203,7 @@
 
     <div class="youtube-subscribe">
       <a href="https://youtube.com/@catfishempire" target="_blank">
-        <img src="yt.png" alt="YouTube"> Subscribe
+        <img src="yt.png" alt="YouTube">
       </a>
     </div>
 
