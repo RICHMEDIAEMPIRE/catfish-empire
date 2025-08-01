@@ -44,10 +44,34 @@
       margin: 0 auto 2rem;
     }
 
-    .cta {
-      margin: 2rem auto 1rem;
-      display: flex;
-      justify-content: center;
+    .gear-section {
+      margin: 3rem auto;
+      text-align: center;
+    }
+
+    .cta-wrapper {
+      display: inline-flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .arrow {
+      font-size: 1.8rem;
+      color: gold;
+      animation: pulse 1s infinite alternate;
+      user-select: none;
+    }
+
+    .arrow.down {
+      display: block;
+      margin: 0.5rem auto;
+      animation: bounce 1s infinite;
+    }
+
+    .arrow.up {
+      display: block;
+      margin: 0.5rem auto;
+      animation: bounce-up 1s infinite;
     }
 
     .cta a {
@@ -63,6 +87,23 @@
 
     .cta a:hover {
       background: #ffd700;
+    }
+
+    @keyframes pulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.2); }
+    }
+
+    @keyframes bounce {
+      0%   { transform: translateY(0); }
+      50%  { transform: translateY(5px); }
+      100% { transform: translateY(0); }
+    }
+
+    @keyframes bounce-up {
+      0%   { transform: translateY(0); }
+      50%  { transform: translateY(-5px); }
+      100% { transform: translateY(0); }
     }
 
     .social-media {
@@ -82,10 +123,6 @@
       border-radius: 5px;
       font-weight: bold;
       text-decoration: none;
-    }
-
-    .social-media a:hover {
-      background: #ffd700;
     }
 
     .social-media img {
@@ -179,37 +216,45 @@
   <header>
     <img src="TM.png" alt="Catfish Empire Logo" class="logo" onerror="this.style.display='none'" />
     <p class="subtext">Hardcore catfishing across the Carolinas. It is our goal to provide content and gear to help our fellow anglers succeed!</p>
-
-    <div class="cta">
-      <a href="chooseshop.html">🎣 Catfish Empire™ Gear</a>
-    </div>
-
-    <div class="social-media">
-      <a href="https://x.com/CATFISH_EMPIRE" target="_blank">
-        <img src="x.png" alt="X"> Follow on X
-      </a>
-      <a href="https://www.facebook.com/share/1B4i7CNrYc/" target="_blank">
-        <img src="fb.png" alt="Facebook"> Facebook
-      </a>
-    </div>
-
-    <div class="youtube-subscribe">
-      <a href="https://youtube.com/@catfishempire" target="_blank">
-        <img src="yt.png" alt="YouTube">
-      </a>
-    </div>
-
-    <div class="video-section">
-      <h2>Watch our latest content</h2>
-      <div class="video-wrapper">
-        <iframe width="100%" height="450"
-          src="https://www.youtube.com/embed/J2fEfs98HK8?autoplay=1&mute=1"
-          title="Catfish Empire Video" frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowfullscreen></iframe>
-      </div>
-    </div>
   </header>
+
+  <section class="gear-section">
+    <div class="arrow up">⬇️ CLICK HERE ⬇️</div>
+    <div class="cta-wrapper">
+      <div class="arrow">⬅️</div>
+      <div class="cta">
+        <a href="chooseshop.html">🎣 Catfish Empire™ Gear</a>
+      </div>
+      <div class="arrow">➡️</div>
+    </div>
+    <div class="arrow down">⬆️ CLICK HERE ⬆️</div>
+  </section>
+
+  <div class="social-media">
+    <a href="https://x.com/CATFISH_EMPIRE" target="_blank">
+      <img src="x.png" alt="X"> Follow on X
+    </a>
+    <a href="https://www.facebook.com/share/1B4i7CNrYc/" target="_blank">
+      <img src="fb.png" alt="Facebook"> Facebook
+    </a>
+  </div>
+
+  <div class="youtube-subscribe">
+    <a href="https://youtube.com/@catfishempire" target="_blank">
+      <img src="yt.png" alt="YouTube">
+    </a>
+  </div>
+
+  <div class="video-section">
+    <h2>Watch our latest content</h2>
+    <div class="video-wrapper">
+      <iframe width="100%" height="450"
+        src="https://www.youtube.com/embed/J2fEfs98HK8?autoplay=1&mute=1"
+        title="Catfish Empire Video" frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen></iframe>
+    </div>
+  </div>
 
   <section class="gallery">
     <div class="gallery-item"><img src="img1.jpg" alt="43 lb Flathead Catfish at Santee" /><p>43 lb Flathead Catfish — Caught at Santee</p></div>
