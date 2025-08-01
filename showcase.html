@@ -38,11 +38,40 @@
       font-size:1.2rem; background: gold; color:black; border:none;
       padding:10px 20px; border-radius:5px; cursor:pointer; z-index:1000;
     }
+
+    .etsy-footer {
+      margin: 3rem auto 2rem;
+      max-width: 500px;
+      background: #222;
+      padding: 1rem;
+      border-radius: 10px;
+      text-align: center;
+    }
+    .etsy-footer img {
+      width: 100%;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    .etsy-footer .button {
+      background: gold;
+      color: black;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 1.1rem;
+      display: inline-block;
+      transition: background 0.3s;
+    }
+    .etsy-footer .button:hover {
+      background: #ffd700;
+    }
   </style>
 </head>
 <body>
 
-<a href="chooseshop.html" class="back-link">← Back</a>
+<a href="index.html" class="back-link">← Back</a>
 <a href="cart.html" class="cart-link">View Cart</a>
 <h1>Catfish Empire™ Sunglasses • $14.99 + Tax</h1>
 <div class="product-list" id="product-list"></div>
@@ -53,6 +82,12 @@
   <img id="mainImage" src="" alt="Product Preview" />
   <button class="nav-button next" onclick="changeImage(1)">❯</button>
   <button class="close-btn" onclick="hideViewer()">Exit Fullscreen</button>
+</div>
+
+<!-- Etsy Shop Footer Block -->
+<div class="etsy-footer">
+  <img src="shopbanner.jpg" alt="Etsy Shop" />
+  <a href="https://www.etsy.com/shop/RICHMEDIAEMPIRE?ref=profile_header&section_id=54071039" target="_blank" class="button">Visit Our Etsy Shop</a>
 </div>
 
 <script>
