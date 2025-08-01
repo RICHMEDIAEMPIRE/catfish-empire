@@ -19,6 +19,10 @@
       position: fixed; top: 20px; right: 20px; background: gold; color: black;
       padding: 10px 15px; border-radius: 5px; font-weight: bold; text-decoration: none;
     }
+    .back-link {
+      position: fixed; top: 20px; left: 20px; background: #444; color: gold;
+      padding: 10px 15px; border-radius: 5px; font-weight: bold; text-decoration: none;
+    }
     .viewer {
       display: none; position: fixed; top:0; left:0; width:100vw; height:100vh;
       background:rgba(0,0,0,0.95); align-items:center; justify-content:center; z-index:999;
@@ -38,8 +42,9 @@
 </head>
 <body>
 
-<h1>Catfish Empire™ Sunglasses • $14.99 + Tax</h1>
+<a href="choose.html" class="back-link">← Back</a>
 <a href="cart.html" class="cart-link">View Cart</a>
+<h1>Catfish Empire™ Sunglasses • $14.99 + Tax</h1>
 <div class="product-list" id="product-list"></div>
 
 <!-- Fullscreen Viewer -->
