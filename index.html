@@ -28,7 +28,7 @@
 
     header {
       text-align: center;
-      padding: 3rem 1rem 2rem;
+      padding: 3rem 1rem 1rem;
       background: rgba(0, 0, 0, 0.7);
     }
 
@@ -46,8 +46,8 @@
 
     .cta {
       margin: 2rem auto;
-      display: flex;
-      justify-content: center;
+      position: relative;
+      display: inline-block;
     }
 
     .cta a {
@@ -59,17 +59,37 @@
       border-radius: 10px;
       font-size: 1.2rem;
       transition: background 0.3s;
+      display: inline-block;
     }
 
     .cta a:hover {
       background: #ffd700;
     }
 
+    .arrow {
+      position: absolute;
+      font-size: 2rem;
+      color: gold;
+      animation: blink 1s infinite;
+    }
+
+    .top { top: -40px; left: 50%; transform: translateX(-50%); }
+    .bottom { bottom: -40px; left: 50%; transform: translateX(-50%) rotate(180deg); }
+    .topleft { top: -30px; left: -50px; transform: rotate(-45deg); }
+    .topright { top: -30px; right: -50px; transform: rotate(45deg); }
+    .bottomleft { bottom: -30px; left: -50px; transform: rotate(225deg); }
+    .bottomright { bottom: -30px; right: -50px; transform: rotate(-225deg); }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
     .social-media {
       display: flex;
       justify-content: center;
       gap: 1rem;
-      margin: 2rem auto;
+      margin: 2rem auto 1rem;
     }
 
     .social-media a {
@@ -94,19 +114,19 @@
     }
 
     .youtube-subscribe {
-      margin: 1.5rem auto;
+      margin: 2rem auto 0;
       display: flex;
       justify-content: center;
     }
 
     .youtube-subscribe a img {
-      width: 72px; /* 3x scale from default 24px */
+      width: 72px;
       height: 72px;
     }
 
     .video-section {
       text-align: center;
-      padding: 1rem;
+      padding: 1rem 1rem 2rem;
     }
 
     .video-wrapper {
@@ -116,8 +136,7 @@
 
     .video-section h2 {
       color: gold;
-      margin-top: 1rem;
-      margin-bottom: 1rem;
+      margin: 1rem 0;
     }
 
     .gallery {
@@ -182,21 +201,27 @@
     <p class="subtext">Hardcore catfishing across the Carolinas. It is our goal to provide content and gear to help our fellow anglers succeed!</p>
 
     <div class="cta">
+      <span class="arrow top">⬇️</span>
+      <span class="arrow bottom">⬆️</span>
+      <span class="arrow topleft">⬇️</span>
+      <span class="arrow topright">⬇️</span>
+      <span class="arrow bottomleft">⬆️</span>
+      <span class="arrow bottomright">⬆️</span>
       <a href="chooseshop.html">Catfish Empire™ Gear</a>
     </div>
 
     <div class="social-media">
       <a href="https://x.com/CATFISH_EMPIRE" target="_blank">
-        <img src="x.png" alt="X"> Follow on X
+        <img src="x.png" alt="X Icon"> Follow on X
       </a>
       <a href="https://www.facebook.com/share/1B4i7CNrYc/" target="_blank">
-        <img src="fb.png" alt="Facebook"> Facebook
+        <img src="fb.png" alt="Facebook Icon"> Facebook
       </a>
     </div>
 
     <div class="youtube-subscribe">
       <a href="https://youtube.com/@catfishempire" target="_blank">
-        <img src="yt.png" alt="YouTube">
+        <img src="yt.png" alt="YouTube Icon">
       </a>
     </div>
 
