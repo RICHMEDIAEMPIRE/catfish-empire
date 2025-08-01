@@ -1,301 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Catfish Empire™ Shop & Gallery</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        background: black;
-        color: white;
-        margin: 0;
-        padding: 0;
-        position: relative;
-      }
-      nav {
-        background: #111;
-        padding: 1rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid gold;
-      }
-      nav a {
-        color: gold;
-        text-decoration: none;
-        font-weight: bold;
-        font-size: 1.1rem;
-      }
-      h1 {
-        text-align: center;
-        color: gold;
-        margin-top: 1rem;
-      }
-      .product-list {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 2rem;
-        margin: 2rem 0;
-        padding: 0 20px;
-      }
-      .product {
-        background: #222;
-        padding: 1rem;
-        border-radius: 10px;
-        width: 200px;
-        text-align: center;
-      }
-      .product img {
-        width: 100%;
-        border-radius: 10px;
-        cursor: pointer;
-      }
-      .product input[type="number"] {
-        width: 100%;
-        padding: 0.5rem;
-        margin-top: 0.5rem;
-        box-sizing: border-box;
-      }
-      .product button,
-      .checkout-btn {
-        background: gold;
-        border: none;
-        padding: 0.75rem;
-        margin-top: 0.5rem;
-        width: 100%;
-        font-weight: bold;
-        cursor: pointer;
-        color: black;
-        border-radius: 5px;
-      }
-      .checkout-btn {
-        max-width: 250px;
-        margin: 2rem auto;
-        display: block;
-      }
-      /* Fullscreen Gallery */
-      .viewer {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(0, 0, 0, 0.95);
-        align-items: center;
-        justify-content: center;
-        z-index: 999;
-      }
-      .viewer img {
-        max-width: 90vw;
-        max-height: 90vh;
-        border-radius: 10px;
-      }
-      .nav-button {
-        position: fixed;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 3rem;
-        color: gold;
-        background: none;
-        border: none;
-        cursor: pointer;
-        z-index: 1000;
-      }
-      .prev {
-        left: 10px;
-      }
-      .next {
-        right: 10px;
-      }
-      .close-btn {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        font-size: 1.5rem;
-        background: gold;
-        color: black;
-        border: none;
-        padding: 10px 20px;
-        cursor: pointer;
-        border-radius: 5px;
-        z-index: 1000;
-      }
-      .thumbnails {
-        position: absolute;
-        bottom: 0;
-        width: 100%;
-        padding: 1rem;
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        background: rgba(0, 0, 0, 0.6);
-        z-index: 1000;
-      }
-      .thumbnails img {
-        width: 60px;
-        height: 40px;
-        object-fit: cover;
-        border: 2px solid transparent;
-        cursor: pointer;
-        border-radius: 5px;
-        transition: transform 0.2s;
-      }
-      .thumbnails img:hover,
-      .thumbnails img.active {
-        border-color: gold;
-        transform: scale(1.1);
-      }
-    </style>
-  </head>
-  <body>
-    <nav>
-      <a href="https://catfishempire.com">Home</a>
-      <a href="cart.html">Cart (<span id="cart-count">0</span>)</a>
-    </nav>
-    <h1>Catfish Empire™ Sunglasses • $14.99 + Tax</h1>
-    <div class="product-list" id="product-list"></div>
-    <button class="checkout-btn" onclick="checkoutCart()">Checkout</button>
-    <!-- Fullscreen Gallery Overlay -->
-    <div class="viewer" id="viewer">
-      <button class="nav-button prev" onclick="changeImage(-1)">❮</button>
-      <img id="mainImage" src="" alt="Gallery" />
-      <button class="nav-button next" onclick="changeImage(1)">❯</button>
-      <button class="close-btn" onclick="hideViewer()">Exit Fullscreen</button>
-      <div class="thumbnails" id="thumbs"></div>
-    </div>
-    <script>
-      // Backend URL for inventory
-      const backendURL = "https://catfish-stripe-backend.onrender.com";
-      // Product definitions (colours and image filenames)
-      const products = [
-        { color: "Blue", image: "sunglasses-blue.jpg" },
-        { color: "Green", image: "sunglasses-green.jpg" },
-        { color: "Red", image: "sunglasses-red.jpg" },
-        { color: "Silver", image: "sunglasses-silver.jpg" },
-        { color: "Black", image: "sunglasses-black.jpg" },
-        { color: "Brown", image: "sunglasses-brown.jpg" },
-      ];
-      // Local state for inventory and cart
-      let inventory = {};
-      let cart = JSON.parse(localStorage.getItem("cart")) || [];
-      function updateLocalCart() {
-        localStorage.setItem("cart", JSON.stringify(cart));
-      }
-      function updateCartCount() {
-        document.getElementById("cart-count").textContent = cart.reduce(
-          (s, i) => s + i.qty,
-          0
-        );
-      }
-      function addToCart(color, qty) {
-        if (!qty || qty < 1) return;
-        if (inventory[color] === undefined || qty > inventory[color])
-          return alert(`Only ${inventory[color] || 0} in stock`);
-        const exist = cart.find((i) => i.color === color);
-        if (exist) {
-          if (exist.qty + qty > inventory[color])
-            return alert("Exceeds stock");
-          exist.qty += qty;
-        } else cart.push({ color, qty });
-        updateLocalCart();
-        updateCartCount();
-        alert(`${qty}× ${color} added to cart`);
-      }
-      function handleAdd(color) {
-        const qty = parseInt(
-          document.getElementById(`qty-${color}`).value
-        );
-        if (!qty || qty < 1) return alert("Enter valid quantity");
-        addToCart(color, qty);
-      }
-      function createProductCard(p) {
-        const div = document.createElement("div");
-        div.className = "product";
-        div.innerHTML = `
-              <img src="${p.image}" alt="${p.color}" onclick="openViewer(${products.findIndex(
-                (o) => o.color === p.color
-              )})"/>
-              <h3>${p.color}</h3>
-              <p>In Stock: <span id="stock-${p.color}">–</span></p>
-              <input type="number" min="1" value="1" id="qty-${p.color}" />
-              <button onclick="handleAdd('${p.color}')">Add to Cart</button>
-            `;
-        return div;
-      }
-      async function loadInventory() {
-        try {
-          const res = await fetch(`${backendURL}/public-inventory`);
-          const data = await res.json();
-          inventory = {};
-          const list = document.getElementById("product-list");
-          list.innerHTML = "";
-          products.forEach((p) => {
-            list.appendChild(createProductCard(p));
-          });
-          for (const color in data) {
-            inventory[color] = data[color];
-            const el = document.getElementById(`stock-${color}`);
-            if (el) el.textContent = data[color];
-          }
-        } catch (err) {
-          console.error("Failed to load inventory from backend", err);
-        }
-      }
-      function checkoutCart() {
-        if (!cart.length) return alert("Cart is empty.");
-        // Checkout remains handled by the backend (Stripe). Use the existing endpoint.
-        fetch(`${backendURL}/create-checkout-session`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ items: cart }),
-        })
-          .then((r) => r.json())
-          .then((data) => {
-            if (data.url) {
-              localStorage.removeItem("cart");
-              window.location.href = data.url;
-            } else alert("Checkout session failed");
-          })
-          .catch((err) => alert("Checkout failed"));
-      }
-      // Fullscreen gallery logic
-      const viewer = document.getElementById("viewer");
-      const mainImage = document.getElementById("mainImage");
-      const thumbs = document.getElementById("thumbs");
-      let currentIndex = 0;
-      products.forEach((p, i) => {
-        const t = document.createElement("img");
-        t.src = p.image;
-        t.alt = p.color;
-        t.onclick = () => showImage(i);
-        thumbs.appendChild(t);
+<head>
+  <meta charset="UTF-8">
+  <title>Catfish Empire Showcase</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script>
+    const SUPABASE_URL = 'https://YOUR.supabase.co';
+    const SUPABASE_KEY = 'public-anon-key'; // Use anon/public key only on frontend
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function loadInventory() {
+      const res = await fetch('https://catfish-stripe-backend.onrender.com/public-inventory');
+      const data = await res.json();
+      document.querySelectorAll('.product').forEach(el => {
+        const color = el.dataset.color;
+        const qtyEl = el.querySelector('.qty');
+        qtyEl.textContent = data[color] ?? 'N/A';
+        qtyEl.style.color = data[color] === 0 ? 'red' : 'green';
       });
-      function openViewer(index) {
-        viewer.style.display = "flex";
-        showImage(index);
-      }
-      function showImage(idx) {
-        currentIndex = (idx + products.length) % products.length;
-        mainImage.src = products[currentIndex].image;
-        mainImage.alt = products[currentIndex].color;
-        Array.from(thumbs.children).forEach((img, i) =>
-          img.classList.toggle("active", i === currentIndex)
-        );
-      }
-      function changeImage(step) {
-        showImage(currentIndex + step);
-      }
-      function hideViewer() {
-        viewer.style.display = "none";
-      }
-      // Initialize page
-      loadInventory();
-      updateCartCount();
-      // Periodically refresh inventory to reflect admin updates (every 30s)
-      setInterval(loadInventory, 30000);
-    </script>
-  </body>
+    }
+
+    window.addEventListener('DOMContentLoaded', loadInventory);
+  </script>
+  <style>
+    .product { margin: 20px; padding: 10px; border: 1px solid #000; display: inline-block; }
+    .qty { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Catfish Empire Sunglasses</h1>
+  <div id="products">
+    <div class="product" data-color="Blue">
+      <h3>Blue Sunglasses</h3>
+      Qty: <span class="qty">Loading...</span>
+    </div>
+    <div class="product" data-color="Black">
+      <h3>Black Sunglasses</h3>
+      Qty: <span class="qty">Loading...</span>
+    </div>
+    <!-- Add remaining colors similarly -->
+  </div>
+</body>
 </html>
