@@ -1,44 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Catfish Empire Showcase</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <script>
-    const SUPABASE_URL = 'https://YOUR.supabase.co';
-    const SUPABASE_KEY = 'public-anon-key'; // Use anon/public key only on frontend
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    async function loadInventory() {
-      const res = await fetch('https://catfish-stripe-backend.onrender.com/public-inventory');
-      const data = await res.json();
-      document.querySelectorAll('.product').forEach(el => {
-        const color = el.dataset.color;
-        const qtyEl = el.querySelector('.qty');
-        qtyEl.textContent = data[color] ?? 'N/A';
-        qtyEl.style.color = data[color] === 0 ? 'red' : 'green';
-      });
-    }
-
-    window.addEventListener('DOMContentLoaded', loadInventory);
-  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Catfish Empire™ Sunglasses</title>
   <style>
-    .product { margin: 20px; padding: 10px; border: 1px solid #000; display: inline-block; }
-    .qty { font-weight: bold; }
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    .product-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .product {
+      border: 1px solid #ccc;
+      padding: 12px;
+      width: 160px;
+      text-align: center;
+      border-radius: 8px;
+    }
+    .stock {
+      font-weight: bold;
+      margin-top: 6px;
+      color: green;
+    }
   </style>
 </head>
 <body>
   <h1>Catfish Empire Sunglasses</h1>
-  <div id="products">
-    <div class="product" data-color="Blue">
-      <h3>Blue Sunglasses</h3>
-      Qty: <span class="qty">Loading...</span>
-    </div>
-    <div class="product" data-color="Black">
-      <h3>Black Sunglasses</h3>
-      Qty: <span class="qty">Loading...</span>
-    </div>
-    <!-- Add remaining colors similarly -->
+  <div class="product-grid" id="productGrid">
+    <!-- Items will be loaded here -->
   </div>
+
+  <script>
+    const colors = ['Blue', 'Green', 'Red', 'Silver', 'Black', 'Brown'];
+    const apiUrl = 'https://catfish-stripe-backend.onrender.com/public-inventory';
+
+    async function loadInventory() {
+      try {
+        const res = await fetch(apiUrl);
+        const inventory = await res.json();
+
+        const container = document.getElementById('productGrid');
+        container.innerHTML = '';
+
+        colors.forEach(color => {
+          const qty = inventory[color] ?? 'Unavailable';
+
+          const item = document.createElement('div');
+          item.className = 'product';
+          item.innerHTML = `
+            <div><strong>${color} Sunglasses</strong></div>
+            <div class="stock">Qty: ${qty}</div>
+          `;
+          container.appendChild(item);
+        });
+      } catch (err) {
+        console.error('Failed to load inventory:', err);
+        document.getElementById('productGrid').innerText = 'Error loading inventory.';
+      }
+    }
+
+    loadInventory();
+  </script>
 </body>
 </html>
