@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Catfish Empire™</title>
   <style>
     body {
@@ -15,10 +15,7 @@
     body::before {
       content: "";
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0; width: 100%; height: 100%;
       background: url('TM.png') no-repeat center center;
       background-size: 80vh;
       background-attachment: scroll;
@@ -28,8 +25,9 @@
 
     header {
       text-align: center;
-      padding: 3rem 1rem 1rem;
+      padding: 3rem 1rem 2rem;
       background: rgba(0, 0, 0, 0.7);
+      position: relative;
     }
 
     .logo {
@@ -38,7 +36,7 @@
       margin-bottom: 1.5rem;
     }
 
-    p.subtext {
+    .subtext {
       font-size: 1.2rem;
       max-width: 700px;
       margin: 0 auto 2rem;
@@ -66,30 +64,31 @@
       background: #ffd700;
     }
 
+    /* Animated arrows */
     .arrow {
       position: absolute;
-      font-size: 2rem;
+      font-size: 1rem;
+      font-weight: bold;
       color: gold;
-      animation: blink 1s infinite;
+      animation: pulse 1s infinite alternate;
+      white-space: nowrap;
     }
 
-    .top { top: -40px; left: 50%; transform: translateX(-50%); }
-    .bottom { bottom: -40px; left: 50%; transform: translateX(-50%) rotate(180deg); }
-    .topleft { top: -30px; left: -50px; transform: rotate(-45deg); }
-    .topright { top: -30px; right: -50px; transform: rotate(45deg); }
-    .bottomleft { bottom: -30px; left: -50px; transform: rotate(225deg); }
-    .bottomright { bottom: -30px; right: -50px; transform: rotate(-225deg); }
+    .arrow-top { top: -30px; left: 50%; transform: translateX(-50%); }
+    .arrow-bottom { bottom: -30px; left: 50%; transform: translateX(-50%); }
+    .arrow-tl { top: -40px; left: -80px; transform: rotate(-45deg); }
+    .arrow-br { bottom: -40px; right: -80px; transform: rotate(45deg); }
 
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
+    @keyframes pulse {
+      0% { transform: translateY(0) scale(1); }
+      100% { transform: translateY(-5px) scale(1.1); }
     }
 
     .social-media {
       display: flex;
       justify-content: center;
       gap: 1rem;
-      margin: 2rem auto 1rem;
+      margin: 2rem auto;
     }
 
     .social-media a {
@@ -104,29 +103,28 @@
       text-decoration: none;
     }
 
-    .social-media a:hover {
-      background: #ffd700;
-    }
-
     .social-media img {
-      width: 20px;
-      height: 20px;
+      width: 20px; height: 20px;
     }
 
     .youtube-subscribe {
-      margin: 2rem auto 0;
+      margin: 3rem auto;
       display: flex;
       justify-content: center;
     }
 
-    .youtube-subscribe a img {
-      width: 72px;
-      height: 72px;
+    .youtube-subscribe img {
+      width: 72px; height: 72px;
+      transition: transform 0.2s ease-in-out;
+    }
+
+    .youtube-subscribe img:hover {
+      transform: scale(1.1);
     }
 
     .video-section {
       text-align: center;
-      padding: 1rem 1rem 2rem;
+      padding: 1rem;
     }
 
     .video-wrapper {
@@ -136,7 +134,8 @@
 
     .video-section h2 {
       color: gold;
-      margin: 1rem 0;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
     }
 
     .gallery {
@@ -177,10 +176,6 @@
       text-decoration: none;
     }
 
-    footer a:hover {
-      text-decoration: underline;
-    }
-
     @media (min-width: 768px) {
       body::before {
         background-size: 100vh auto;
@@ -201,27 +196,25 @@
     <p class="subtext">Hardcore catfishing across the Carolinas. It is our goal to provide content and gear to help our fellow anglers succeed!</p>
 
     <div class="cta">
-      <span class="arrow top">⬇️</span>
-      <span class="arrow bottom">⬆️</span>
-      <span class="arrow topleft">⬇️</span>
-      <span class="arrow topright">⬇️</span>
-      <span class="arrow bottomleft">⬆️</span>
-      <span class="arrow bottomright">⬆️</span>
       <a href="chooseshop.html">Catfish Empire™ Gear</a>
+      <div class="arrow arrow-top">⬇ CLICK HERE ⬇</div>
+      <div class="arrow arrow-bottom">⬆ CLICK HERE ⬆</div>
+      <div class="arrow arrow-tl">➡ CLICK HERE ⬅</div>
+      <div class="arrow arrow-br">⬅ CLICK HERE ➡</div>
     </div>
 
     <div class="social-media">
       <a href="https://x.com/CATFISH_EMPIRE" target="_blank">
-        <img src="x.png" alt="X Icon"> Follow on X
+        <img src="x.png" alt="X"> Follow on X
       </a>
       <a href="https://www.facebook.com/share/1B4i7CNrYc/" target="_blank">
-        <img src="fb.png" alt="Facebook Icon"> Facebook
+        <img src="fb.png" alt="Facebook"> Facebook
       </a>
     </div>
 
     <div class="youtube-subscribe">
       <a href="https://youtube.com/@catfishempire" target="_blank">
-        <img src="yt.png" alt="YouTube Icon">
+        <img src="yt.png" alt="YouTube">
       </a>
     </div>
 
@@ -238,11 +231,11 @@
   </header>
 
   <section class="gallery">
-    <div class="gallery-item"><img src="img1.jpg" alt="43 lb Flathead Catfish at Santee" /><p>43 lb Flathead Catfish — Caught at Santee</p></div>
-    <div class="gallery-item"><img src="img2.jpg" alt="43 lb Flathead Catfish at Santee" /><p>43 lb Flathead Catfish — Caught at Santee</p></div>
-    <div class="gallery-item"><img src="img3.jpg" alt="45 lb Blue Catfish at Santee" /><p>45 lb Blue Catfish — Caught at Santee</p></div>
-    <div class="gallery-item"><img src="img4.jpg" alt="38 lb Blue Catfish at Santee" /><p>38 lb Blue Catfish — Caught at Santee</p></div>
-    <div class="gallery-item"><img src="img5.jpeg" alt="43 lb Flathead Catfish at Santee" /><p>43 lb Flathead Catfish — Caught at Santee</p></div>
+    <div class="gallery-item"><img src="img1.jpg" alt="43 lb Flathead Catfish" /><p>43 lb Flathead Catfish — Caught at Santee</p></div>
+    <div class="gallery-item"><img src="img2.jpg" alt="43 lb Flathead Catfish" /><p>43 lb Flathead Catfish — Caught at Santee</p></div>
+    <div class="gallery-item"><img src="img3.jpg" alt="45 lb Blue Catfish" /><p>45 lb Blue Catfish — Caught at Santee</p></div>
+    <div class="gallery-item"><img src="img4.jpg" alt="38 lb Blue Catfish" /><p>38 lb Blue Catfish — Caught at Santee</p></div>
+    <div class="gallery-item"><img src="img5.jpeg" alt="43 lb Flathead Catfish" /><p>43 lb Flathead Catfish — Caught at Santee</p></div>
   </section>
 
   <footer>
