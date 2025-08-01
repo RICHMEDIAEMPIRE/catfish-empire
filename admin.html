@@ -59,12 +59,12 @@
   <h2>Update Inventory</h2>
   <label>Color:
     <select id="color">
-      <option value="Blue">Blue</option>
-      <option value="Green">Green</option>
-      <option value="Red">Red</option>
-      <option value="Silver">Silver</option>
-      <option value="Black">Black</option>
-      <option value="Brown">Brown</option>
+      <option value="blue">Blue</option>
+      <option value="green">Green</option>
+      <option value="red">Red</option>
+      <option value="silver">Silver</option>
+      <option value="black">Black</option>
+      <option value="brown">Brown</option>
     </select>
   </label><br />
   <label>Qty:
@@ -87,12 +87,12 @@
     </thead>
     <tbody>
       <tr>
-        <td id="stock-Blue"></td>
-        <td id="stock-Green"></td>
-        <td id="stock-Red"></td>
-        <td id="stock-Silver"></td>
-        <td id="stock-Black"></td>
-        <td id="stock-Brown"></td>
+        <td id="stock-blue"></td>
+        <td id="stock-green"></td>
+        <td id="stock-red"></td>
+        <td id="stock-silver"></td>
+        <td id="stock-black"></td>
+        <td id="stock-brown"></td>
         <td id="total-stock"></td>
       </tr>
     </tbody>
@@ -126,7 +126,7 @@ function login() {
     });
 }
 
-// Pull inventory from backend instead of Supabase
+// Pull inventory from backend
 async function fetchInventory() {
   try {
     const res = await fetch(`${backendURL}/inventory`, {
