@@ -5,49 +5,90 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Catfish Empire™ Showcase</title>
   <style>
-    body { background: black; color: white; font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    body {
+      background: black;
+      color: white;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
 
     .toolbar {
-      position: fixed;
-      top: 0;
-      width: 100%;
       background: gold;
       color: black;
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      padding: 0.75rem 1rem;
-      z-index: 1000;
-      box-sizing: border-box;
-    }
-
-    .toolbar .title {
-      text-align: center;
-      font-size: 1.5rem;
       font-weight: bold;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      padding: 0.75rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
     }
 
-    .toolbar a {
-      background: black;
-      color: gold;
-      padding: 0.5rem 1rem;
-      border-radius: 5px;
+    .toolbar-title {
+      font-size: 1.3rem;
+      font-weight: bold;
+      margin-bottom: 0.25rem;
+    }
+
+    .toolbar-links {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 1000px;
+    }
+
+    .toolbar-links a {
+      color: black;
       text-decoration: none;
       font-weight: bold;
-      justify-self: start;
+      padding: 0.3rem 0.5rem;
+      background: black;
+      color: gold;
+      border-radius: 5px;
     }
 
-    .cart-button {
-      justify-self: end;
+    .toolbar-links a:hover {
+      background: #222;
+    }
+
+    @media (min-width: 768px) {
+      .toolbar {
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 1rem 5%;
+      }
+
+      .toolbar-title {
+        font-size: 1.8rem;
+        margin: 0 auto;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+
+      .toolbar-links {
+        justify-content: space-between;
+        width: 100%;
+        max-width: none;
+        position: relative;
+        z-index: 1;
+      }
+
+      .toolbar-links a:first-child {
+        margin-left: 0;
+      }
+
+      .toolbar-links a:last-child {
+        margin-right: 0;
+      }
     }
 
     h1 {
       text-align: center;
       color: gold;
-      margin: 6rem 0 1rem;
+      margin: 1rem 0;
     }
 
     .product-list {
@@ -79,29 +120,68 @@
     }
 
     .product button {
-      background: gold; color: black; border: none; padding: 0.75rem;
-      margin-top: 0.5rem; width: 100%; font-weight: bold; border-radius: 5px; cursor: pointer;
+      background: gold;
+      color: black;
+      border: none;
+      padding: 0.75rem;
+      margin-top: 0.5rem;
+      width: 100%;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
     }
 
     .viewer {
-      display: none; position: fixed; top:0; left:0; width:100vw; height:100vh;
-      background:rgba(0,0,0,0.95); align-items:center; justify-content:center; z-index:999;
+      display: none;
+      position: fixed;
+      top:0;
+      left:0;
+      width:100vw;
+      height:100vh;
+      background:rgba(0,0,0,0.95);
+      align-items:center;
+      justify-content:center;
+      z-index:999;
     }
 
-    .viewer img { max-width:90vw; max-height:90vh; border-radius:10px; }
+    .viewer img {
+      max-width:90vw;
+      max-height:90vh;
+      border-radius:10px;
+    }
 
     .nav-button {
-      position: fixed; top:50%; transform:translateY(-50%);
-      font-size:3rem; color:gold; background:none; border:none; cursor:pointer; z-index:1000;
+      position: fixed;
+      top:50%;
+      transform:translateY(-50%);
+      font-size:3rem;
+      color:gold;
+      background:none;
+      border:none;
+      cursor:pointer;
+      z-index:1000;
     }
 
-    .prev { left:10px; }
-    .next { right:10px; }
+    .prev {
+      left:10px;
+    }
+
+    .next {
+      right:10px;
+    }
 
     .close-btn {
-      position: fixed; top:20px; right:20px;
-      font-size:1.2rem; background: gold; color:black; border:none;
-      padding:10px 20px; border-radius:5px; cursor:pointer; z-index:1000;
+      position: fixed;
+      top:20px;
+      right:20px;
+      font-size:1.2rem;
+      background: gold;
+      color:black;
+      border:none;
+      padding:10px 20px;
+      border-radius:5px;
+      cursor:pointer;
+      z-index:1000;
     }
 
     .etsy-footer {
@@ -135,52 +215,32 @@
     .etsy-footer .button:hover {
       background: #ffd700;
     }
-
-    @media (max-width: 600px) {
-      .toolbar {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto;
-        text-align: center;
-      }
-
-      .toolbar .title {
-        margin-bottom: 0.5rem;
-      }
-
-      .toolbar a {
-        justify-self: center;
-      }
-
-      .cart-button {
-        margin-top: 0.5rem;
-      }
-    }
   </style>
 </head>
 <body>
 
-  <div class="toolbar">
+<div class="toolbar">
+  <div class="toolbar-title">CATFISH EMPIRE™ SHOP</div>
+  <div class="toolbar-links">
     <a href="index.html">← Back</a>
-    <div class="title">CATFISH EMPIRE™ SHOP</div>
-    <a href="cart.html" class="cart-button">View Cart</a>
+    <a href="cart.html" class="cart-link">View Cart</a>
   </div>
+</div>
 
-  <h1>Catfish Empire™ Sunglasses • $14.99 + Tax</h1>
-  <div class="product-list" id="product-list"></div>
+<h1>Catfish Empire™ Sunglasses • $14.99 + Tax</h1>
+<div class="product-list" id="product-list"></div>
 
-  <!-- Fullscreen Viewer -->
-  <div class="viewer" id="viewer">
-    <button class="nav-button prev" onclick="changeImage(-1)">❮</button>
-    <img id="mainImage" src="" alt="Product Preview" />
-    <button class="nav-button next" onclick="changeImage(1)">❯</button>
-    <button class="close-btn" onclick="hideViewer()">Exit Fullscreen</button>
-  </div>
+<div class="viewer" id="viewer">
+  <button class="nav-button prev" onclick="changeImage(-1)">❮</button>
+  <img id="mainImage" src="" alt="Product Preview" />
+  <button class="nav-button next" onclick="changeImage(1)">❯</button>
+  <button class="close-btn" onclick="hideViewer()">Exit Fullscreen</button>
+</div>
 
-  <!-- Etsy Shop Footer Block -->
-  <div class="etsy-footer">
-    <img src="shopbanner.jpg" alt="Etsy Shop" />
-    <a href="https://www.etsy.com/shop/RICHMEDIAEMPIRE?ref=profile_header&section_id=54071039" target="_blank" class="button">Visit Our Etsy Shop</a>
-  </div>
+<div class="etsy-footer">
+  <img src="shopbanner.jpg" alt="Etsy Shop" />
+  <a href="https://www.etsy.com/shop/RICHMEDIAEMPIRE?ref=profile_header&section_id=54071039" target="_blank" class="button">Visit Our Etsy Shop</a>
+</div>
 
 <script>
 const BACKEND_URL = "https://catfish-stripe-backend.onrender.com";
@@ -202,7 +262,7 @@ function updateLocalCart() {
 
 function updateCartCount() {
   const total = cart.reduce((sum, item) => sum + item.qty, 0);
-  const cartLink = document.querySelector(".cart-button");
+  const cartLink = document.querySelector(".cart-link");
   if (cartLink) {
     cartLink.textContent = `View Cart (${total})`;
   }
@@ -290,5 +350,6 @@ function hideViewer() {
 loadInventory();
 updateCartCount();
 </script>
+
 </body>
 </html>
