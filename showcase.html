@@ -11,12 +11,14 @@
     .product { background: #222; padding: 1rem; border-radius: 10px; width: 200px; text-align: center; }
     .product img { width: 100%; border-radius: 10px; cursor: pointer; }
     .product input { width: 100%; padding: 0.5rem; margin-top: 0.5rem; }
-    .product button, .checkout-btn {
+    .product button {
       background: gold; color: black; border: none; padding: 0.75rem;
       margin-top: 0.5rem; width: 100%; font-weight: bold; border-radius: 5px; cursor: pointer;
     }
-    .checkout-btn { max-width: 250px; margin: 2rem auto; display: block; }
-
+    .cart-link {
+      position: fixed; top: 20px; right: 20px; background: gold; color: black;
+      padding: 10px 15px; border-radius: 5px; font-weight: bold; text-decoration: none;
+    }
     .viewer {
       display: none; position: fixed; top:0; left:0; width:100vw; height:100vh;
       background:rgba(0,0,0,0.95); align-items:center; justify-content:center; z-index:999;
@@ -37,8 +39,8 @@
 <body>
 
 <h1>Catfish Empire™ Sunglasses • $14.99 + Tax</h1>
+<a href="cart.html" class="cart-link">View Cart</a>
 <div class="product-list" id="product-list"></div>
-<button class="checkout-btn" onclick="checkoutCart()">Checkout</button>
 
 <!-- Fullscreen Viewer -->
 <div class="viewer" id="viewer">
@@ -66,10 +68,6 @@ function updateLocalCart() {
   localStorage.setItem("cart", JSON.stringify(cart));
 }
 
-function updateCartCount() {
-  // You can add a cart badge update here if needed
-}
-
 function addToCart(color, qty) {
   if (!qty || qty < 1) return;
   if (inventory[color] === undefined || qty > inventory[color]) return alert(`Only ${inventory[color] || 0} in stock`);
@@ -81,7 +79,6 @@ function addToCart(color, qty) {
     cart.push({ color, qty });
   }
   updateLocalCart();
-  updateCartCount();
   alert(`${qty}× ${color} added to cart`);
 }
 
@@ -122,25 +119,6 @@ function loadInventory() {
     });
 }
 
-function checkoutCart() {
-  if (!cart.length) return alert("Cart is empty.");
-  fetch(`${BACKEND_URL}/create-checkout-session`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ items: cart })
-  })
-    .then(r => r.json())
-    .then(data => {
-      if (data.url) {
-        localStorage.removeItem("cart");
-        window.location.href = data.url;
-      } else {
-        alert("Checkout failed");
-      }
-    })
-    .catch(err => alert("Checkout error"));
-}
-
 // Viewer logic
 const viewer = document.getElementById("viewer");
 const mainImage = document.getElementById("mainImage");
@@ -169,7 +147,6 @@ function hideViewer() {
 
 // Init
 loadInventory();
-updateCartCount();
 </script>
 </body>
 </html>
