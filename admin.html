@@ -2,46 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Admin Panel - Catfish Empire™</title>
+  <title>Catfish Empire Admin</title>
   <style>
     body {
-      background-color: #000;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      text-align: center;
+      font-family: sans-serif;
+      background-color: #111;
+      color: #f4f4f4;
       padding: 2rem;
     }
-
-    input, select, button {
-      margin: 0.5rem;
-      padding: 0.5rem;
-      font-size: 1rem;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    table {
-      margin: 1rem auto;
-      border-collapse: collapse;
-      width: 300px;
-    }
-
-    th, td {
-      padding: 0.5rem;
-      border: 1px solid #666;
-    }
-
-    #message {
-      margin-top: 1rem;
-      color: yellow;
-    }
+    .hidden { display: none; }
+    label, input, select { margin: 0.5rem 0; }
+    table { margin-top: 1rem; border-collapse: collapse; }
+    th, td { padding: 0.5rem 1rem; border: 1px solid #fff; }
+    button { margin-top: 1rem; padding: 0.5rem 1rem; background: gold; border: none; cursor: pointer; }
   </style>
 </head>
 <body>
-  <h1>Catfish Empire™ Admin Panel</h1>
-
   <div id="login-section">
     <input type="password" id="password" placeholder="Enter admin password" />
     <br />
@@ -60,11 +36,13 @@
         <option value="Black">Black</option>
         <option value="Brown">Brown</option>
       </select>
-    </label><br/>
+    </label>
+    <br />
     <label>
       Quantity:
       <input type="number" id="qty" min="0" />
-    </label><br/>
+    </label>
+    <br />
     <button id="update-btn">Update Inventory</button>
     <p id="message"></p>
 
@@ -73,96 +51,92 @@
       <thead>
         <tr><th>Color</th><th>Quantity</th></tr>
       </thead>
-      <tbody id="inventory-table"></tbody>
+      <tbody id="inventory-body"></tbody>
     </table>
 
-    <button id="logout-btn" style="margin-top: 20px;">Logout</button>
+    <button id="logout-btn">Logout</button>
   </div>
 
   <script>
     const backendURL = "https://catfish-stripe-backend.onrender.com";
 
-    async function login() {
+    function login() {
       const password = document.getElementById("password").value;
-      const res = await fetch(`${backendURL}/login`, {
+      fetch(`${backendURL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ password }),
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById("login-section").classList.add("hidden");
+          document.getElementById("admin-panel").classList.remove("hidden");
+          fetchInventory();
+        } else {
+          alert("Incorrect password");
+        }
       });
-
-      const data = await res.json();
-      if (data.success) {
-        document.getElementById("login-section").classList.add("hidden");
-        document.getElementById("admin-panel").classList.remove("hidden");
-        fetchInventory();
-      } else {
-        alert("Invalid password");
-      }
     }
 
-    async function fetchInventory() {
-      const res = await fetch(`${backendURL}/inventory`, {
+    function fetchInventory() {
+      fetch(`${backendURL}/inventory`, {
         credentials: "include",
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Not logged in");
+        return res.json();
+      })
+      .then(data => {
+        const tbody = document.getElementById("inventory-body");
+        tbody.innerHTML = "";
+        Object.entries(data).forEach(([color, qty]) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `<td>${color}</td><td>${qty}</td>`;
+          tbody.appendChild(row);
+        });
+      })
+      .catch(err => {
+        document.getElementById("inventory-body").innerHTML = `<tr><td colspan="2">${err.message}</td></tr>`;
       });
-
-      if (res.status === 403) {
-        document.getElementById("message").textContent = "Not logged in.";
-        return;
-      }
-
-      const data = await res.json();
-      const table = document.getElementById("inventory-table");
-      table.innerHTML = "";
-
-      for (const color in data) {
-        const row = document.createElement("tr");
-        row.innerHTML = `<td>${color}</td><td>${data[color]}</td>`;
-        table.appendChild(row);
-      }
     }
 
-    async function updateInventory() {
+    function updateInventory() {
       const color = document.getElementById("color").value;
       const qty = document.getElementById("qty").value;
-
-      const res = await fetch(`${backendURL}/inventory`, {
+      fetch(`${backendURL}/inventory`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ color, qty }),
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("message").textContent = data.success
+          ? "Inventory updated successfully"
+          : "Failed to update inventory";
+        fetchInventory();
       });
-
-      const data = await res.json();
-      document.getElementById("message").textContent = data.success
-        ? "Inventory updated successfully"
-        : "Failed to update inventory";
-      fetchInventory();
     }
 
-    async function logout() {
-      await fetch(`${backendURL}/logout`, {
+    function logout() {
+      fetch(`${backendURL}/logout`, {
         method: "POST",
-        credentials: "include",
+        credentials: "include"
+      }).then(() => {
+        document.getElementById("admin-panel").classList.add("hidden");
+        document.getElementById("login-section").classList.remove("hidden");
       });
-      document.getElementById("admin-panel").classList.add("hidden");
-      document.getElementById("login-section").classList.remove("hidden");
-      document.getElementById("password").value = "";
-      document.getElementById("message").textContent = "";
     }
 
-    // Hook up buttons
     document.getElementById("login-btn").onclick = login;
     document.getElementById("update-btn").onclick = updateInventory;
     document.getElementById("logout-btn").onclick = logout;
 
-    // Allow Enter key on password input
-    document.getElementById("password").addEventListener("keydown", function(e) {
+    document.getElementById("password").addEventListener("keydown", (e) => {
       if (e.key === "Enter") login();
     });
-
-    // Try to auto-load inventory (session cookie present)
-    window.onload = () => fetchInventory();
   </script>
 </body>
 </html>
