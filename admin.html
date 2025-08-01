@@ -133,22 +133,16 @@
     }
 
     function fetchInventory() {
-      fetch(`${backendURL}/inventory`, {
-        method: "GET",
-        credentials: "include"
-      })
+      fetch(`${backendURL}/public-inventory`)
       .then(res => res.json())
       .then(data => {
         let total = 0;
         for (const [color, qty] of Object.entries(data)) {
-          const cell = document.getElementById(`stock-${color}`);
+          const cell = document.getElementById(`stock-${color.trim()}`);
           if (cell) cell.textContent = qty;
           total += parseInt(qty);
         }
         document.getElementById("total-stock").textContent = total;
-      })
-      .catch((err) => {
-        console.error("Admin fetchInventory failed:", err);
       });
     }
 
