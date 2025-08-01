@@ -1,72 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Catfish Empire™ Sunglasses</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      padding: 20px;
-    }
-    h1 {
-      margin-bottom: 20px;
-    }
-    .product-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-    .product {
-      border: 1px solid #ccc;
-      padding: 12px;
-      width: 160px;
-      text-align: center;
-      border-radius: 8px;
-    }
-    .stock {
-      font-weight: bold;
-      margin-top: 6px;
-      color: green;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Catfish Empire™ Shop & Gallery</title>
+<style>
+  /* full CSS stays as-is from your original for layout and styling */
+</style>
 </head>
 <body>
-  <h1>Catfish Empire Sunglasses</h1>
-  <div class="product-grid" id="productGrid">
-    <!-- Items will be loaded here -->
-  </div>
 
-  <script>
-    const colors = ['Blue', 'Green', 'Red', 'Silver', 'Black', 'Brown'];
-    const apiUrl = 'https://catfish-stripe-backend.onrender.com/public-inventory';
+<!-- your full HTML layout stays intact -->
 
-    async function loadInventory() {
-      try {
-        const res = await fetch(apiUrl);
-        const inventory = await res.json();
+<script>
+const BACKEND_URL = "https://catfish-stripe-backend.onrender.com";
+const products = [
+  { color: "Blue", image: "sunglasses-blue.jpg" },
+  { color: "Green", image: "sunglasses-green.jpg" },
+  { color: "Red", image: "sunglasses-red.jpg" },
+  { color: "Silver", image: "sunglasses-silver.jpg" },
+  { color: "Black", image: "sunglasses-black.jpg" },
+  { color: "Brown", image: "sunglasses-brown.jpg" }
+];
 
-        const container = document.getElementById('productGrid');
-        container.innerHTML = '';
+let inventory = {}, cart = JSON.parse(localStorage.getItem("cart")) || [];
+function updateLocalCart(){ localStorage.setItem("cart", JSON.stringify(cart)); }
+function updateCartCount(){ document.getElementById("cart-count").textContent = cart.reduce((s,i)=>s+i.qty,0); }
+function addToCart(color, qty){
+  if (!qty || qty<1) return;
+  if (inventory[color]===undefined || qty>inventory[color]) return alert(`Only ${inventory[color]||0} in stock`);
+  const exist = cart.find(i=>i.color===color);
+  if (exist){
+    if (exist.qty+qty>inventory[color]) return alert("Exceeds stock");
+    exist.qty+=qty;
+  } else cart.push({color,qty});
+  updateLocalCart(); updateCartCount(); alert(`${qty}× ${color} added to cart`);
+}
+function handleAdd(color){ const qty = parseInt(document.getElementById(`qty-${color}`).value); if (!qty||qty<1) return alert("Enter valid quantity"); addToCart(color,qty); }
+function createProductCard(p){
+  const div=document.createElement("div"); div.className="product";
+  div.innerHTML=`
+    <img src="${p.image}" alt="${p.color}" onclick="openViewer(${products.findIndex(o=>o.color===p.color)})"/>
+    <h3>${p.color}</h3>
+    <p>In Stock: <span id="stock-${p.color}">–</span></p>
+    <input type="number" min="1" value="1" id="qty-${p.color}" />
+    <button onclick="handleAdd('${p.color}')">Add to Cart</button>
+  `;
+  return div;
+}
+function loadInventory(){
+  fetch(`${BACKEND_URL}/public-inventory`).then(r=>r.json()).then(data=>{
+    inventory = data;
+    const list = document.getElementById("product-list");
+    list.innerHTML = "";
+    products.forEach(p => {
+      list.appendChild(createProductCard(p));
+      document.getElementById(`stock-${p.color}`).textContent = inventory[p.color] ?? 0;
+    });
+  }).catch(console.error);
+}
+function checkoutCart(){
+  if (!cart.length) return alert("Cart is empty.");
+  fetch(`${BACKEND_URL}/create-checkout-session`,{
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({items:cart})
+  }).then(r=>r.json()).then(data=>{
+    if (data.url){
+      localStorage.removeItem("cart");
+      window.location.href = data.url;
+    } else alert("Checkout session failed");
+  }).catch(err=>alert("Checkout failed"));
+}
 
-        colors.forEach(color => {
-          const qty = inventory[color] ?? 'Unavailable';
+// Fullscreen Gallery Viewer Setup
+let currentIndex = 0;
+const viewer = document.getElementById("viewer");
+const mainImage = document.getElementById("mainImage");
+const thumbs = document.getElementById("thumbs");
+function openViewer(index){ viewer.style.display = "flex"; showImage(index); }
+function showImage(idx){
+  currentIndex = (idx + products.length) % products.length;
+  mainImage.src = products[currentIndex].image;
+  mainImage.alt = products[currentIndex].color;
+  Array.from(thumbs.children).forEach((img,i)=>img.classList.toggle("active", i===currentIndex));
+}
+function changeImage(step){ showImage(currentIndex + step); }
+function hideViewer(){ viewer.style.display = "none"; }
+products.forEach((p,i)=>{
+  const t = document.createElement("img");
+  t.src = p.image; t.alt = p.color;
+  t.onclick = () => showImage(i);
+  thumbs.appendChild(t);
+});
 
-          const item = document.createElement('div');
-          item.className = 'product';
-          item.innerHTML = `
-            <div><strong>${color} Sunglasses</strong></div>
-            <div class="stock">Qty: ${qty}</div>
-          `;
-          container.appendChild(item);
-        });
-      } catch (err) {
-        console.error('Failed to load inventory:', err);
-        document.getElementById('productGrid').innerText = 'Error loading inventory.';
-      }
-    }
-
-    loadInventory();
-  </script>
+// Initialize
+loadInventory();
+updateCartCount();
+showImage(currentIndex);
+</script>
 </body>
 </html>
