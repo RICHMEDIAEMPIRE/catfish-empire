@@ -10,33 +10,36 @@
       color: white;
       font-family: Arial, sans-serif;
       margin: 0;
-      padding-top: 60px; /* space for fixed toolbar */
+      padding: 0;
+    }
+
+    h1 {
+      text-align: center;
+      color: gold;
+      margin: 1rem 0;
+      margin-top: 80px;
     }
 
     .toolbar {
       position: fixed;
       top: 0;
-      left: 0;
       width: 100%;
+      height: 60px;
       background: gold;
-      color: black;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 20px;
+      padding: 0 1rem;
       z-index: 1000;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
 
-    .toolbar button, .toolbar a {
+    .toolbar a {
       background: black;
       color: gold;
-      border: none;
-      padding: 10px 15px;
+      padding: 8px 16px;
+      border-radius: 5px;
       font-weight: bold;
       text-decoration: none;
-      border-radius: 5px;
-      cursor: pointer;
     }
 
     .toolbar .title {
@@ -44,15 +47,11 @@
       left: 50%;
       transform: translateX(-50%);
       font-weight: bold;
-      font-size: 1.1rem;
+      font-size: 1.5rem;
+      letter-spacing: 0.5px;
       color: black;
       white-space: nowrap;
-    }
-
-    h1 {
-      text-align: center;
-      color: gold;
-      margin: 1rem 0;
+      line-height: 1;
     }
 
     .product-list {
@@ -98,11 +97,10 @@
     .viewer {
       display: none;
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.95);
+      top:0; left:0;
+      width:100vw;
+      height:100vh;
+      background: rgba(0,0,0,0.95);
       align-items: center;
       justify-content: center;
       z-index: 999;
@@ -178,11 +176,10 @@
 </head>
 <body>
 
-  <!-- Gold Toolbar -->
   <div class="toolbar">
     <a href="index.html">← Back</a>
-    <div class="title">CATFISH EMPIRE TM SHOP</div>
-    <a href="cart.html" class="cart-link">View Cart</a>
+    <div class="title">CATFISH EMPIRE™ SHOP</div>
+    <a href="cart.html">View Cart</a>
   </div>
 
   <h1>Catfish Empire™ Sunglasses • $14.99 + Tax</h1>
@@ -202,113 +199,114 @@
     <a href="https://www.etsy.com/shop/RICHMEDIAEMPIRE?ref=profile_header&section_id=54071039" target="_blank" class="button">Visit Our Etsy Shop</a>
   </div>
 
-  <script>
-    const BACKEND_URL = "https://catfish-stripe-backend.onrender.com";
-    const products = [
-      { color: "Blue", image: "sunglasses-blue.jpg" },
-      { color: "Green", image: "sunglasses-green.jpg" },
-      { color: "Red", image: "sunglasses-red.jpg" },
-      { color: "Silver", image: "sunglasses-silver.jpg" },
-      { color: "Black", image: "sunglasses-black.jpg" },
-      { color: "Brown", image: "sunglasses-brown.jpg" }
-    ];
+<script>
+const BACKEND_URL = "https://catfish-stripe-backend.onrender.com";
+const products = [
+  { color: "Blue", image: "sunglasses-blue.jpg" },
+  { color: "Green", image: "sunglasses-green.jpg" },
+  { color: "Red", image: "sunglasses-red.jpg" },
+  { color: "Silver", image: "sunglasses-silver.jpg" },
+  { color: "Black", image: "sunglasses-black.jpg" },
+  { color: "Brown", image: "sunglasses-brown.jpg" }
+];
 
-    let inventory = {}, cart = JSON.parse(localStorage.getItem("cart") || "[]");
-    let currentIndex = 0;
+let inventory = {}, cart = JSON.parse(localStorage.getItem("cart") || "[]");
+let currentIndex = 0;
 
-    function updateLocalCart() {
-      localStorage.setItem("cart", JSON.stringify(cart));
-    }
+function updateLocalCart() {
+  localStorage.setItem("cart", JSON.stringify(cart));
+}
 
-    function updateCartCount() {
-      const total = cart.reduce((sum, item) => sum + item.qty, 0);
-      const cartLink = document.querySelector(".cart-link");
-      if (cartLink) {
-        cartLink.textContent = `View Cart (${total})`;
-      }
-    }
+function updateCartCount() {
+  const total = cart.reduce((sum, item) => sum + item.qty, 0);
+  const cartLink = document.querySelector(".toolbar a[href='cart.html']");
+  if (cartLink) {
+    cartLink.textContent = `View Cart (${total})`;
+  }
+}
 
-    function addToCart(color, qty) {
-      if (!qty || qty < 1) return;
-      if (inventory[color] === undefined || qty > inventory[color]) return alert(`Only ${inventory[color] || 0} in stock`);
-      const exist = cart.find(i => i.color === color);
-      if (exist) {
-        if (exist.qty + qty > inventory[color]) return alert("Exceeds stock");
-        exist.qty += qty;
-      } else {
-        cart.push({ color, qty });
-      }
-      updateLocalCart();
-      updateCartCount();
-      alert(`${qty}× ${color} added to cart`);
-    }
+function addToCart(color, qty) {
+  if (!qty || qty < 1) return;
+  if (inventory[color] === undefined || qty > inventory[color]) return alert(`Only ${inventory[color] || 0} in stock`);
+  const exist = cart.find(i => i.color === color);
+  if (exist) {
+    if (exist.qty + qty > inventory[color]) return alert("Exceeds stock");
+    exist.qty += qty;
+  } else {
+    cart.push({ color, qty });
+  }
+  updateLocalCart();
+  updateCartCount();
+  alert(`${qty}× ${color} added to cart`);
+}
 
-    function handleAdd(color) {
-      const qty = parseInt(document.getElementById(`qty-${color}`).value);
-      if (!qty || qty < 1) return alert("Enter valid quantity");
-      addToCart(color, qty);
-    }
+function handleAdd(color) {
+  const qty = parseInt(document.getElementById(`qty-${color}`).value);
+  if (!qty || qty < 1) return alert("Enter valid quantity");
+  addToCart(color, qty);
+}
 
-    function createProductCard(p) {
-      const div = document.createElement("div");
-      div.className = "product";
-      div.innerHTML = `
-        <img src="${p.image}" alt="${p.color}" onclick="openViewer(${products.findIndex(i => i.color === p.color)})" />
-        <h3>${p.color}</h3>
-        <p>In Stock: <span id="stock-${p.color}">–</span></p>
-        <input type="number" min="1" value="1" id="qty-${p.color}" />
-        <button onclick="handleAdd('${p.color}')">Add to Cart</button>
-      `;
-      return div;
-    }
+function createProductCard(p) {
+  const div = document.createElement("div");
+  div.className = "product";
+  div.innerHTML = `
+    <img src="${p.image}" alt="${p.color}" onclick="openViewer(${products.findIndex(i => i.color === p.color)})" />
+    <h3>${p.color}</h3>
+    <p>In Stock: <span id="stock-${p.color}">–</span></p>
+    <input type="number" min="1" value="1" id="qty-${p.color}" />
+    <button onclick="handleAdd('${p.color}')">Add to Cart</button>
+  `;
+  return div;
+}
 
-    function loadInventory() {
-      fetch(`${BACKEND_URL}/public-inventory`)
-        .then(r => r.json())
-        .then(data => {
-          inventory = data;
-          const container = document.getElementById("product-list");
-          container.innerHTML = "";
-          products.forEach(p => {
-            container.appendChild(createProductCard(p));
-            document.getElementById(`stock-${p.color}`).textContent = inventory[p.color] ?? 0;
-          });
-        })
-        .catch(err => {
-          console.error("Failed to fetch inventory", err);
-          document.getElementById("product-list").textContent = "Error loading inventory.";
-        });
-    }
+function loadInventory() {
+  fetch(`${BACKEND_URL}/public-inventory`)
+    .then(r => r.json())
+    .then(data => {
+      inventory = data;
+      const container = document.getElementById("product-list");
+      container.innerHTML = "";
+      products.forEach(p => {
+        container.appendChild(createProductCard(p));
+        document.getElementById(`stock-${p.color}`).textContent = inventory[p.color] ?? 0;
+      });
+    })
+    .catch(err => {
+      console.error("Failed to fetch inventory", err);
+      document.getElementById("product-list").textContent = "Error loading inventory.";
+    });
+}
 
-    // Viewer logic
-    const viewer = document.getElementById("viewer");
-    const mainImage = document.getElementById("mainImage");
+// Viewer logic
+const viewer = document.getElementById("viewer");
+const mainImage = document.getElementById("mainImage");
 
-    function openViewer(index) {
-      currentIndex = index;
-      viewer.style.display = "flex";
-      showImage(currentIndex);
-    }
+function openViewer(index) {
+  currentIndex = index;
+  viewer.style.display = "flex";
+  showImage(currentIndex);
+}
 
-    function showImage(index) {
-      const p = products[index];
-      if (!p) return;
-      mainImage.src = p.image;
-      mainImage.alt = p.color;
-    }
+function showImage(index) {
+  const p = products[index];
+  if (!p) return;
+  mainImage.src = p.image;
+  mainImage.alt = p.color;
+}
 
-    function changeImage(step) {
-      currentIndex = (currentIndex + step + products.length) % products.length;
-      showImage(currentIndex);
-    }
+function changeImage(step) {
+  currentIndex = (currentIndex + step + products.length) % products.length;
+  showImage(currentIndex);
+}
 
-    function hideViewer() {
-      viewer.style.display = "none";
-    }
+function hideViewer() {
+  viewer.style.display = "none";
+}
 
-    // Init
-    loadInventory();
-    updateCartCount();
-  </script>
+// Init
+loadInventory();
+updateCartCount();
+</script>
+
 </body>
 </html>
