@@ -99,6 +99,24 @@
       font-size: 1.05rem;
     }
 
+    .state-box {
+      margin: 2rem auto;
+      text-align: center;
+      max-width: 300px;
+    }
+
+    .state-box select {
+      padding: 0.5rem;
+      width: 100%;
+    }
+
+    .state-box .warning {
+      color: red;
+      font-weight: bold;
+      display: none;
+      margin-top: 0.5rem;
+    }
+
     .product-list {
       display: flex;
       flex-wrap: wrap;
@@ -241,6 +259,29 @@ Polarized lenses for maximum glare reduction and crystal-clear vision.
 UV400 protection to block 100% of harmful UVA & UVB rays.
 Comfort-fit design that stays put—even in rough conditions.
 Built to see through the water, not just across it—these are your go-to sunglasses for spotting structure, bait, and big catfish below the surface.</p>
+
+<!-- STATE SELECTION -->
+<div class="state-box">
+  <label for="shipping-state">Select Your Shipping State:</label>
+  <select id="shipping-state">
+    <option value="">Select a state</option>
+    <script>
+      const blockedStates = ['CO', 'PA', 'CA'];
+      const allStates = [
+        'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME',
+        'MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR',
+        'PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'
+      ];
+      allStates.forEach(state => {
+        if (!blockedStates.includes(state)) {
+          document.write(`<option value="${state}">${state}</option>`);
+        }
+      });
+    </script>
+  </select>
+  <div id="state-warning" class="warning">🚫 Sorry, we do not ship to Colorado, California, or Pennsylvania.</div>
+</div>
+
 <div class="product-list" id="product-list"></div>
 
 <div class="viewer" id="viewer">
@@ -298,7 +339,19 @@ function addToCart(color, qty) {
 
 function handleAdd(color) {
   const qty = parseInt(document.getElementById(`qty-${color}`).value);
+  const state = document.getElementById("shipping-state").value;
+  const warning = document.getElementById("state-warning");
+
   if (!qty || qty < 1) return alert("Enter valid quantity");
+  if (!state) return alert("Please select your shipping state first.");
+  if (['CO','PA','CA'].includes(state)) {
+    warning.style.display = "block";
+    return;
+  } else {
+    warning.style.display = "none";
+  }
+
+  localStorage.setItem("shippingState", state);
   addToCart(color, qty);
 }
 
