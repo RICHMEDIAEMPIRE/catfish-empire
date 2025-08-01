@@ -10,7 +10,7 @@
       color: white;
       font-family: Arial, sans-serif;
       margin: 0;
-      padding-top: 60px; /* offset for toolbar */
+      padding-top: 60px; /* space for fixed toolbar */
     }
 
     .toolbar {
@@ -19,20 +19,34 @@
       left: 0;
       width: 100%;
       background: gold;
+      color: black;
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
       padding: 10px 20px;
-      z-index: 1001;
+      z-index: 1000;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
 
-    .toolbar a {
-      color: black;
+    .toolbar button, .toolbar a {
+      background: black;
+      color: gold;
+      border: none;
+      padding: 10px 15px;
       font-weight: bold;
       text-decoration: none;
-      padding: 8px 12px;
-      background: white;
       border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .toolbar .title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-weight: bold;
+      font-size: 1.1rem;
+      color: black;
+      white-space: nowrap;
     }
 
     h1 {
@@ -112,13 +126,8 @@
       z-index: 1000;
     }
 
-    .prev {
-      left: 10px;
-    }
-
-    .next {
-      right: 10px;
-    }
+    .prev { left: 10px; }
+    .next { right: 10px; }
 
     .close-btn {
       position: fixed;
@@ -172,7 +181,8 @@
   <!-- Gold Toolbar -->
   <div class="toolbar">
     <a href="index.html">← Back</a>
-    <a href="cart.html" id="cart-link">View Cart</a>
+    <div class="title">CATFISH EMPIRE TM SHOP</div>
+    <a href="cart.html" class="cart-link">View Cart</a>
   </div>
 
   <h1>Catfish Empire™ Sunglasses • $14.99 + Tax</h1>
@@ -212,7 +222,7 @@
 
     function updateCartCount() {
       const total = cart.reduce((sum, item) => sum + item.qty, 0);
-      const cartLink = document.getElementById("cart-link");
+      const cartLink = document.querySelector(".cart-link");
       if (cartLink) {
         cartLink.textContent = `View Cart (${total})`;
       }
