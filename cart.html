@@ -116,7 +116,7 @@
       }
 
       cart.forEach((item, index) => {
-        const itemTotal = (item.qty * 0.50).toFixed(2);
+        const itemTotal = (item.qty * 14.99).toFixed(2);
         subtotal += parseFloat(itemTotal);
 
         const li = document.createElement("li");
@@ -144,7 +144,6 @@
         return;
       }
 
-      // Send simplified items to match backend expectation
       const items = cart.map(item => ({
         color: item.color,
         qty: item.qty
