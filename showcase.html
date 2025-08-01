@@ -1,16 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Catfish Empire™ Shop & Gallery</title>
-<style>
-  /* full CSS stays as-is from your original for layout and styling */
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Catfish Empire™ Showcase</title>
+  <style>
+    body { background: black; color: white; font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    h1 { text-align: center; color: gold; margin: 1rem 0; }
+    .product-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem; margin: 1rem; }
+    .product { background: #222; padding: 1rem; border-radius: 10px; width: 200px; text-align: center; }
+    .product img { width: 100%; border-radius: 10px; cursor: pointer; }
+    .product input { width: 100%; padding: 0.5rem; margin-top: 0.5rem; }
+    .product button, .checkout-btn {
+      background: gold; color: black; border: none; padding: 0.75rem;
+      margin-top: 0.5rem; width: 100%; font-weight: bold; border-radius: 5px; cursor: pointer;
+    }
+    .checkout-btn { max-width: 250px; margin: 2rem auto; display: block; }
+
+    .viewer {
+      display: none; position: fixed; top:0; left:0; width:100vw; height:100vh;
+      background:rgba(0,0,0,0.95); align-items:center; justify-content:center; z-index:999;
+    }
+    .viewer img { max-width:90vw; max-height:90vh; border-radius:10px; }
+    .nav-button { position: fixed; top:50%; transform:translateY(-50%);
+      font-size:3rem; color:gold; background:none; border:none; cursor:pointer; z-index:1000;
+    }
+    .prev { left:10px; }
+    .next { right:10px; }
+    .close-btn {
+      position: fixed; top:20px; right:20px;
+      font-size:1.2rem; background: gold; color:black; border:none;
+      padding:10px 20px; border-radius:5px; cursor:pointer; z-index:1000;
+    }
+  </style>
 </head>
 <body>
 
-<!-- your full HTML layout stays intact -->
+<h1>Catfish Empire™ Sunglasses • $14.99 + Tax</h1>
+<div class="product-list" id="product-list"></div>
+<button class="checkout-btn" onclick="checkoutCart()">Checkout</button>
+
+<!-- Fullscreen Viewer -->
+<div class="viewer" id="viewer">
+  <button class="nav-button prev" onclick="changeImage(-1)">❮</button>
+  <img id="mainImage" src="" alt="Product Preview" />
+  <button class="nav-button next" onclick="changeImage(1)">❯</button>
+  <button class="close-btn" onclick="hideViewer()">Exit Fullscreen</button>
+</div>
 
 <script>
 const BACKEND_URL = "https://catfish-stripe-backend.onrender.com";
@@ -23,24 +59,43 @@ const products = [
   { color: "Brown", image: "sunglasses-brown.jpg" }
 ];
 
-let inventory = {}, cart = JSON.parse(localStorage.getItem("cart")) || [];
-function updateLocalCart(){ localStorage.setItem("cart", JSON.stringify(cart)); }
-function updateCartCount(){ document.getElementById("cart-count").textContent = cart.reduce((s,i)=>s+i.qty,0); }
-function addToCart(color, qty){
-  if (!qty || qty<1) return;
-  if (inventory[color]===undefined || qty>inventory[color]) return alert(`Only ${inventory[color]||0} in stock`);
-  const exist = cart.find(i=>i.color===color);
-  if (exist){
-    if (exist.qty+qty>inventory[color]) return alert("Exceeds stock");
-    exist.qty+=qty;
-  } else cart.push({color,qty});
-  updateLocalCart(); updateCartCount(); alert(`${qty}× ${color} added to cart`);
+let inventory = {}, cart = JSON.parse(localStorage.getItem("cart") || "[]");
+let currentIndex = 0;
+
+function updateLocalCart() {
+  localStorage.setItem("cart", JSON.stringify(cart));
 }
-function handleAdd(color){ const qty = parseInt(document.getElementById(`qty-${color}`).value); if (!qty||qty<1) return alert("Enter valid quantity"); addToCart(color,qty); }
-function createProductCard(p){
-  const div=document.createElement("div"); div.className="product";
-  div.innerHTML=`
-    <img src="${p.image}" alt="${p.color}" onclick="openViewer(${products.findIndex(o=>o.color===p.color)})"/>
+
+function updateCartCount() {
+  // You can add a cart badge update here if needed
+}
+
+function addToCart(color, qty) {
+  if (!qty || qty < 1) return;
+  if (inventory[color] === undefined || qty > inventory[color]) return alert(`Only ${inventory[color] || 0} in stock`);
+  const exist = cart.find(i => i.color === color);
+  if (exist) {
+    if (exist.qty + qty > inventory[color]) return alert("Exceeds stock");
+    exist.qty += qty;
+  } else {
+    cart.push({ color, qty });
+  }
+  updateLocalCart();
+  updateCartCount();
+  alert(`${qty}× ${color} added to cart`);
+}
+
+function handleAdd(color) {
+  const qty = parseInt(document.getElementById(`qty-${color}`).value);
+  if (!qty || qty < 1) return alert("Enter valid quantity");
+  addToCart(color, qty);
+}
+
+function createProductCard(p) {
+  const div = document.createElement("div");
+  div.className = "product";
+  div.innerHTML = `
+    <img src="${p.image}" alt="${p.color}" onclick="openViewer(${products.findIndex(i => i.color === p.color)})" />
     <h3>${p.color}</h3>
     <p>In Stock: <span id="stock-${p.color}">–</span></p>
     <input type="number" min="1" value="1" id="qty-${p.color}" />
@@ -48,55 +103,73 @@ function createProductCard(p){
   `;
   return div;
 }
-function loadInventory(){
-  fetch(`${BACKEND_URL}/public-inventory`).then(r=>r.json()).then(data=>{
-    inventory = data;
-    const list = document.getElementById("product-list");
-    list.innerHTML = "";
-    products.forEach(p => {
-      list.appendChild(createProductCard(p));
-      document.getElementById(`stock-${p.color}`).textContent = inventory[p.color] ?? 0;
+
+function loadInventory() {
+  fetch(`${BACKEND_URL}/public-inventory`)
+    .then(r => r.json())
+    .then(data => {
+      inventory = data;
+      const container = document.getElementById("product-list");
+      container.innerHTML = "";
+      products.forEach(p => {
+        container.appendChild(createProductCard(p));
+        document.getElementById(`stock-${p.color}`).textContent = inventory[p.color] ?? 0;
+      });
+    })
+    .catch(err => {
+      console.error("Failed to fetch inventory", err);
+      document.getElementById("product-list").textContent = "Error loading inventory.";
     });
-  }).catch(console.error);
-}
-function checkoutCart(){
-  if (!cart.length) return alert("Cart is empty.");
-  fetch(`${BACKEND_URL}/create-checkout-session`,{
-    method:"POST", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({items:cart})
-  }).then(r=>r.json()).then(data=>{
-    if (data.url){
-      localStorage.removeItem("cart");
-      window.location.href = data.url;
-    } else alert("Checkout session failed");
-  }).catch(err=>alert("Checkout failed"));
 }
 
-// Fullscreen Gallery Viewer Setup
-let currentIndex = 0;
+function checkoutCart() {
+  if (!cart.length) return alert("Cart is empty.");
+  fetch(`${BACKEND_URL}/create-checkout-session`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ items: cart })
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.url) {
+        localStorage.removeItem("cart");
+        window.location.href = data.url;
+      } else {
+        alert("Checkout failed");
+      }
+    })
+    .catch(err => alert("Checkout error"));
+}
+
+// Viewer logic
 const viewer = document.getElementById("viewer");
 const mainImage = document.getElementById("mainImage");
-const thumbs = document.getElementById("thumbs");
-function openViewer(index){ viewer.style.display = "flex"; showImage(index); }
-function showImage(idx){
-  currentIndex = (idx + products.length) % products.length;
-  mainImage.src = products[currentIndex].image;
-  mainImage.alt = products[currentIndex].color;
-  Array.from(thumbs.children).forEach((img,i)=>img.classList.toggle("active", i===currentIndex));
-}
-function changeImage(step){ showImage(currentIndex + step); }
-function hideViewer(){ viewer.style.display = "none"; }
-products.forEach((p,i)=>{
-  const t = document.createElement("img");
-  t.src = p.image; t.alt = p.color;
-  t.onclick = () => showImage(i);
-  thumbs.appendChild(t);
-});
 
-// Initialize
+function openViewer(index) {
+  currentIndex = index;
+  viewer.style.display = "flex";
+  showImage(currentIndex);
+}
+
+function showImage(index) {
+  const p = products[index];
+  if (!p) return;
+  mainImage.src = p.image;
+  mainImage.alt = p.color;
+}
+
+function changeImage(step) {
+  currentIndex = (currentIndex + step + products.length) % products.length;
+  showImage(currentIndex);
+}
+
+function hideViewer() {
+  viewer.style.display = "none";
+}
+
+// Init
 loadInventory();
 updateCartCount();
-showImage(currentIndex);
 </script>
 </body>
 </html>
