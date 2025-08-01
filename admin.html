@@ -52,7 +52,6 @@
   <h1>Admin Login</h1>
 
   <div id="login-section">
-    <input type="text" id="username" placeholder="Username"/><br/>
     <input type="password" id="password" placeholder="Password"/><br/>
     <button onclick="login()">Login</button>
   </div>
@@ -116,7 +115,6 @@
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          username: document.getElementById("username").value,
           password: document.getElementById("password").value
         })
       })
@@ -133,14 +131,19 @@
     }
 
     function fetchInventory() {
-      fetch(`${backendURL}/public-inventory`)
+      fetch(`${backendURL}/inventory`, {
+        method: "GET",
+        credentials: "include"
+      })
       .then(res => res.json())
       .then(data => {
         let total = 0;
         for (const [color, qty] of Object.entries(data)) {
-          const cell = document.getElementById(`stock-${color.trim()}`);
-          if (cell) cell.textContent = qty;
-          total += parseInt(qty);
+          const cell = document.getElementById(`stock-${color}`);
+          if (cell) {
+            cell.textContent = qty;
+            total += parseInt(qty);
+          }
         }
         document.getElementById("total-stock").textContent = total;
       });
