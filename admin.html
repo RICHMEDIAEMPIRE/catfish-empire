@@ -53,7 +53,7 @@
 
   <div id="login-section">
     <input type="password" id="password" placeholder="Enter admin password"/><br/>
-    <button onclick="login()">Login</button>
+    <button id="login-btn">Login</button>
   </div>
 
   <div id="admin-panel" class="hidden">
@@ -74,7 +74,7 @@
       <input type="number" id="qty" min="0"/>
     </label><br/>
 
-    <button onclick="updateInventory()">Update Inventory</button>
+    <button id="update-btn">Update Inventory</button>
     <p id="message"></p>
 
     <h2>Current Inventory</h2>
@@ -103,7 +103,7 @@
       </tbody>
     </table>
 
-    <button onclick="logout()" style="margin-top: 20px;">Logout</button>
+    <button id="logout-btn" style="margin-top: 20px;">Logout</button>
   </div>
 
   <script>
@@ -171,3 +171,26 @@
       .then(res => res.json())
       .then(data => {
         document.getElementById("message").textContent = data.success
+          ? "Inventory updated successfully"
+          : "Failed to update inventory";
+        fetchInventory();
+      });
+    }
+
+    function logout() {
+      fetch(`${backendURL}/logout`, {
+        method: "POST",
+        credentials: "include"
+      }).then(() => {
+        document.getElementById("admin-panel").classList.add("hidden");
+        document.getElementById("login-section").classList.remove("hidden");
+      });
+    }
+
+    // Hook up buttons after DOM loads
+    document.getElementById("login-btn").onclick = login;
+    document.getElementById("update-btn").onclick = updateInventory;
+    document.getElementById("logout-btn").onclick = logout;
+  </script>
+</body>
+</html>
