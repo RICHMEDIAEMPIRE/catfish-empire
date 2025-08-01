@@ -1,14 +1,65 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Admin Panel</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Catfish Empire Admin Panel</title>
   <style>
-    .hidden { display: none; }
+    body {
+      background-color: #111;
+      color: #f2f2f2;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    input, select, button {
+      padding: 10px;
+      margin: 5px 0;
+      font-size: 1rem;
+    }
+
+    table {
+      border-collapse: collapse;
+      margin-top: 20px;
+      width: 100%;
+      background-color: #222;
+    }
+
+    th, td {
+      border: 1px solid #444;
+      padding: 10px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #333;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    button {
+      background-color: #444;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #666;
+    }
+
+    #message {
+      margin-top: 10px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
   <div id="login-section">
-    <input type="password" id="password" placeholder="Enter admin password"/><br/>
+    <h2>Admin Login</h2>
+    <input type="password" id="password" placeholder="Enter admin password" /><br />
     <button id="login-btn">Login</button>
   </div>
 
@@ -24,11 +75,11 @@
         <option value="Black">Black</option>
         <option value="Brown">Brown</option>
       </select>
-    </label><br/>
+    </label><br />
     <label>
       Quantity:
-      <input type="number" id="qty" min="0"/>
-    </label><br/>
+      <input type="number" id="qty" min="0" />
+    </label><br />
     <button id="update-btn">Update Inventory</button>
     <p id="message"></p>
 
@@ -44,75 +95,89 @@
   </div>
 
   <script>
-    const backendURL = "https://catfish-stripe-backend.onrender.com";
+    const backendURL = location.origin.includes("localhost")
+      ? "http://localhost:10000"
+      : "https://catfishempire.com";
 
-    function fetchInventory() {
-      fetch(`${backendURL}/inventory`, {
-        credentials: "include"
-      })
-      .then(res => res.json())
-      .then(data => {
-        const tbody = document.getElementById("inventory-table");
-        tbody.innerHTML = "";
-        Object.entries(data).forEach(([color, qty]) => {
-          const row = document.createElement("tr");
-          row.innerHTML = `<td>${color}</td><td>${qty}</td>`;
-          tbody.appendChild(row);
-        });
-      });
-    }
-
-    function login() {
+    async function login() {
       const password = document.getElementById("password").value;
-      fetch(`${backendURL}/login`, {
+      const res = await fetch(`${backendURL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ password })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          document.getElementById("login-section").classList.add("hidden");
-          document.getElementById("admin-panel").classList.remove("hidden");
-          fetchInventory();
-        } else {
-          alert("Invalid password");
-        }
+        body: JSON.stringify({ password }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById("login-section").classList.add("hidden");
+        document.getElementById("admin-panel").classList.remove("hidden");
+        fetchInventory();
+      } else {
+        document.getElementById("message").textContent = "Invalid password";
+      }
+    }
+
+    async function fetchInventory() {
+      const res = await fetch(`${backendURL}/inventory`, {
+        credentials: "include",
+      });
+      const data = await res.json();
+
+      const message = document.getElementById("message");
+      const tbody = document.getElementById("inventory-table");
+      tbody.innerHTML = "";
+
+      if (data.error) {
+        message.textContent = data.error;
+        return;
+      }
+
+      message.textContent = "";
+      Object.entries(data).forEach(([color, qty]) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${color}</td><td>${qty}</td>`;
+        tbody.appendChild(row);
       });
     }
 
-    function updateInventory() {
+    async function updateInventory() {
       const color = document.getElementById("color").value;
       const qty = document.getElementById("qty").value;
-      fetch(`${backendURL}/inventory`, {
+      const res = await fetch(`${backendURL}/inventory`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ color, qty })
-      })
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById("message").textContent = data.success
-          ? "Inventory updated successfully"
-          : "Failed to update inventory";
-        fetchInventory();
+        body: JSON.stringify({ color, qty }),
       });
+
+      const data = await res.json();
+      const msg = document.getElementById("message");
+      msg.textContent = data.success
+        ? "Inventory updated successfully"
+        : "Failed to update inventory";
+      fetchInventory();
     }
 
-    function logout() {
-      fetch(`${backendURL}/logout`, {
+    async function logout() {
+      await fetch(`${backendURL}/logout`, {
         method: "POST",
-        credentials: "include"
-      }).then(() => {
-        document.getElementById("admin-panel").classList.add("hidden");
-        document.getElementById("login-section").classList.remove("hidden");
+        credentials: "include",
       });
+      document.getElementById("admin-panel").classList.add("hidden");
+      document.getElementById("login-section").classList.remove("hidden");
     }
 
+    // Hook up buttons after DOM loads
     document.getElementById("login-btn").onclick = login;
     document.getElementById("update-btn").onclick = updateInventory;
     document.getElementById("logout-btn").onclick = logout;
+
+    // Auto try fetching inventory in case session already exists
+    fetchInventory().then(() => {
+      document.getElementById("login-section").classList.add("hidden");
+      document.getElementById("admin-panel").classList.remove("hidden");
+    }).catch(() => {});
   </script>
 </body>
 </html>
