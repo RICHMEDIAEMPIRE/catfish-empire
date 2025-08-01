@@ -6,47 +6,81 @@
   <title>Catfish Empire™ Showcase</title>
   <style>
     body { background: black; color: white; font-family: Arial, sans-serif; margin: 0; padding: 0; }
-    h1 { text-align: center; color: gold; margin: 1rem 0; }
 
     .toolbar {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: gold;
+      color: black;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: gold;
-      padding: 10px 15px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      padding: 0.75rem 1rem;
+      z-index: 1000;
+      box-sizing: border-box;
       flex-wrap: wrap;
+    }
+
+    .toolbar .title {
+      flex: 1 1 100%;
+      text-align: center;
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: black;
+      white-space: nowrap;
+    }
+
+    .toolbar .button-group {
+      flex: 1 1 100%;
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.5rem;
     }
 
     .toolbar a {
       background: black;
       color: gold;
-      padding: 10px 15px;
+      padding: 0.5rem 1rem;
       border-radius: 5px;
-      font-weight: bold;
       text-decoration: none;
-      margin: 5px;
-      flex-shrink: 0;
-    }
-
-    .toolbar h2 {
-      flex: 1;
-      text-align: center;
-      font-size: 1.1rem;
-      color: black;
-      margin: 5px 0;
       font-weight: bold;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
-    .product-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem; margin: 1rem; }
-    .product { background: #222; padding: 1rem; border-radius: 10px; width: 200px; text-align: center; }
-    .product img { width: 100%; border-radius: 10px; cursor: pointer; }
-    .product input { width: 100%; padding: 0.5rem; margin-top: 0.5rem; }
+    h1 {
+      text-align: center;
+      color: gold;
+      margin: 6rem 0 1rem;
+    }
+
+    .product-list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 2rem;
+      margin: 1rem;
+    }
+
+    .product {
+      background: #222;
+      padding: 1rem;
+      border-radius: 10px;
+      width: 200px;
+      text-align: center;
+    }
+
+    .product img {
+      width: 100%;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .product input {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
     .product button {
       background: gold; color: black; border: none; padding: 0.75rem;
       margin-top: 0.5rem; width: 100%; font-weight: bold; border-radius: 5px; cursor: pointer;
@@ -56,13 +90,17 @@
       display: none; position: fixed; top:0; left:0; width:100vw; height:100vh;
       background:rgba(0,0,0,0.95); align-items:center; justify-content:center; z-index:999;
     }
+
     .viewer img { max-width:90vw; max-height:90vh; border-radius:10px; }
+
     .nav-button {
       position: fixed; top:50%; transform:translateY(-50%);
       font-size:3rem; color:gold; background:none; border:none; cursor:pointer; z-index:1000;
     }
+
     .prev { left:10px; }
     .next { right:10px; }
+
     .close-btn {
       position: fixed; top:20px; right:20px;
       font-size:1.2rem; background: gold; color:black; border:none;
@@ -77,11 +115,13 @@
       border-radius: 10px;
       text-align: center;
     }
+
     .etsy-footer img {
       width: 100%;
       border-radius: 8px;
       margin-bottom: 1rem;
     }
+
     .etsy-footer .button {
       background: gold;
       color: black;
@@ -94,51 +134,53 @@
       display: inline-block;
       transition: background 0.3s;
     }
+
     .etsy-footer .button:hover {
       background: #ffd700;
     }
 
-    @media (max-width: 600px) {
+    @media (min-width: 600px) {
       .toolbar {
-        flex-direction: column;
-        align-items: stretch;
+        flex-wrap: nowrap;
       }
-
-      .toolbar h2 {
-        font-size: 1rem;
-        margin: 10px 0;
+      .toolbar .title {
+        flex: 1;
+        font-size: 1.5rem;
       }
-
-      .toolbar a {
-        width: 100%;
-        text-align: center;
-        margin: 5px 0;
+      .toolbar .button-group {
+        flex: none;
+        margin-top: 0;
+        gap: 1rem;
       }
     }
   </style>
 </head>
 <body>
 
-<div class="toolbar">
-  <a href="index.html">← Back</a>
-  <h2>CATFISH EMPIRE™ SHOP</h2>
-  <a href="cart.html">View Cart</a>
-</div>
+  <div class="toolbar">
+    <div class="title">CATFISH EMPIRE™ SHOP</div>
+    <div class="button-group">
+      <a href="index.html">← Back</a>
+      <a href="cart.html" class="cart-button">View Cart</a>
+    </div>
+  </div>
 
-<h1>Catfish Empire™ Sunglasses • $14.99 + Tax</h1>
-<div class="product-list" id="product-list"></div>
+  <h1>Catfish Empire™ Sunglasses • $14.99 + Tax</h1>
+  <div class="product-list" id="product-list"></div>
 
-<div class="viewer" id="viewer">
-  <button class="nav-button prev" onclick="changeImage(-1)">❮</button>
-  <img id="mainImage" src="" alt="Product Preview" />
-  <button class="nav-button next" onclick="changeImage(1)">❯</button>
-  <button class="close-btn" onclick="hideViewer()">Exit Fullscreen</button>
-</div>
+  <!-- Fullscreen Viewer -->
+  <div class="viewer" id="viewer">
+    <button class="nav-button prev" onclick="changeImage(-1)">❮</button>
+    <img id="mainImage" src="" alt="Product Preview" />
+    <button class="nav-button next" onclick="changeImage(1)">❯</button>
+    <button class="close-btn" onclick="hideViewer()">Exit Fullscreen</button>
+  </div>
 
-<div class="etsy-footer">
-  <img src="shopbanner.jpg" alt="Etsy Shop" />
-  <a href="https://www.etsy.com/shop/RICHMEDIAEMPIRE?ref=profile_header&section_id=54071039" target="_blank" class="button">Visit Our Etsy Shop</a>
-</div>
+  <!-- Etsy Shop Footer Block -->
+  <div class="etsy-footer">
+    <img src="shopbanner.jpg" alt="Etsy Shop" />
+    <a href="https://www.etsy.com/shop/RICHMEDIAEMPIRE?ref=profile_header&section_id=54071039" target="_blank" class="button">Visit Our Etsy Shop</a>
+  </div>
 
 <script>
 const BACKEND_URL = "https://catfish-stripe-backend.onrender.com";
@@ -160,7 +202,7 @@ function updateLocalCart() {
 
 function updateCartCount() {
   const total = cart.reduce((sum, item) => sum + item.qty, 0);
-  const cartLink = document.querySelector(".toolbar a[href='cart.html']");
+  const cartLink = document.querySelector(".cart-button");
   if (cartLink) {
     cartLink.textContent = `View Cart (${total})`;
   }
@@ -218,6 +260,7 @@ function loadInventory() {
     });
 }
 
+// Viewer logic
 const viewer = document.getElementById("viewer");
 const mainImage = document.getElementById("mainImage");
 
@@ -243,6 +286,7 @@ function hideViewer() {
   viewer.style.display = "none";
 }
 
+// Init
 loadInventory();
 updateCartCount();
 </script>
