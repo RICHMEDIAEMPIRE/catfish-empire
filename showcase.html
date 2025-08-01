@@ -4,8 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Catfish Empire™ Shop & Gallery</title>
-    <!-- Supabase client library for real-time inventory sync -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -169,10 +167,8 @@
       <div class="thumbnails" id="thumbs"></div>
     </div>
     <script>
-      // Configure Supabase client. Replace placeholders with your project URL and anon/service key.
-      const SUPABASE_URL = "YOUR_SUPABASE_URL";
-      const SUPABASE_KEY = "YOUR_SUPABASE_KEY";
-      const supa = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      // Backend URL for inventory
+      const backendURL = "https://catfish-stripe-backend.onrender.com";
       // Product definitions (colours and image filenames)
       const products = [
         { color: "Blue", image: "sunglasses-blue.jpg" },
@@ -219,41 +215,39 @@
         const div = document.createElement("div");
         div.className = "product";
         div.innerHTML = `
-          <img src="${p.image}" alt="${p.color}" onclick="openViewer(${products.findIndex(
-            (o) => o.color === p.color
-          )})"/>
-          <h3>${p.color}</h3>
-          <p>In Stock: <span id="stock-${p.color}">–</span></p>
-          <input type="number" min="1" value="1" id="qty-${p.color}" />
-          <button onclick="handleAdd('${p.color}')">Add to Cart</button>
-        `;
+              <img src="${p.image}" alt="${p.color}" onclick="openViewer(${products.findIndex(
+                (o) => o.color === p.color
+              )})"/>
+              <h3>${p.color}</h3>
+              <p>In Stock: <span id="stock-${p.color}">–</span></p>
+              <input type="number" min="1" value="1" id="qty-${p.color}" />
+              <button onclick="handleAdd('${p.color}')">Add to Cart</button>
+            `;
         return div;
       }
       async function loadInventory() {
         try {
-          const { data, error } = await supa
-            .from("inventory")
-            .select("color, quantity");
-          if (error) throw error;
+          const res = await fetch(`${backendURL}/public-inventory`);
+          const data = await res.json();
           inventory = {};
           const list = document.getElementById("product-list");
           list.innerHTML = "";
           products.forEach((p) => {
             list.appendChild(createProductCard(p));
           });
-          data.forEach((row) => {
-            inventory[row.color] = row.quantity;
-            const el = document.getElementById(`stock-${row.color}`);
-            if (el) el.textContent = row.quantity;
-          });
+          for (const color in data) {
+            inventory[color] = data[color];
+            const el = document.getElementById(`stock-${color}`);
+            if (el) el.textContent = data[color];
+          }
         } catch (err) {
-          console.error("Failed to load inventory from Supabase", err);
+          console.error("Failed to load inventory from backend", err);
         }
       }
       function checkoutCart() {
         if (!cart.length) return alert("Cart is empty.");
         // Checkout remains handled by the backend (Stripe). Use the existing endpoint.
-        fetch(`https://catfish-stripe-backend.onrender.com/create-checkout-session`, {
+        fetch(`${backendURL}/create-checkout-session`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ items: cart }),
