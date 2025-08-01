@@ -46,10 +46,11 @@
 
     .cta-wrapper {
       position: relative;
-      margin: 3rem auto 2rem;
+      margin: 5rem auto 3rem;
       display: flex;
       justify-content: center;
       align-items: center;
+      flex-direction: column;
     }
 
     .cta a {
@@ -61,6 +62,7 @@
       border-radius: 10px;
       font-size: 1.2rem;
       transition: background 0.3s;
+      z-index: 2;
     }
 
     .cta a:hover {
@@ -68,9 +70,6 @@
     }
 
     .click-arrow {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
       color: gold;
       font-weight: bold;
       font-size: 1rem;
@@ -78,24 +77,24 @@
     }
 
     .click-arrow.top {
-      top: -30px;
-      animation: bounce-down 1s infinite alternate;
+      margin-bottom: 2.5rem;
+      animation: bounce-down 0.75s infinite alternate;
     }
 
     .click-arrow.bottom {
-      bottom: -30px;
-      transform: translateX(-50%) rotate(180deg);
-      animation: bounce-up 1s infinite alternate;
+      margin-top: 2.5rem;
+      transform: rotate(180deg);
+      animation: bounce-up 0.75s infinite alternate;
     }
 
     @keyframes bounce-down {
-      0% { transform: translateX(-50%) translateY(0); }
-      100% { transform: translateX(-50%) translateY(10px); }
+      0% { transform: translateY(0); }
+      100% { transform: translateY(10px); }
     }
 
     @keyframes bounce-up {
-      0% { transform: translateX(-50%) translateY(0); }
-      100% { transform: translateX(-50%) translateY(-10px); }
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-10px); }
     }
 
     .social-media {
