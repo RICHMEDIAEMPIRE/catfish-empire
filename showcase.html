@@ -68,6 +68,14 @@ function updateLocalCart() {
   localStorage.setItem("cart", JSON.stringify(cart));
 }
 
+function updateCartCount() {
+  const total = cart.reduce((sum, item) => sum + item.qty, 0);
+  const cartLink = document.querySelector(".cart-link");
+  if (cartLink) {
+    cartLink.textContent = `View Cart (${total})`;
+  }
+}
+
 function addToCart(color, qty) {
   if (!qty || qty < 1) return;
   if (inventory[color] === undefined || qty > inventory[color]) return alert(`Only ${inventory[color] || 0} in stock`);
@@ -79,6 +87,7 @@ function addToCart(color, qty) {
     cart.push({ color, qty });
   }
   updateLocalCart();
+  updateCartCount();
   alert(`${qty}× ${color} added to cart`);
 }
 
@@ -147,6 +156,7 @@ function hideViewer() {
 
 // Init
 loadInventory();
+updateCartCount();
 </script>
 </body>
 </html>
