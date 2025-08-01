@@ -117,7 +117,7 @@
       }
 
       cart.forEach((item, index) => {
-        const itemTotal = (item.qty * 0.5).toFixed(2);
+        const itemTotal = (item.qty * 14.99).toFixed(2);
         subtotal += parseFloat(itemTotal);
 
         const li = document.createElement("li");
@@ -145,16 +145,20 @@
         return;
       }
 
-      const items = cart.map(item => ({
-        color: item.color,
-        qty: item.qty
+      const line_items = cart.map(item => ({
+        quantity: item.qty,
+        price_data: {
+          currency: "usd",
+          product_data: { name: `${item.color} Sunglasses` },
+          unit_amount: 1499 // $14.99 in cents
+        }
       }));
 
       fetch(`${BACKEND_URL}/create-checkout-session`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ items })
+        body: JSON.stringify({ line_items })
       })
       .then(res => res.json())
       .then(data => {
