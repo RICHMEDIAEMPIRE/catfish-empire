@@ -28,7 +28,7 @@
 
     header {
       text-align: center;
-      padding: 3rem 1rem 2rem;
+      padding: 3rem 1rem 1rem;
       background: rgba(0, 0, 0, 0.7);
     }
 
@@ -45,7 +45,7 @@
     }
 
     .cta {
-      margin: 2rem auto;
+      margin: 2rem auto 1rem;
       display: flex;
       justify-content: center;
     }
@@ -69,7 +69,7 @@
       display: flex;
       justify-content: center;
       gap: 1rem;
-      margin: 2rem auto;
+      margin: 2rem auto 0;
     }
 
     .social-media a {
@@ -94,31 +94,29 @@
     }
 
     .youtube-subscribe {
-      margin: 1rem auto 0.5rem;
       display: flex;
       justify-content: center;
+      margin: 1rem 0 0;
     }
 
-    .youtube-subscribe a {
-      display: block;
-      border-radius: 10px;
+    .youtube-subscribe a img {
+      width: 72px;
+      height: 72px;
     }
 
-    .youtube-subscribe img {
-      width: 180px;
-      height: 180px;
-      display: block;
-    }
-
-    .video-heading {
-      margin: 0.5rem auto;
-      font-size: 1.5rem;
-      color: gold;
+    .video-section {
+      text-align: center;
+      padding: 1rem 1rem 2rem;
     }
 
     .video-wrapper {
       max-width: 800px;
-      margin: 1rem auto;
+      margin: auto;
+    }
+
+    .video-section h2 {
+      color: gold;
+      margin: 2rem 0 1rem;
     }
 
     .gallery {
@@ -183,7 +181,7 @@
     <p class="subtext">Hardcore catfishing across the Carolinas. It is our goal to provide content and gear to help our fellow anglers succeed!</p>
 
     <div class="cta">
-      <a href="chooseshop.html">🛍️ Enter the Shop</a>
+      <a href="chooseshop.html">🎣 Catfish Empire™ Gear</a>
     </div>
 
     <div class="social-media">
@@ -201,14 +199,15 @@
       </a>
     </div>
 
-    <div class="video-heading">Watch our latest content</div>
-
-    <div class="video-wrapper">
-      <iframe width="100%" height="450"
-        src="https://www.youtube.com/embed/J2fEfs98HK8?autoplay=1&mute=1"
-        title="Catfish Empire Video" frameborder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowfullscreen></iframe>
+    <div class="video-section">
+      <h2>Watch our latest content</h2>
+      <div class="video-wrapper">
+        <iframe width="100%" height="450"
+          src="https://www.youtube.com/embed/J2fEfs98HK8?autoplay=1&mute=1"
+          title="Catfish Empire Video" frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen></iframe>
+      </div>
     </div>
   </header>
 
