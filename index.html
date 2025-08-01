@@ -44,9 +44,9 @@
       margin: 0 auto 2rem;
     }
 
-    .cta {
-      margin: 3rem auto;
+    .cta-wrapper {
       position: relative;
+      margin: 3rem auto 2rem;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -59,7 +59,7 @@
       text-decoration: none;
       padding: 1rem 2rem;
       border-radius: 10px;
-      font-size: 1.3rem;
+      font-size: 1.2rem;
       transition: background 0.3s;
     }
 
@@ -74,22 +74,28 @@
       color: gold;
       font-weight: bold;
       font-size: 1rem;
-      animation: bounce 1s infinite alternate;
       z-index: 1;
     }
 
     .click-arrow.top {
       top: -30px;
+      animation: bounce-down 1s infinite alternate;
     }
 
     .click-arrow.bottom {
       bottom: -30px;
       transform: translateX(-50%) rotate(180deg);
+      animation: bounce-up 1s infinite alternate;
     }
 
-    @keyframes bounce {
+    @keyframes bounce-down {
       0% { transform: translateX(-50%) translateY(0); }
       100% { transform: translateX(-50%) translateY(10px); }
+    }
+
+    @keyframes bounce-up {
+      0% { transform: translateX(-50%) translateY(0); }
+      100% { transform: translateX(-50%) translateY(-10px); }
     }
 
     .social-media {
@@ -121,19 +127,19 @@
     }
 
     .youtube-subscribe {
-      margin: 2rem auto;
       display: flex;
       justify-content: center;
+      margin: 1rem auto 0;
     }
 
-    .youtube-subscribe img {
+    .youtube-subscribe a img {
       width: 72px;
-      height: 72px;
+      height: auto;
     }
 
     .video-section {
       text-align: center;
-      padding: 2rem 1rem;
+      padding: 2rem 1rem 1rem;
     }
 
     .video-wrapper {
@@ -143,7 +149,7 @@
 
     .video-section h2 {
       color: gold;
-      margin: 1rem 0;
+      margin-bottom: 1rem;
     }
 
     .gallery {
@@ -207,9 +213,11 @@
     <img src="TM.png" alt="Catfish Empire Logo" class="logo" onerror="this.style.display='none'" />
     <p class="subtext">Hardcore catfishing across the Carolinas. It is our goal to provide content and gear to help our fellow anglers succeed!</p>
 
-    <div class="cta">
+    <div class="cta-wrapper">
       <div class="click-arrow top">⬇️ CLICK HERE ⬇️</div>
-      <a href="chooseshop.html">Catfish Empire™ Gear</a>
+      <div class="cta">
+        <a href="chooseshop.html">Catfish Empire™ Gear</a>
+      </div>
       <div class="click-arrow bottom">⬆️ CLICK HERE ⬆️</div>
     </div>
 
@@ -224,7 +232,7 @@
 
     <div class="youtube-subscribe">
       <a href="https://youtube.com/@catfishempire" target="_blank">
-        <img src="yt.png" alt="YouTube">
+        <img src="yt.png" alt="YouTube" />
       </a>
     </div>
 
