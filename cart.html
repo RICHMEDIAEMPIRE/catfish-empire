@@ -144,20 +144,17 @@
         return;
       }
 
+      // Send simplified items to match backend expectation
       const items = cart.map(item => ({
-        quantity: item.qty,
-        price_data: {
-          currency: "usd",
-          product_data: { name: `${item.color} Sunglasses` },
-          unit_amount: 50 // = $0.50
-        }
+        color: item.color,
+        qty: item.qty
       }));
 
       fetch(`${BACKEND_URL}/create-checkout-session`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ line_items: items })
+        body: JSON.stringify({ items })
       })
       .then(res => res.json())
       .then(data => {
