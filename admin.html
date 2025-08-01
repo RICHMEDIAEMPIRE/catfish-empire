@@ -46,21 +46,13 @@
       margin-top: 10px;
       color: lightgreen;
     }
-    #debug {
-      margin-top: 20px;
-      background: #222;
-      padding: 10px;
-      font-size: 0.9rem;
-      white-space: pre-wrap;
-      border: 1px solid #444;
-    }
   </style>
 </head>
 <body>
   <h1>Admin Login</h1>
 
   <div id="login-section">
-    <input type="password" id="password" placeholder="Password"/><br/>
+    <input type="password" id="password" placeholder="Enter admin password"/><br/>
     <button onclick="login()">Login</button>
   </div>
 
@@ -114,28 +106,20 @@
     <button onclick="logout()" style="margin-top: 20px;">Logout</button>
   </div>
 
-  <div id="debug"></div>
-
   <script>
     const backendURL = "https://catfish-stripe-backend.onrender.com";
-    const debug = document.getElementById("debug");
-
-    function logDebug(msg) {
-      debug.textContent += `\n${msg}`;
-    }
 
     function login() {
-      const password = document.getElementById("password").value;
-      logDebug("🔐 Attempting login...");
       fetch(`${backendURL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ password })
+        body: JSON.stringify({
+          password: document.getElementById("password").value
+        })
       })
       .then(res => res.json())
       .then(data => {
-        logDebug("🟢 Login response: " + JSON.stringify(data));
         if (data.success) {
           document.getElementById("login-section").classList.add("hidden");
           document.getElementById("admin-panel").classList.remove("hidden");
@@ -143,30 +127,30 @@
         } else {
           alert("Login failed");
         }
-      })
-      .catch(err => logDebug("🔴 Login failed: " + err));
+      });
     }
 
     function fetchInventory() {
-      logDebug("📦 Fetching inventory...");
       fetch(`${backendURL}/inventory`, {
         method: "GET",
         credentials: "include"
       })
-      .then(res => res.json())
+      .then(res => {
+        if (res.status === 403) throw new Error("Not logged in");
+        return res.json();
+      })
       .then(data => {
-        logDebug("📦 Inventory response: " + JSON.stringify(data));
         let total = 0;
         for (const [color, qty] of Object.entries(data)) {
-          const cell = document.getElementById(`stock-${color}`);
-          if (cell) {
-            cell.textContent = qty;
-            total += parseInt(qty);
-          }
+          const el = document.getElementById(`stock-${color.trim()}`);
+          if (el) el.textContent = qty;
+          total += parseInt(qty);
         }
         document.getElementById("total-stock").textContent = total;
       })
-      .catch(err => logDebug("🔴 Inventory fetch failed: " + err));
+      .catch(err => {
+        alert("Failed to load inventory: " + err.message);
+      });
     }
 
     function updateInventory() {
@@ -178,7 +162,6 @@
         return;
       }
 
-      logDebug(`📤 Sending update: ${color} → ${qty}`);
       fetch(`${backendURL}/inventory`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -187,26 +170,4 @@
       })
       .then(res => res.json())
       .then(data => {
-        logDebug("✅ Update response: " + JSON.stringify(data));
         document.getElementById("message").textContent = data.success
-          ? "Inventory updated successfully"
-          : "Failed to update inventory";
-        fetchInventory();
-      })
-      .catch(err => logDebug("🔴 Update failed: " + err));
-    }
-
-    function logout() {
-      logDebug("🚪 Logging out...");
-      fetch(`${backendURL}/logout`, {
-        method: "POST",
-        credentials: "include"
-      }).then(() => {
-        document.getElementById("admin-panel").classList.add("hidden");
-        document.getElementById("login-section").classList.remove("hidden");
-        logDebug("🟡 Logged out");
-      });
-    }
-  </script>
-</body>
-</html>
