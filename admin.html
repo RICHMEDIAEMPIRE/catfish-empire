@@ -141,10 +141,14 @@
       .then(data => {
         let total = 0;
         for (const [color, qty] of Object.entries(data)) {
-          document.getElementById(`stock-${color}`).textContent = qty;
+          const cell = document.getElementById(`stock-${color}`);
+          if (cell) cell.textContent = qty;
           total += parseInt(qty);
         }
         document.getElementById("total-stock").textContent = total;
+      })
+      .catch((err) => {
+        console.error("Admin fetchInventory failed:", err);
       });
     }
 
