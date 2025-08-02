@@ -144,6 +144,8 @@
         return;
       }
 
+      const shippingState = localStorage.getItem("shippingState") || "Unknown";
+
       const items = cart.map(item => ({
         color: item.color,
         qty: item.qty
@@ -153,12 +155,12 @@
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ items })
+        body: JSON.stringify({ items, shippingState })
       })
       .then(res => res.json())
       .then(data => {
         if (data.url) {
-          localStorage.removeItem("cart");
+          // Do NOT clear cart here — wait for success.html
           window.location = data.url;
         } else {
           alert("Checkout session failed to create.");
