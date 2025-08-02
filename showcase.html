@@ -4,53 +4,287 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Catfish Empire™ Showcase</title>
   <style>
-    body { background: black; color: white; font-family: Arial, sans-serif; margin: 0; padding: 0; }
-    .toolbar { background: gold; color: black; font-weight: bold; padding: 0.75rem 1rem; display: flex; flex-direction: column; align-items: center; position: sticky; top: 0; z-index: 1000; }
-    .toolbar-title { font-size: 1.3rem; font-weight: bold; margin-bottom: 0.25rem; }
-    .toolbar-links { display: flex; justify-content: space-between; width: 100%; max-width: 1000px; }
-    .toolbar-links a { color: black; text-decoration: none; font-weight: bold; padding: 0.3rem 0.5rem; background: black; color: gold; border-radius: 5px; }
-    .toolbar-links a:hover { background: #222; }
-    @media (min-width: 768px) {
-      .toolbar { flex-direction: row; justify-content: space-between; padding: 1rem 5%; }
-      .toolbar-title { font-size: 1.8rem; margin: 0 auto; position: absolute; left: 50%; transform: translateX(-50%); }
+    body {
+      background: black;
+      color: white;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
     }
-    h1 { text-align: center; color: gold; margin: 1rem 0 0.5rem; }
-    .description { text-align: center; max-width: 600px; margin: 0 auto 1.5rem; color: #ccc; font-size: 1.05rem; }
-    .product-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem; margin: 1rem; }
-    .product { background: #222; padding: 1rem; border-radius: 10px; width: 200px; text-align: center; }
-    .product img { width: 100%; border-radius: 10px; cursor: pointer; }
-    .product input { width: 100%; padding: 0.5rem; margin-top: 0.5rem; }
-    .product button { background: gold; color: black; border: none; padding: 0.75rem; margin-top: 0.5rem; width: 100%; font-weight: bold; border-radius: 5px; cursor: pointer; }
-    .viewer { display: none; position: fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.95); align-items:center; justify-content:center; z-index:999; }
-    .viewer img { max-width:90vw; max-height:90vh; border-radius:10px; }
-    .nav-button { position: fixed; top:50%; transform:translateY(-50%); font-size:3rem; color:gold; background:none; border:none; cursor:pointer; z-index:1000; }
-    .prev { left:10px; }
-    .next { right:10px; }
-    .close-btn { position: fixed; top:20px; right:20px; font-size:1.2rem; background: gold; color:black; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; z-index:1000; }
-    .etsy-footer { margin: 3rem auto 2rem; max-width: 500px; background: #222; padding: 1rem; border-radius: 10px; text-align: center; }
-    .etsy-footer img { width: 100%; border-radius: 8px; margin-bottom: 1rem; }
-    .etsy-footer .button { background: gold; color: black; padding: 0.75rem 1.5rem; border: none; border-radius: 5px; text-decoration: none; font-weight: bold; font-size: 1.1rem; display: inline-block; transition: background 0.3s; }
-    .etsy-footer .button:hover { background: #ffd700; }
+    .toolbar {
+      background: gold;
+      color: black;
+      font-weight: bold;
+      padding: 0.75rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    .toolbar-title {
+      font-size: 1.3rem;
+      font-weight: bold;
+      margin-bottom: 0.25rem;
+    }
+    .toolbar-links {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 1000px;
+    }
+    .toolbar-links a {
+      color: black;
+      text-decoration: none;
+      font-weight: bold;
+      padding: 0.3rem 0.5rem;
+      background: black;
+      color: gold;
+      border-radius: 5px;
+    }
+    .toolbar-links a:hover {
+      background: #222;
+    }
+    h1 {
+      text-align: center;
+      color: gold;
+      margin: 1rem 0 0.5rem;
+    }
+    .description {
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto 1.5rem;
+      color: #ccc;
+      font-size: 1.05rem;
+    }
+    .product-list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 2rem;
+      margin: 1rem;
+    }
+    .product {
+      background: #222;
+      padding: 1rem;
+      border-radius: 10px;
+      width: 200px;
+      text-align: center;
+    }
+    .product img {
+      width: 100%;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .product input {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .product button {
+      background: gold;
+      color: black;
+      border: none;
+      padding: 0.75rem;
+      margin-top: 0.5rem;
+      width: 100%;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .viewer {
+      display: none;
+      position: fixed;
+      top:0;
+      left:0;
+      width:100vw;
+      height:100vh;
+      background:rgba(0,0,0,0.95);
+      align-items:center;
+      justify-content:center;
+      z-index:999;
+    }
+    .viewer img {
+      max-width:90vw;
+      max-height:90vh;
+      border-radius:10px;
+    }
+    .nav-button {
+      position: fixed;
+      top:50%;
+      transform:translateY(-50%);
+      font-size:3rem;
+      color:gold;
+      background:none;
+      border:none;
+      cursor:pointer;
+      z-index:1000;
+    }
+    .prev {
+      left:10px;
+    }
+    .next {
+      right:10px;
+    }
+    .close-btn {
+      position: fixed;
+      top:20px;
+      right:20px;
+      font-size:1.2rem;
+      background: gold;
+      color:black;
+      border:none;
+      padding:10px 20px;
+      border-radius:5px;
+      cursor:pointer;
+      z-index:1000;
+    }
   </style>
 </head>
-<body><div class="toolbar">
-  <div class="toolbar-title">CATFISH EMPIRE™ SHOP</div>
-  <div class="toolbar-links">
-    <a href="index.html">← Back</a>
-    <a href="cart.html" class="cart-link">View Cart</a>
-  </div>
-</div><h1>Catfish Empire™ Sunglasses • $14.99 + Tax</h1>
-<p class="description">Stay sharp on the water with Catfish Empire™ HD Polarized Sunglasses, crafted for serious anglers...</p><div class="product-list" id="product-list"></div><div class="viewer" id="viewer">
-  <button class="nav-button prev" onclick="changeImage(-1)">❮</button>
-  <img id="mainImage" src="" alt="Product Preview" />
-  <button class="nav-button next" onclick="changeImage(1)">❯</button>
-  <button class="close-btn" onclick="hideViewer()">Exit Fullscreen</button>
-</div><div class="etsy-footer">
-  <img src="shopbanner.jpg" alt="Etsy Shop" />
-  <a href="https://www.etsy.com/shop/RICHMEDIAEMPIRE?ref=profile_header&sort_order=price_asc&section_id=54071039" target="_blank" class="button">Visit Our Etsy Shop</a>
-</div><script>
-// existing logic preserved from your original showcase.html
-// uses prompt for shipping state entry, not dropdown
-// lightweight for speed, only minimal fetch/inventory code
-</script></body>
+<body>
+  <div class="toolbar">
+    <div class="toolbar-title">CATFISH EMPIRE™ SHOP</div>
+    <div class="toolbar-links">
+      <a href="index.html">← Back</a>
+      <a href="cart.html" class="cart-link">View Cart</a>
+    </div>
+  </div>  <h1>Catfish Empire™ Sunglasses • $14.99 + Tax</h1>
+  <p class="description">Polarized, UV400, ultra-lightweight & water-ready.</p>  <div class="product-list" id="product-list"></div>  <div class="viewer" id="viewer">
+    <button class="nav-button prev" onclick="changeImage(-1)">❮</button>
+    <img id="mainImage" src="" alt="Product Preview" />
+    <button class="nav-button next" onclick="changeImage(1)">❯</button>
+    <button class="close-btn" onclick="hideViewer()">Exit Fullscreen</button>
+  </div>  <script>
+    const BACKEND_URL = "https://catfish-stripe-backend.onrender.com";
+    const products = [
+      { color: "Blue", image: "sunglasses-blue.webp" },
+      { color: "Green", image: "sunglasses-green.webp" },
+      { color: "Red", image: "sunglasses-red.webp" },
+      { color: "Silver", image: "sunglasses-silver.webp" },
+      { color: "Black", image: "sunglasses-black.webp" },
+      { color: "Brown", image: "sunglasses-brown.webp" }
+    ];
+    let inventory = {}, cart = JSON.parse(localStorage.getItem("cart") || "[]");
+    let currentIndex = 0;
+    const blockedStates = ['CO', 'PA', 'CA'];
+
+    function updateLocalCart() {
+      localStorage.setItem("cart", JSON.stringify(cart));
+    }
+    function updateCartCount() {
+      const total = cart.reduce((sum, item) => sum + item.qty, 0);
+      const cartLink = document.querySelector(".cart-link");
+      if (cartLink) cartLink.textContent = `View Cart (${total})`;
+    }
+    function getShippingState() {
+      return localStorage.getItem("shippingState");
+    }
+    function askForShippingState() {
+      const states = ["AL","AR","AZ","DE","FL","GA","IA","ID","IL","IN","KS","KY","LA","MA","MD","ME","MI","MN","MO","MS","MT","NC","ND","NE","NH","NJ","NM","NV","NY","OH","OK","OR","RI","SC","SD","TN","TX","UT","VA","VT","WA","WI","WV","WY"];
+      let dropdown = document.createElement("select");
+      dropdown.innerHTML = `<option value="">Select Your State</option>` +
+        states.map(s => `<option value="${s}">${s}</option>`).join("");
+      let popup = document.createElement("div");
+      popup.style = "position:fixed;top:30%;left:50%;transform:translateX(-50%);background:#222;padding:1rem;border:2px solid gold;z-index:9999;text-align:center";
+      popup.innerHTML = `<h3>Please select your shipping state</h3>`;
+      popup.appendChild(dropdown);
+      let confirmBtn = document.createElement("button");
+      confirmBtn.textContent = "Confirm";
+      confirmBtn.style = "margin-top:10px;padding:5px 10px;font-weight:bold";
+      popup.appendChild(confirmBtn);
+      document.body.appendChild(popup);
+      return new Promise(resolve => {
+        confirmBtn.onclick = () => {
+          const val = dropdown.value;
+          if (!val) return;
+          if (blockedStates.includes(val)) {
+            alert("Sorry, we do not ship to CO, PA, or CA.");
+            document.body.removeChild(popup);
+            resolve(null);
+          } else {
+            localStorage.setItem("shippingState", val);
+            document.body.removeChild(popup);
+            resolve(val);
+          }
+        };
+      });
+    }
+    async function ensureShippingState() {
+      const saved = getShippingState();
+      if (saved && !blockedStates.includes(saved)) return saved;
+      return await askForShippingState();
+    }
+    async function handleAdd(color) {
+      const qty = parseInt(document.getElementById(`qty-${color}`).value);
+      if (!qty || qty < 1) return alert("Enter valid quantity");
+      const state = await ensureShippingState();
+      if (!state) return;
+      if (inventory[color] === undefined || qty > inventory[color])
+        return alert(`Only ${inventory[color] || 0} in stock`);
+      const exist = cart.find(i => i.color === color);
+      if (exist) {
+        if (exist.qty + qty > inventory[color]) return alert("Exceeds stock");
+        exist.qty += qty;
+      } else {
+        cart.push({ color, qty });
+      }
+      updateLocalCart();
+      updateCartCount();
+      alert(`${qty}× ${color} added to cart`);
+    }
+    function createProductCard(p) {
+      const div = document.createElement("div");
+      div.className = "product";
+      div.innerHTML = `
+        <img loading="lazy" src="${p.image}" alt="${p.color}" onclick="openViewer(${products.findIndex(i => i.color === p.color)})" />
+        <h3>${p.color}</h3>
+        <p>In Stock: <span id="stock-${p.color}">–</span></p>
+        <input type="number" min="1" value="1" id="qty-${p.color}" />
+        <button onclick="handleAdd('${p.color}')">Add to Cart</button>
+      `;
+      return div;
+    }
+    function loadInventory() {
+      fetch(`${BACKEND_URL}/public-inventory`)
+        .then(r => r.json())
+        .then(data => {
+          inventory = data;
+          const container = document.getElementById("product-list");
+          container.innerHTML = "";
+          products.forEach(p => {
+            container.appendChild(createProductCard(p));
+            document.getElementById(`stock-${p.color}`).textContent = inventory[p.color] ?? 0;
+          });
+        })
+        .catch(err => {
+          console.error("Failed to fetch inventory", err);
+          document.getElementById("product-list").textContent = "Error loading inventory.";
+        });
+    }
+    // Fullscreen viewer
+    const viewer = document.getElementById("viewer");
+    const mainImage = document.getElementById("mainImage");
+    function openViewer(index) {
+      currentIndex = index;
+      viewer.style.display = "flex";
+      showImage(currentIndex);
+    }
+    function showImage(index) {
+      const p = products[index];
+      if (!p) return;
+      mainImage.src = p.image;
+      mainImage.alt = p.color;
+    }
+    function changeImage(step) {
+      currentIndex = (currentIndex + step + products.length) % products.length;
+      showImage(currentIndex);
+    }
+    function hideViewer() {
+      viewer.style.display = "none";
+    }
+    // INIT
+    loadInventory();
+    updateCartCount();
+  </script></body>
 </html>
