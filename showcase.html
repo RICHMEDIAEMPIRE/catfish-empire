@@ -140,6 +140,27 @@
       cursor:pointer;
       z-index:1000;
     }
+    .etsy-footer {
+      margin: 3rem auto 1rem;
+      text-align: center;
+    }
+    .etsy-footer img {
+      max-width: 300px;
+      border-radius: 10px;
+    }
+    .etsy-footer a {
+      display: inline-block;
+      margin-top: 1rem;
+      background: gold;
+      color: black;
+      text-decoration: none;
+      padding: 0.75rem 1.25rem;
+      font-weight: bold;
+      border-radius: 5px;
+    }
+    .etsy-footer a:hover {
+      background: #f2c300;
+    }
   </style>
 </head>
 <body>
@@ -149,19 +170,25 @@
       <a href="index.html">← Back</a>
       <a href="cart.html" class="cart-link">View Cart</a>
     </div>
-  </div>  <h1>Catfish Empire™ Sunglasses • $14.99 + Tax</h1>
-  <p class="description">Polarized, UV400, ultra-lightweight & water-ready.</p>  <div class="product-list" id="product-list"></div>  <div class="viewer" id="viewer">
+  </div>
+  <h1>Catfish Empire™ Sunglasses • $14.99 + Tax</h1>
+  <p class="description">Polarized, UV400, ultra-lightweight & water-ready.</p>
+  <div class="product-list" id="product-list"></div>
+  <div class="viewer" id="viewer">
     <button class="nav-button prev" onclick="changeImage(-1)">❮</button>
     <img id="mainImage" src="" alt="Product Preview" />
     <button class="nav-button next" onclick="changeImage(1)">❯</button>
     <button class="close-btn" onclick="hideViewer()">Exit Fullscreen</button>
-</div>
+  </div>
+
   <!-- Etsy Footer -->
   <div class="etsy-footer">
-    <img src="shopbanner.jpg" alt="Etsy Shop" />
-    <a href="https://www.etsy.com/shop/RICHMEDIAEMPIRE?ref=profile_header&sort_order=price_asc&section_id=54071039" target="_blank" class="button">Visit Our Etsy Shop</a>
+    <img src="shopbanner.jpg" alt="Visit Our Etsy Store" />
+    <br/>
+    <a href="https://www.etsy.com/shop/RICHMEDIAEMPIRE?ref=profile_header&sort_order=price_asc&section_id=54071039" target="_blank">Visit Our Etsy Shop</a>
   </div>
-  </div>  <script>
+
+  <script>
     const BACKEND_URL = "https://catfish-stripe-backend.onrender.com";
     const products = [
       { color: "Blue", image: "sunglasses-blue.webp" },
@@ -292,5 +319,6 @@
     // INIT
     loadInventory();
     updateCartCount();
-  </script></body>
+  </script>
+</body>
 </html>
