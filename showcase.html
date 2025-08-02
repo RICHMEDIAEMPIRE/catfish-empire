@@ -245,8 +245,10 @@
     }
     async function ensureShippingState() {
       const saved = getShippingState();
-      if (saved && !blockedStates.includes(saved)) return saved;
-      return await askForShippingState();
+      if (!saved || blockedStates.includes(saved)) {
+        return await askForShippingState();
+      }
+      return saved;
     }
     async function handleAdd(color) {
       const qty = parseInt(document.getElementById(`qty-${color}`).value);
