@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+const thumbEls = (p.images||[]).map((src,i)=>{ const t=el('img'); t.src=src; t.alt=p.title+' thumbnail '+(i+1); t.loading='lazy'; if(i===0) t.classList.add('active'); thumbs.appendChild(t); return t; });
+
+
+content.appendChild(titleRow);
+content.appendChild(desc);
+content.appendChild(thumbs);
+
+
+const footer = el('div','footer');
+const view = el('a','btn','View on Etsy'); view.href = p.url; view.target = '_blank';
+const add = el('a','btn primary','Add to Cart'); add.href = p.url; add.target = '_blank'; // Etsy checkout
+footer.appendChild(view); footer.appendChild(add);
+
+
+card.appendChild(media);
+card.appendChild(content);
+card.appendChild(footer);
+grid.appendChild(card);
+
+
+// per-card carousel logic
+let cur=0;
+function show(i){ if(!p.images?.length) return; cur=(i+p.images.length)%p.images.length; main.src=p.images[cur]; dotEls.forEach((d,k)=>d.classList.toggle('active',k===cur)); thumbEls.forEach((t,k)=>t.classList.toggle('active',k===cur)); }
+prev.addEventListener('click', ()=>show(cur-1));
+next.addEventListener('click', ()=>show(cur+1));
+thumbEls.forEach((t,i)=>t.addEventListener('click', ()=>show(i)));
+let startX=0, touching=false; media.addEventListener('pointerdown', e=>{touching=true; startX=e.clientX;}); media.addEventListener('pointerup', e=>{if(!touching) return; touching=false; const dx=e.clientX-startX; if(Math.abs(dx)>35){ dx<0?show(cur+1):show(cur-1);} }); media.addEventListener('pointercancel',()=>touching=false);
+media.tabIndex=0; media.addEventListener('keydown', e=>{ if(e.key==='ArrowLeft'){e.preventDefault();show(cur-1);} if(e.key==='ArrowRight'){e.preventDefault();show(cur+1);} });
+});
+}
+
+
+fetchProducts().then(render).catch(err=>{ status.textContent='Error loading Etsy data.'; console.error(err); });
+</script>
+</body>
+</html>
