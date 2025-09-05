@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Catfish Empire™ Etsy Showcase</title>
   <style>
     body { background:black; color:white; font-family:Arial,sans-serif; margin:0; }
@@ -15,8 +15,8 @@
     .description { text-align:center; max-width:600px; margin:0 auto 1.5rem; color:#ccc; }
     .grid { display:flex; flex-wrap:wrap; justify-content:center; gap:1.5rem; padding:1rem; }
     .card { background:#222; border-radius:10px; width:280px; display:flex; flex-direction:column; overflow:hidden; }
-    .media { position:relative; }
-    .media img { width:100%; height:auto; border-radius:10px 10px 0 0; }
+    .media { position:relative; background:#111; }
+    .media img { width:100%; height:auto; display:block; }
     .navBtn { position:absolute; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.5); color:gold; border:none; font-size:1.5rem; padding:0.25rem 0.5rem; cursor:pointer; border-radius:5px; }
     .navPrev { left:5px; } .navNext { right:5px; }
     .dots { display:flex; justify-content:center; gap:4px; padding:4px; }
@@ -30,8 +30,7 @@
     .thumbs img { width:40px; height:40px; object-fit:cover; border:2px solid transparent; border-radius:5px; cursor:pointer; }
     .thumbs img.active { border-color:gold; }
     .footer { display:flex; gap:0.5rem; padding:0.75rem; justify-content:center; }
-    .btn { padding:0.5rem 0.75rem; border-radius:5px; text-decoration:none; font-weight:bold; text-align:center; flex:1; }
-    .btn { background:#444; color:white; }
+    .btn { padding:0.5rem 0.75rem; border-radius:5px; text-decoration:none; font-weight:bold; text-align:center; flex:1; background:#444; color:white; }
     .btn:hover { background:#666; }
     .btn.primary { background:gold; color:black; }
     .btn.primary:hover { background:#f2c300; }
@@ -46,6 +45,7 @@
       <a href="cart.html" class="cart-link">View Cart</a>
     </div>
   </div>
+
   <h1>Etsy Product Showcase</h1>
   <p class="description">Browse all Catfish Empire™ products currently listed on Etsy.</p>
   <div id="status" class="status">Loading products…</div>
@@ -60,7 +60,7 @@ const grid = document.getElementById('grid');
 function el(tag, cls, txt){
   const e=document.createElement(tag);
   if(cls) e.className=cls;
-  if(txt) e.textContent=txt;
+  if(txt!==undefined) e.textContent=txt;
   return e;
 }
 
@@ -73,13 +73,20 @@ async function fetchProducts(){
 function render(products){
   status.remove();
   products.forEach(p=>{
+    const imgs = Array.from(new Set((p.images||[]).map(u=>{
+      if(!u) return '';
+      if(u.startsWith('//')) return 'https:'+u;
+      if(u.startsWith('/')) return 'https://www.etsy.com'+u;
+      return u.replace(/^http:\/\//i,'https://');
+    }).filter(Boolean)));
+
     const card = el('article','card');
 
     // MEDIA
     const media = el('div','media');
     const main = el('img');
     main.alt = (p.title||'Listing') + ' mockup';
-    if(p.images?.length) main.src=p.images[0];
+    if(imgs.length) main.src = imgs[0];
     media.appendChild(main);
 
     const prev = el('button','navBtn navPrev'); prev.textContent='⟨';
@@ -87,55 +94,69 @@ function render(products){
     media.appendChild(prev); media.appendChild(next);
 
     const dots = el('div','dots');
-    const dotEls = (p.images||[]).map((_,i)=>{
-      const d = el('div','dot'+(i===0?' active':''));
-      dots.appendChild(d); return d;
-    });
+    const dotEls = imgs.map((_,i)=>{ const d=el('div','dot'+(i===0?' active':'')); dots.appendChild(d); return d; });
     media.appendChild(dots);
 
     // CONTENT
     const content = el('div','content');
     const titleRow = el('div','titleRow');
-    const titleEl = el('div','title',p.title||'Etsy Listing');
-    const priceEl = el('div','price',p.price||'');
+    const titleEl = el('div','title', p.title || 'Etsy Listing');
+    const priceEl = el('div','price', p.price || '');
     titleRow.appendChild(titleEl); titleRow.appendChild(priceEl);
+
     const thumbs = el('div','thumbs');
-    const thumbEls=(p.images||[]).map((src,i)=>{
-      const t=el('img');t.src=src;t.alt=p.title+' thumb '+(i+1);
-      if(i===0) t.classList.add('active'); thumbs.appendChild(t); return t;
-    });
-    content.appendChild(titleRow); content.appendChild(thumbs);
+    const thumbEls = imgs.map((src,i)=>{ const t=el('img'); t.src=src; t.alt=(p.title||'Listing')+' thumb '+(i+1); if(i===0) t.classList.add('active'); thumbs.appendChild(t); return t; });
+
+    content.appendChild(titleRow);
+    content.appendChild(thumbs);
 
     // FOOTER
     const footer = el('div','footer');
-    const view = el('a','btn','View on Etsy'); view.href=p.url; view.target='_blank';
+    const view = el('a','btn','View on Etsy'); view.href = p.url; view.target = '_blank';
     footer.appendChild(view);
-    card.appendChild(media); card.appendChild(content); card.appendChild(footer);
+
+    // Assemble
+    card.appendChild(media);
+    card.appendChild(content);
+    card.appendChild(footer);
     grid.appendChild(card);
 
-    // CAROUSEL LOGIC
+    // Carousel logic
     let cur=0;
     function show(i){
-      if(!p.images?.length) return;
-      cur=(i+p.images.length)%p.images.length;
-      main.src=p.images[cur];
+      if(!imgs.length) return;
+      cur=(i+imgs.length)%imgs.length;
+      if(main.src!==imgs[cur]) main.src=imgs[cur];
       dotEls.forEach((d,k)=>d.classList.toggle('active',k===cur));
       thumbEls.forEach((t,k)=>t.classList.toggle('active',k===cur));
+      const active = thumbEls[cur];
+      if(active?.scrollIntoView) active.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
     }
-    prev.addEventListener('click',()=>show(cur-1));
-    next.addEventListener('click',()=>show(cur+1));
-    thumbEls.forEach((t,i)=>t.addEventListener('click',()=>show(i)));
-    media.tabIndex=0;
-    media.addEventListener('keydown',e=>{
-      if(e.key==='ArrowLeft'){e.preventDefault();show(cur-1);}
-      if(e.key==='ArrowRight'){e.preventDefault();show(cur+1);}
-    });
+    if(imgs.length>1){
+      prev.addEventListener('click',()=>show(cur-1));
+      next.addEventListener('click',()=>show(cur+1));
+      thumbEls.forEach((t,i)=>t.addEventListener('click',()=>show(i)));
+      media.tabIndex=0;
+      media.addEventListener('keydown',e=>{
+        if(e.key==='ArrowLeft'){e.preventDefault();show(cur-1);}
+        if(e.key==='ArrowRight'){e.preventDefault();show(cur+1);}
+      });
+      let startX=0,touch=false;
+      media.addEventListener('pointerdown',e=>{touch=true;startX=e.clientX;});
+      media.addEventListener('pointerup',e=>{
+        if(!touch) return; touch=false;
+        const dx=e.clientX-startX;
+        if(Math.abs(dx)>35) (dx<0?show(cur+1):show(cur-1));
+      });
+      media.addEventListener('pointercancel',()=>touch=false);
+    }
   });
 }
 
-fetchProducts().then(render).catch(err=>{
-  status.textContent='Error loading Etsy data.'; console.error(err);
-});
+fetchProducts()
+  .then(p=>Array.isArray(p)?p:[])
+  .then(render)
+  .catch(err=>{ status.textContent='Error loading Etsy data.'; console.error(err); });
 </script>
 </body>
 </html>
