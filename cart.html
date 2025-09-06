@@ -178,9 +178,20 @@
     let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
     function updateCartCount() {
-      const total = cart.reduce((sum, item) => sum + item.qty, 0);
+      const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+      const totalPrice = cart.reduce((sum, item) => {
+        const price = item.type === 'printful' ? item.price : 14.99;
+        return sum + (price * item.qty);
+      }, 0);
+      
       const countEl = document.getElementById("cart-count");
-      if (countEl) countEl.textContent = total;
+      if (countEl) {
+        if (totalItems > 0) {
+          countEl.textContent = `${totalItems} ($${totalPrice.toFixed(2)})`;
+        } else {
+          countEl.textContent = '0';
+        }
+      }
     }
 
     function updateCartPage() {
@@ -199,12 +210,24 @@
       }
 
       cart.forEach((item, index) => {
-        const itemTotal = (item.qty * 14.99).toFixed(2);
+        let itemPrice, itemName;
+        
+        if (item.type === 'printful') {
+          // Printful product
+          itemPrice = item.price;
+          itemName = item.name;
+        } else {
+          // Sunglasses product
+          itemPrice = 14.99;
+          itemName = `${item.color} Sunglasses`;
+        }
+        
+        const itemTotal = (item.qty * itemPrice).toFixed(2);
         subtotal += parseFloat(itemTotal);
 
         const li = document.createElement("li");
         li.innerHTML = `
-          ${item.qty}× ${item.color} - $${itemTotal}
+          ${item.qty}× ${itemName} - $${itemTotal}
           <button class="remove" onclick="removeItem(${index})">Remove</button>
         `;
         cartList.appendChild(li);
@@ -229,10 +252,27 @@
 
       const shippingState = localStorage.getItem("shippingState") || "Unknown";
 
-      const items = cart.map(item => ({
-        color: item.color,
-        qty: item.qty
-      }));
+      const items = cart.map(item => {
+        if (item.type === 'printful') {
+          // Printful product
+          return {
+            type: 'printful',
+            id: item.id,
+            variant_id: item.variant_id,
+            name: item.name,
+            price: item.price,
+            currency: item.currency,
+            image: item.image,
+            qty: item.qty
+          };
+        } else {
+          // Sunglasses product (legacy format)
+          return {
+            color: item.color,
+            qty: item.qty
+          };
+        }
+      });
 
       fetch(`${BACKEND_URL}/create-checkout-session`, {
         method: "POST",

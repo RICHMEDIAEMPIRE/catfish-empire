@@ -413,9 +413,20 @@
     }
 
     function updateCartCount() {
-      const total = cart.reduce((sum, item) => sum + item.qty, 0);
+      const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+      const totalPrice = cart.reduce((sum, item) => {
+        const price = item.type === 'printful' ? item.price : 14.99;
+        return sum + (price * item.qty);
+      }, 0);
+      
       const cartLink = document.querySelector(".cart-link");
-      if (cartLink) cartLink.textContent = `Cart (${total})`;
+      if (cartLink) {
+        if (totalItems > 0) {
+          cartLink.textContent = `Cart (${totalItems} - $${totalPrice.toFixed(2)})`;
+        } else {
+          cartLink.textContent = `Cart (0)`;
+        }
+      }
     }
 
     // State Management

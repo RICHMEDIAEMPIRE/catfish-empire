@@ -124,31 +124,14 @@
     }
     
     .social-btn {
-      background: linear-gradient(45deg, gold, #ffd700);
-      padding: 1rem;
-      border-radius: 12px;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
       text-decoration: none;
-    }
-    
-    .social-btn:hover {
-      background: linear-gradient(45deg, #ffd700, gold);
-      transform: translateY(-3px);
-      box-shadow: 0 8px 25px rgba(255, 215, 0, 0.5);
+      display: inline-block;
     }
     
     .social-btn img {
-      width: 40px;
-      height: 40px;
-      transition: transform 0.3s ease;
-    }
-    
-    .social-btn:hover img {
-      transform: scale(1.1);
+      width: 80px;
+      height: 80px;
+      display: block;
     }
     .flagship-section {
       text-align: center;
@@ -356,8 +339,8 @@
         gap: 1rem;
       }
       .social-btn img {
-        width: 35px;
-        height: 35px;
+        width: 70px;
+        height: 70px;
       }
       .printful-grid {
         grid-template-columns: 1fr;
@@ -431,7 +414,7 @@
         <p>🔄 Loading latest merchandise...</p>
       </div>
       <div class="error-message" id="printful-error" style="display: none;">
-        <p>⚠️ Unable to load merchandise at this time. Please try again later or visit our <a href="https://www.etsy.com/shop/RICHMEDIAEMPIRE" target="_blank" style="color: gold;">Etsy store</a> directly.</p>
+        <p>⚠️ Unable to load merchandise at this time. Please try again later.</p>
       </div>
       <div class="printful-grid" id="printful-grid" style="display: none;">
         <!-- Printful products will be loaded here dynamically -->
@@ -448,28 +431,62 @@
     // Cart Management
     function updateCartCount() {
       const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-      const total = cart.reduce((sum, item) => sum + item.qty, 0);
+      const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+      const totalPrice = cart.reduce((sum, item) => {
+        const price = item.type === 'printful' ? item.price : 14.99;
+        return sum + (price * item.qty);
+      }, 0);
+      
       const cartCountEl = document.getElementById("cart-count");
-      if (cartCountEl) cartCountEl.textContent = total;
-    }
-
-    // Printful API Configuration
-    const PRINTFUL_CONFIG = {
-      API_KEY: '', // TODO: Add your Printful API key here
-      BASE_URL: 'https://api.printful.com',
-      ENDPOINTS: {
-        PRODUCTS: '/store/products',
-        PRODUCT_DETAIL: '/store/products/{id}'
+      if (cartCountEl) {
+        if (totalItems > 0) {
+          cartCountEl.textContent = `${totalItems} ($${totalPrice.toFixed(2)})`;
+        } else {
+          cartCountEl.textContent = '0';
+        }
       }
-    };
-
-    function getPrintfulHeaders() {
-      return {
-        'Authorization': `Bearer ${PRINTFUL_CONFIG.API_KEY}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      };
     }
+
+    // Add Printful product to cart
+    function addPrintfulToCart(product, quantity = 1) {
+      const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+      
+      // Check if this Printful product is already in cart
+      const existingItem = cart.find(item => 
+        item.type === 'printful' && item.variant_id === product.variant_id
+      );
+      
+      if (existingItem) {
+        existingItem.qty += quantity;
+      } else {
+        cart.push({
+          type: 'printful',
+          id: product.id,
+          variant_id: product.variant_id,
+          name: product.name,
+          price: product.price,
+          currency: product.currency,
+          image: product.image,
+          qty: quantity
+        });
+      }
+      
+      localStorage.setItem("cart", JSON.stringify(cart));
+      updateCartCount();
+      
+      // Show feedback to user
+      const feedback = document.createElement('div');
+      feedback.style = 'position: fixed; top: 100px; right: 20px; background: gold; color: black; padding: 1rem; border-radius: 8px; z-index: 9999; font-weight: bold;';
+      feedback.textContent = `✅ Added ${product.name} to cart!`;
+      document.body.appendChild(feedback);
+      
+      setTimeout(() => {
+        document.body.removeChild(feedback);
+      }, 3000);
+    }
+
+    // Backend API Configuration
+    const BACKEND_URL = "https://catfish-stripe-backend.onrender.com";
 
     let printfulCache = {
       products: null,
@@ -483,41 +500,42 @@
       const gridEl = document.getElementById('printful-grid');
 
       try {
-        if (!PRINTFUL_CONFIG.API_KEY || PRINTFUL_CONFIG.API_KEY.trim() === '') {
-          throw new Error('Printful API key not configured');
-        }
-
+        // Check cache first
         const now = Date.now();
         if (printfulCache.products && (now - printfulCache.timestamp) < printfulCache.TTL) {
           displayPrintfulProducts(printfulCache.products);
           return;
         }
 
-        const response = await fetch(`${PRINTFUL_CONFIG.BASE_URL}${PRINTFUL_CONFIG.ENDPOINTS.PRODUCTS}`, {
+        // Fetch from backend API
+        const response = await fetch(`${BACKEND_URL}/printful/products`, {
           method: 'GET',
-          headers: getPrintfulHeaders()
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          throw new Error(`Backend API Error: ${response.status} ${response.statusText}`);
         }
 
         const data = await response.json();
-        if (data.code !== 200) {
-          throw new Error(`Printful API Error: ${data.error || 'Unknown error'}`);
+        if (data.error) {
+          throw new Error(data.error);
         }
 
-        const enrichedProducts = await enrichProductData(data.result || []);
+        // Cache the results
         printfulCache = {
-          products: enrichedProducts,
+          products: data.products || [],
           timestamp: now,
           TTL: printfulCache.TTL
         };
 
-        displayPrintfulProducts(enrichedProducts);
+        displayPrintfulProducts(data.products || []);
       } catch (error) {
         console.error('Printful API Error:', error);
         if (printfulCache.products && printfulCache.products.length > 0) {
+          console.log('Using cached Printful data as fallback');
           displayPrintfulProducts(printfulCache.products);
         } else {
           loadingEl.style.display = 'none';
@@ -525,45 +543,6 @@
           gridEl.style.display = 'none';
         }
       }
-    }
-
-    async function enrichProductData(products) {
-      const enrichedProducts = [];
-      const productsToProcess = products.slice(0, 12);
-      
-      for (const product of productsToProcess) {
-        try {
-          const detailResponse = await fetch(
-            `${PRINTFUL_CONFIG.BASE_URL}${PRINTFUL_CONFIG.ENDPOINTS.PRODUCT_DETAIL.replace('{id}', product.id)}`,
-            { headers: getPrintfulHeaders() }
-          );
-          
-          if (detailResponse.ok) {
-            const detailData = await detailResponse.json();
-            if (detailData.code === 200 && detailData.result) {
-              const productDetail = detailData.result;
-              const variant = productDetail.sync_variants && productDetail.sync_variants[0];
-              
-              if (variant) {
-                enrichedProducts.push({
-                  id: product.id,
-                  name: productDetail.sync_product?.name || product.name || 'Catfish Empire Product',
-                  description: productDetail.sync_product?.description || 'Premium Catfish Empire merchandise',
-                  price: variant.retail_price || '0.00',
-                  currency: variant.currency || 'USD',
-                  image: variant.files?.[0]?.preview_url || variant.files?.[0]?.thumbnail_url || 'TM.png',
-                  variant_id: variant.id,
-                  availability: variant.availability_status || 'active'
-                });
-              }
-            }
-          }
-          await new Promise(resolve => setTimeout(resolve, 100));
-        } catch (error) {
-          console.warn(`Failed to enrich product ${product.id}:`, error);
-        }
-      }
-      return enrichedProducts;
     }
 
     function displayPrintfulProducts(products) {
@@ -606,23 +585,28 @@
           <h3>${product.name}</h3>
           <p>${description}</p>
           <div class="price">${formattedPrice}</div>
-          <button class="printful-buy-btn" onclick="buyPrintfulProduct('${product.id}', '${product.variant_id}', '${product.name}')">
-            Buy Now
+          <button class="printful-buy-btn" onclick="addPrintfulProductToCart('${product.id}')">
+            Add to Cart
           </button>
         </div>
       `;
       return card;
     }
 
-    function buyPrintfulProduct(productId, variantId, productName) {
-      if (!PRINTFUL_CONFIG.API_KEY || PRINTFUL_CONFIG.API_KEY.trim() === '') {
-        alert('Purchase system not yet configured. Please contact us directly.');
+    function addPrintfulProductToCart(productId) {
+      // Find the product in our cache
+      const product = printfulCache.products?.find(p => p.id == productId);
+      if (!product) {
+        alert('Product not found. Please refresh and try again.');
         return;
       }
       
-      if (confirm(`Purchase ${productName}?\\n\\nThis will redirect you to our secure checkout.`)) {
-        window.open('https://www.etsy.com/shop/RICHMEDIAEMPIRE', '_blank');
+      if (product.price <= 0) {
+        alert('This product is currently unavailable.');
+        return;
       }
+      
+      addPrintfulToCart(product, 1);
     }
 
     // Smooth scrolling
