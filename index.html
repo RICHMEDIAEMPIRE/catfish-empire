@@ -369,6 +369,15 @@
       cursor: zoom-in;
     }
 
+    .clickable-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(255, 215, 0, 0.3);
+    }
+
+    .clickable-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
     @media (max-width: 768px) {
       .zoom-nav-btn {
         width: 40px;
@@ -699,7 +708,9 @@
     // Create sunglasses product card (flagship product)
     function createSunglassesCard() {
       const card = document.createElement('div');
-      card.className = 'product-card';
+      card.className = 'product-card clickable-card';
+      card.style.cursor = 'pointer';
+      card.onclick = () => addSunglassesToCart();
       
       card.innerHTML = `
         <img src="sunglasses-green.webp" alt="Catfish Empire™ Green Sunglasses" loading="lazy" />
@@ -708,7 +719,7 @@
           <h3>Catfish Empire™ Sunglasses</h3>
           <p>Polarized, UV400 protection, ultra-lightweight & water-ready. Perfect for hardcore catfishing!</p>
           <div class="price">$14.99</div>
-          <button class="add-to-cart-btn sunglasses-btn" onclick="addSunglassesToCart()">
+          <button class="add-to-cart-btn sunglasses-btn" onclick="event.stopPropagation(); addSunglassesToCart()">
             Choose Color
           </button>
         </div>
