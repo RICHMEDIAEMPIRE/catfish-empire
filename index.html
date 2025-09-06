@@ -3,15 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Catfish Empire™</title>
+  <title>Catfish Empire™ - For Hardcore Catfishing Across the Carolinas</title>
   <style>
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #000;
       color: #fff;
+      scroll-behavior: smooth;
     }
-
     body::before {
       content: "";
       position: fixed;
@@ -23,242 +24,600 @@
       background-size: 80vh;
       background-attachment: scroll;
       z-index: -1;
-      opacity: 0.25;
+      opacity: 0.1;
     }
-
-    header {
-      text-align: center;
-      padding: 3rem 1rem 2rem;
-      background: rgba(0, 0, 0, 0.7);
-    }
-
-    .logo {
-      max-width: 200px;
-      height: auto;
-      margin-bottom: 1.5rem;
-    }
-
-    p.subtext {
-      font-size: 1.2rem;
-      max-width: 700px;
-      margin: 0 auto 2rem;
-    }
-
-    .cta-wrapper {
-      position: relative;
-      margin: 5rem auto 3rem;
+    .toolbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(45deg, gold, #ffd700);
+      color: black;
+      font-weight: bold;
+      padding: 1rem 2rem;
       display: flex;
       justify-content: center;
       align-items: center;
-      flex-direction: column;
+      gap: 2rem;
+      z-index: 1000;
+      box-shadow: 0 4px 20px rgba(255, 215, 0, 0.4);
     }
-
-    .cta a {
-      background: gold;
+    .toolbar a {
       color: black;
-      font-weight: bold;
       text-decoration: none;
-      padding: 1rem 2rem;
-      border-radius: 10px;
-      font-size: 1.2rem;
-      transition: background 0.3s;
-      z-index: 2;
-    }
-
-    .cta a:hover {
-      background: #ffd700;
-    }
-
-    .click-arrow {
-      color: gold;
       font-weight: bold;
-      font-size: 1rem;
-      z-index: 1;
-    }
-
-    .click-arrow.top {
-      margin-bottom: 2.5rem;
-      animation: bounce-down 0.75s infinite alternate;
-    }
-
-    .click-arrow.bottom {
-      margin-top: 2.5rem;
-      transform: rotate(180deg);
-      animation: bounce-up 0.75s infinite alternate;
-    }
-
-    @keyframes bounce-down {
-      0% { transform: translateY(0); }
-      100% { transform: translateY(10px); }
-    }
-
-    @keyframes bounce-up {
-      0% { transform: translateY(0); }
-      100% { transform: translateY(-10px); }
-    }
-
-    .social-media {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-      margin: 2rem auto;
-    }
-
-    .social-media a {
+      padding: 0.5rem 1rem;
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      transition: all 0.3s ease;
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      background: gold;
-      color: black;
-      padding: 0.6rem 1rem;
-      border-radius: 5px;
+    }
+    .toolbar a:hover {
+      background: rgba(0, 0, 0, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    .toolbar a.cart-link {
+      background: #333;
+      color: gold;
+    }
+    .toolbar a.cart-link:hover {
+      background: #555;
+    }
+    .main-content {
+      margin-top: 80px;
+      padding: 0;
+    }
+    .header {
+      text-align: center;
+      padding: 4rem 2rem 3rem;
+      background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.6));
+    }
+    .logo {
+      max-width: 200px;
+      height: auto;
+      margin-bottom: 2rem;
+      filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.3));
+    }
+    .hero-text {
+      font-size: 3rem;
       font-weight: bold;
-      text-decoration: none;
+      color: gold;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+      margin-bottom: 2rem;
+      line-height: 1.2;
     }
-
-    .social-media a:hover {
-      background: #ffd700;
+    .hero-subtitle {
+      font-size: 1.3rem;
+      color: #ccc;
+      margin-bottom: 3rem;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
     }
-
-    .social-media img {
-      width: 20px;
-      height: 20px;
-    }
-
-    .youtube-subscribe {
+    .action-buttons {
       display: flex;
       justify-content: center;
-      margin: 1rem auto 0;
+      gap: 2rem;
+      margin-bottom: 4rem;
+      flex-wrap: wrap;
     }
-
-    .youtube-subscribe a img {
-      width: 216px; /* 3x bigger */
-      height: auto;
+    .action-btn {
+      background: linear-gradient(45deg, gold, #ffd700);
+      color: black;
+      text-decoration: none;
+      font-weight: bold;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
-
-    .video-section {
+    .action-btn:hover {
+      background: linear-gradient(45deg, #ffd700, gold);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(255, 215, 0, 0.5);
+    }
+    .flagship-section {
       text-align: center;
-      padding: 2rem 1rem 1rem;
+      padding: 4rem 2rem;
+      background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8));
     }
-
-    .video-wrapper {
-      max-width: 800px;
-      margin: auto;
-    }
-
-    .video-section h2 {
+    .flagship-title {
+      font-size: 2.5rem;
       color: gold;
       margin-bottom: 1rem;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
     }
-
-    .gallery {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 2rem;
-      padding: 2rem 1rem;
-      max-width: 1200px;
-      margin: auto;
+    .flagship-subtitle {
+      font-size: 1.2rem;
+      color: #ccc;
+      margin-bottom: 3rem;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
     }
-
-    .gallery-item {
-      background: rgba(255, 255, 255, 0.05);
-      padding: 1rem;
-      border-radius: 10px;
+    .flagship-product {
+      max-width: 800px;
+      margin: 0 auto 3rem;
+      position: relative;
+      overflow: hidden;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(255, 215, 0, 0.2);
+      transition: transform 0.3s ease;
     }
-
-    .gallery-item img {
+    .flagship-product:hover {
+      transform: scale(1.02);
+      box-shadow: 0 25px 80px rgba(255, 215, 0, 0.3);
+    }
+    .flagship-product img {
       width: 100%;
-      border-radius: 10px;
+      height: auto;
       display: block;
+      border-radius: 20px;
     }
-
-    .gallery-item p {
-      margin-top: 0.5rem;
+    .flagship-btn {
+      background: linear-gradient(45deg, #ff6b00, #ff8533);
+      color: white;
+      text-decoration: none;
       font-weight: bold;
+      padding: 1.5rem 3rem;
+      border-radius: 15px;
+      font-size: 1.4rem;
+      display: inline-block;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 30px rgba(255, 107, 0, 0.4);
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
-
+    .flagship-btn:hover {
+      background: linear-gradient(45deg, #ff8533, #ff6b00);
+      transform: translateY(-5px);
+      box-shadow: 0 15px 45px rgba(255, 107, 0, 0.6);
+    }
+    .printful-section {
+      padding: 4rem 2rem;
+      background: rgba(0, 0, 0, 0.8);
+      min-height: 400px;
+    }
+    .section-title {
+      text-align: center;
+      font-size: 2.5rem;
+      color: gold;
+      margin-bottom: 1rem;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    }
+    .section-subtitle {
+      text-align: center;
+      font-size: 1.2rem;
+      color: #ccc;
+      margin-bottom: 3rem;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .printful-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .printful-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 15px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    .printful-card:hover {
+      transform: translateY(-5px);
+      background: rgba(255, 255, 255, 0.08);
+      border-color: gold;
+      box-shadow: 0 20px 50px rgba(255, 215, 0, 0.2);
+    }
+    .printful-card img {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+    .printful-card:hover img {
+      transform: scale(1.05);
+    }
+    .printful-card-content {
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .printful-card h3 {
+      color: gold;
+      font-size: 1.4rem;
+      margin-bottom: 0.5rem;
+    }
+    .printful-card p {
+      color: #ccc;
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+    .printful-card .price {
+      font-size: 1.6rem;
+      font-weight: bold;
+      color: white;
+      margin-bottom: 1rem;
+    }
+    .printful-buy-btn {
+      background: linear-gradient(45deg, #28a745, #34ce57);
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      display: inline-block;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      font-size: 1.1rem;
+    }
+    .printful-buy-btn:hover {
+      background: linear-gradient(45deg, #34ce57, #28a745);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+    }
+    .loading-spinner {
+      text-align: center;
+      padding: 2rem;
+      color: gold;
+      font-size: 1.2rem;
+    }
+    .error-message {
+      text-align: center;
+      padding: 2rem;
+      color: #ff6b6b;
+      font-size: 1.1rem;
+    }
     footer {
       text-align: center;
-      padding: 2rem 1rem;
-      background: rgba(0, 0, 0, 0.85);
-      font-size: 0.9rem;
+      padding: 3rem 2rem 2rem;
+      background: rgba(0, 0, 0, 0.9);
+      border-top: 2px solid gold;
     }
-
+    footer p {
+      margin: 0.5rem 0;
+      color: #ccc;
+    }
     footer a {
       color: gold;
       text-decoration: none;
     }
-
     footer a:hover {
       text-decoration: underline;
     }
-
-    @media (min-width: 768px) {
-      body::before {
-        background-size: 100vh auto;
-        background-attachment: fixed;
-        background-position: center top;
+    @media (max-width: 768px) {
+      .toolbar {
+        padding: 0.8rem 1rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
       }
-
-      .gallery {
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      .toolbar a {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.9rem;
+      }
+      .main-content {
+        margin-top: 100px;
+      }
+      .hero-text {
+        font-size: 2rem;
+        padding: 0 1rem;
+      }
+      .flagship-title {
+        font-size: 2rem;
+      }
+      .action-buttons {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+      }
+      .printful-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      body::before {
+        background-size: 60vh;
+      }
+    }
+    @media (max-width: 480px) {
+      .hero-text {
+        font-size: 1.8rem;
+      }
+      .flagship-btn {
+        padding: 1.2rem 2rem;
+        font-size: 1.2rem;
+      }
+      .section-title {
+        font-size: 2rem;
       }
     }
   </style>
 </head>
 <body>
+  <nav class="toolbar">
+    <a href="cart.html" class="cart-link">🛒 Cart (<span id="cart-count">0</span>)</a>
+    <a href="https://x.com/CATFISH_EMPIRE" target="_blank">𝕏 Twitter</a>
+    <a href="https://www.facebook.com/share/1B4i7CNrYc/" target="_blank">📘 Facebook</a>
+    <a href="https://youtube.com/@catfishempire" target="_blank">📺 YouTube</a>
+    <a href="showcase.html">🖼️ Gallery</a>
+  </nav>
 
-  <header>
-    <img src="TM.png" alt="Catfish Empire Logo" class="logo" onerror="this.style.display='none'" />
-    <p class="subtext">Hardcore catfishing across the Carolinas. It is our goal to provide content and gear to help our fellow anglers succeed!</p>
-
-    <div class="cta-wrapper">
-      <div class="click-arrow top">⬇️ CLICK HERE ⬇️</div>
-      <div class="cta">
-        <a href="showcase.html">Catfish Empire™ Gear</a>
+  <div class="main-content">
+    <header class="header">
+      <img src="TM.png" alt="Catfish Empire Logo" class="logo" onerror="this.style.display='none'" />
+      <h1 class="hero-text">For Hardcore Catfishing<br>Across the Carolinas</h1>
+      <p class="hero-subtitle">Premium gear and content to help serious catfish anglers succeed. From the best sunglasses to exclusive merchandise.</p>
+      <div class="action-buttons">
+        <a href="https://x.com/CATFISH_EMPIRE" target="_blank" class="action-btn">Follow @catfish_empire</a>
+        <a href="https://youtube.com/@catfishempire" target="_blank" class="action-btn">📺 Subscribe on YouTube</a>
+        <a href="#flagship-product" class="action-btn">🛍️ Shop the Empire</a>
       </div>
-      <div class="click-arrow bottom">⬆️ CLICK HERE ⬆️</div>
-    </div>
+    </header>
 
-    <div class="social-media">
-      <a href="https://x.com/CATFISH_EMPIRE" target="_blank">
-        <img src="x.png" alt="X"> Follow on X
-      </a>
-      <a href="https://www.facebook.com/share/1B4i7CNrYc/" target="_blank">
-        <img src="fb.png" alt="Facebook"> Facebook
-      </a>
-    </div>
-
-    <div class="youtube-subscribe">
-      <a href="https://youtube.com/@catfishempire" target="_blank">
-        <img src="yt.png" alt="YouTube" />
-      </a>
-    </div>
-
-    <div class="video-section">
-      <h2>Watch our latest content</h2>
-      <div class="video-wrapper">
-        <iframe width="100%" height="450"
-          src="https://www.youtube.com/embed/J2fEfs98HK8?autoplay=1&mute=1"
-          title="Catfish Empire Video" frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowfullscreen></iframe>
+    <section class="flagship-section" id="flagship-product">
+      <h2 class="flagship-title">Flagship Product</h2>
+      <p class="flagship-subtitle">Premium polarized sunglasses designed for serious catfish anglers. UV400 protection, ultra-lightweight, and water-ready.</p>
+      <div class="flagship-product">
+        <img src="sunglasses-green.webp" alt="Catfish Empire™ Green Sunglasses" loading="lazy" />
       </div>
-    </div>
-  </header>
+      <a href="/storefront.html" class="flagship-btn">Buy Catfish Empire™ Sunglasses</a>
+    </section>
 
-  <section class="gallery">
-    <div class="gallery-item"><img src="img1.jpg" alt="43 lb Flathead Catfish at Santee" /><p>43 lb Flathead Catfish — Caught at Santee</p></div>
-    <div class="gallery-item"><img src="img2.jpg" alt="43 lb Flathead Catfish at Santee" /><p>43 lb Flathead Catfish — Caught at Santee</p></div>
-    <div class="gallery-item"><img src="img3.jpg" alt="45 lb Blue Catfish at Santee" /><p>45 lb Blue Catfish — Caught at Santee</p></div>
-    <div class="gallery-item"><img src="img4.jpg" alt="38 lb Blue Catfish at Santee" /><p>38 lb Blue Catfish — Caught at Santee</p></div>
-    <div class="gallery-item"><img src="img5.jpeg" alt="43 lb Flathead Catfish at Santee" /><p>43 lb Flathead Catfish — Caught at Santee</p></div>
-  </section>
+    <section class="printful-section" id="printful-products">
+      <h2 class="section-title">Empire Merchandise</h2>
+      <p class="section-subtitle">Exclusive apparel and gear from our Printful store. New designs added regularly.</p>
+      <div class="loading-spinner" id="printful-loading">
+        <p>🔄 Loading latest merchandise...</p>
+      </div>
+      <div class="error-message" id="printful-error" style="display: none;">
+        <p>⚠️ Unable to load merchandise at this time. Please try again later or visit our <a href="https://www.etsy.com/shop/RICHMEDIAEMPIRE" target="_blank" style="color: gold;">Etsy store</a> directly.</p>
+      </div>
+      <div class="printful-grid" id="printful-grid" style="display: none;">
+        <!-- Printful products will be loaded here dynamically -->
+      </div>
+    </section>
+  </div>
 
   <footer>
     <p>&copy; 2025 Catfish Empire™. All rights reserved.</p>
     <p>Owned and operated by <a href="https://richmediaempire.com" target="_blank">Rich Media Empire LLC</a></p>
   </footer>
 
+  <script>
+    // Cart Management
+    function updateCartCount() {
+      const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+      const total = cart.reduce((sum, item) => sum + item.qty, 0);
+      const cartCountEl = document.getElementById("cart-count");
+      if (cartCountEl) cartCountEl.textContent = total;
+    }
+
+    // Printful API Configuration
+    const PRINTFUL_CONFIG = {
+      API_KEY: '', // TODO: Add your Printful API key here
+      BASE_URL: 'https://api.printful.com',
+      ENDPOINTS: {
+        PRODUCTS: '/store/products',
+        PRODUCT_DETAIL: '/store/products/{id}'
+      }
+    };
+
+    function getPrintfulHeaders() {
+      return {
+        'Authorization': `Bearer ${PRINTFUL_CONFIG.API_KEY}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      };
+    }
+
+    let printfulCache = {
+      products: null,
+      timestamp: 0,
+      TTL: 15 * 60 * 1000 // 15 minutes
+    };
+
+    async function fetchPrintfulProducts() {
+      const loadingEl = document.getElementById('printful-loading');
+      const errorEl = document.getElementById('printful-error');
+      const gridEl = document.getElementById('printful-grid');
+
+      try {
+        if (!PRINTFUL_CONFIG.API_KEY || PRINTFUL_CONFIG.API_KEY.trim() === '') {
+          throw new Error('Printful API key not configured');
+        }
+
+        const now = Date.now();
+        if (printfulCache.products && (now - printfulCache.timestamp) < printfulCache.TTL) {
+          displayPrintfulProducts(printfulCache.products);
+          return;
+        }
+
+        const response = await fetch(`${PRINTFUL_CONFIG.BASE_URL}${PRINTFUL_CONFIG.ENDPOINTS.PRODUCTS}`, {
+          method: 'GET',
+          headers: getPrintfulHeaders()
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        if (data.code !== 200) {
+          throw new Error(`Printful API Error: ${data.error || 'Unknown error'}`);
+        }
+
+        const enrichedProducts = await enrichProductData(data.result || []);
+        printfulCache = {
+          products: enrichedProducts,
+          timestamp: now,
+          TTL: printfulCache.TTL
+        };
+
+        displayPrintfulProducts(enrichedProducts);
+      } catch (error) {
+        console.error('Printful API Error:', error);
+        if (printfulCache.products && printfulCache.products.length > 0) {
+          displayPrintfulProducts(printfulCache.products);
+        } else {
+          loadingEl.style.display = 'none';
+          errorEl.style.display = 'block';
+          gridEl.style.display = 'none';
+        }
+      }
+    }
+
+    async function enrichProductData(products) {
+      const enrichedProducts = [];
+      const productsToProcess = products.slice(0, 12);
+      
+      for (const product of productsToProcess) {
+        try {
+          const detailResponse = await fetch(
+            `${PRINTFUL_CONFIG.BASE_URL}${PRINTFUL_CONFIG.ENDPOINTS.PRODUCT_DETAIL.replace('{id}', product.id)}`,
+            { headers: getPrintfulHeaders() }
+          );
+          
+          if (detailResponse.ok) {
+            const detailData = await detailResponse.json();
+            if (detailData.code === 200 && detailData.result) {
+              const productDetail = detailData.result;
+              const variant = productDetail.sync_variants && productDetail.sync_variants[0];
+              
+              if (variant) {
+                enrichedProducts.push({
+                  id: product.id,
+                  name: productDetail.sync_product?.name || product.name || 'Catfish Empire Product',
+                  description: productDetail.sync_product?.description || 'Premium Catfish Empire merchandise',
+                  price: variant.retail_price || '0.00',
+                  currency: variant.currency || 'USD',
+                  image: variant.files?.[0]?.preview_url || variant.files?.[0]?.thumbnail_url || 'TM.png',
+                  variant_id: variant.id,
+                  availability: variant.availability_status || 'active'
+                });
+              }
+            }
+          }
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (error) {
+          console.warn(`Failed to enrich product ${product.id}:`, error);
+        }
+      }
+      return enrichedProducts;
+    }
+
+    function displayPrintfulProducts(products) {
+      const loadingEl = document.getElementById('printful-loading');
+      const errorEl = document.getElementById('printful-error');
+      const gridEl = document.getElementById('printful-grid');
+      
+      loadingEl.style.display = 'none';
+      errorEl.style.display = 'none';
+      
+      if (!products || products.length === 0) {
+        errorEl.innerHTML = '<p>No merchandise available at this time. Check back soon!</p>';
+        errorEl.style.display = 'block';
+        return;
+      }
+      
+      gridEl.innerHTML = '';
+      products.forEach(product => {
+        const card = createPrintfulCard(product);
+        gridEl.appendChild(card);
+      });
+      gridEl.style.display = 'grid';
+    }
+
+    function createPrintfulCard(product) {
+      const card = document.createElement('div');
+      card.className = 'printful-card';
+      
+      const price = parseFloat(product.price || 0);
+      const formattedPrice = price > 0 ? `$${price.toFixed(2)}` : 'Price on request';
+      
+      let description = product.description || '';
+      if (description.length > 100) {
+        description = description.substring(0, 100) + '...';
+      }
+      
+      card.innerHTML = `
+        <img src="${product.image}" alt="${product.name}" loading="lazy" onerror="this.src='TM.png'" />
+        <div class="printful-card-content">
+          <h3>${product.name}</h3>
+          <p>${description}</p>
+          <div class="price">${formattedPrice}</div>
+          <button class="printful-buy-btn" onclick="buyPrintfulProduct('${product.id}', '${product.variant_id}', '${product.name}')">
+            Buy Now
+          </button>
+        </div>
+      `;
+      return card;
+    }
+
+    function buyPrintfulProduct(productId, variantId, productName) {
+      if (!PRINTFUL_CONFIG.API_KEY || PRINTFUL_CONFIG.API_KEY.trim() === '') {
+        alert('Purchase system not yet configured. Please contact us directly.');
+        return;
+      }
+      
+      if (confirm(`Purchase ${productName}?\\n\\nThis will redirect you to our secure checkout.`)) {
+        window.open('https://www.etsy.com/shop/RICHMEDIAEMPIRE', '_blank');
+      }
+    }
+
+    // Smooth scrolling
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+
+    // Initialization
+    document.addEventListener('DOMContentLoaded', function() {
+      updateCartCount();
+      fetchPrintfulProducts();
+      setInterval(fetchPrintfulProducts, 30 * 60 * 1000);
+    });
+
+    // Debug functions
+    function refreshPrintfulData() {
+      printfulCache.timestamp = 0;
+      fetchPrintfulProducts();
+    }
+    
+    function debugPrintfulConfig() {
+      console.log('Printful Configuration:', {
+        hasApiKey: !!PRINTFUL_CONFIG.API_KEY && PRINTFUL_CONFIG.API_KEY.trim() !== '',
+        baseUrl: PRINTFUL_CONFIG.BASE_URL,
+        cacheStatus: {
+          hasData: !!printfulCache.products,
+          productCount: printfulCache.products?.length || 0,
+          age: printfulCache.timestamp ? (Date.now() - printfulCache.timestamp) / 1000 : 0
+        }
+      });
+    }
+    
+    window.refreshPrintfulData = refreshPrintfulData;
+    window.debugPrintfulConfig = debugPrintfulConfig;
+  </script>
 </body>
 </html>

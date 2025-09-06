@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shop | Catfish Empire™ - Premium Sunglasses</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #000;
+      color: #fff;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('TM.png') no-repeat center center;
+      background-size: 80vh;
+      background-attachment: scroll;
+      z-index: -1;
+      opacity: 0.15;
+    }
+
+    /* Navigation Toolbar */
+    .nav-toolbar {
+      background: linear-gradient(45deg, gold, #ffd700);
+      color: black;
+      font-weight: bold;
+      padding: 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+    }
+
+    .nav-logo {
+      font-size: 1.2rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-logo img {
+      height: 30px;
+      width: auto;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      color: black;
+      text-decoration: none;
+      font-weight: bold;
+      padding: 0.5rem 1rem;
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+      transition: all 0.3s ease;
+    }
+
+    .nav-links a:hover {
+      background: rgba(0, 0, 0, 0.2);
+      transform: translateY(-1px);
+    }
+
+    .nav-links a.cart-link {
+      background: #333;
+      color: gold;
+    }
+
+    .nav-links a.cart-link:hover {
+      background: #555;
+    }
+
+    /* Header Section */
+    header {
+      text-align: center;
+      padding: 2rem 1rem 1rem;
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    .logo {
+      max-width: 150px;
+      height: auto;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      color: gold;
+      margin: 0 0 0.5rem 0;
+      font-size: 2.2rem;
+    }
+
+    .description {
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto 1.5rem;
+      color: #ccc;
+      line-height: 1.4;
+    }
+
+    /* State Selection Banner */
+    .state-banner {
+      background: linear-gradient(45deg, #333, #444);
+      color: gold;
+      text-align: center;
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: 10px;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .state-banner.selected {
+      background: linear-gradient(45deg, #1a4a1a, #2d5a2d);
+    }
+
+    /* Product Grid */
+    .product-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+      padding: 2rem 1rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .product {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1.5rem;
+      border-radius: 15px;
+      text-align: center;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+
+    .product:hover {
+      transform: translateY(-5px);
+      background: rgba(255, 255, 255, 0.08);
+      border-color: gold;
+      box-shadow: 0 10px 25px rgba(255, 215, 0, 0.2);
+    }
+
+    .product img {
+      width: 100%;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .product img:hover {
+      transform: scale(1.05);
+    }
+
+    .product h3 {
+      color: gold;
+      margin: 1rem 0 0.5rem 0;
+      font-size: 1.3rem;
+    }
+
+    .product .price {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #fff;
+      margin: 0.5rem 0;
+    }
+
+    .product .stock {
+      color: #ccc;
+      margin: 0.5rem 0;
+    }
+
+    .product input {
+      width: 100%;
+      padding: 0.75rem;
+      margin: 1rem 0 0.5rem 0;
+      border: 2px solid #555;
+      border-radius: 5px;
+      background: #222;
+      color: white;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+
+    .product input:focus {
+      outline: none;
+      border-color: gold;
+    }
+
+    .product button {
+      background: linear-gradient(45deg, gold, #ffd700);
+      color: black;
+      border: none;
+      padding: 1rem;
+      margin-top: 0.5rem;
+      width: 100%;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
+    }
+
+    .product button:hover {
+      background: linear-gradient(45deg, #ffd700, gold);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+    }
+
+    .product button:disabled {
+      background: #666;
+      color: #999;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Image Viewer Modal */
+    .viewer {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.95);
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .viewer img {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 10px;
+    }
+
+    .nav-button {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 3rem;
+      color: gold;
+      background: none;
+      border: none;
+      cursor: pointer;
+      z-index: 1000;
+    }
+
+    .prev {
+      left: 20px;
+    }
+
+    .next {
+      right: 20px;
+    }
+
+    .close-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      font-size: 1.2rem;
+      background: gold;
+      color: black;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      z-index: 1000;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 3rem 1rem 2rem;
+      background: rgba(0, 0, 0, 0.85);
+      margin-top: 3rem;
+    }
+
+    footer p {
+      margin: 0.5rem 0;
+      color: #ccc;
+    }
+
+    footer a {
+      color: gold;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .nav-toolbar {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem 0.5rem;
+      }
+
+      .nav-links {
+        justify-content: center;
+        gap: 0.5rem;
+      }
+
+      .nav-links a {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.9rem;
+      }
+
+      h1 {
+        font-size: 1.8rem;
+      }
+
+      .product-list {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        padding: 1rem;
+      }
+
+      .product {
+        padding: 1rem;
+      }
+
+      body::before {
+        background-size: 60vh;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Toolbar -->
+  <nav class="nav-toolbar">
+    <div class="nav-logo">
+      <img src="TM.png" alt="Catfish Empire Logo" onerror="this.style.display='none'" />
+      CATFISH EMPIRE™
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="cart.html" class="cart-link">Cart (0)</a>
+      <a href="showcase.html">Gallery</a>
+      <a href="https://youtube.com/@catfishempire" target="_blank">YouTube</a>
+      <a href="https://x.com/CATFISH_EMPIRE" target="_blank">X (Twitter)</a>
+      <a href="https://www.facebook.com/share/1B4i7CNrYc/" target="_blank">Facebook</a>
+    </div>
+  </nav>
+
+  <header>
+    <img src="TM.png" alt="Catfish Empire Logo" class="logo" onerror="this.style.display='none'" />
+    <h1>Premium Sunglasses Collection</h1>
+    <p class="description">Polarized, UV400 protection, ultra-lightweight & water-ready. Perfect for hardcore catfishing across the Carolinas and beyond!</p>
+  </header>
+
+  <!-- State Selection Banner -->
+  <div class="state-banner" id="state-banner">
+    <p><strong>🗺️ Select your shipping state before adding items to cart</strong></p>
+    <p id="state-status">No state selected</p>
+  </div>
+
+  <!-- Product Grid -->
+  <div class="product-list" id="product-list">
+    <!-- Products will be loaded dynamically -->
+  </div>
+
+  <!-- Image Viewer Modal -->
+  <div class="viewer" id="viewer">
+    <button class="nav-button prev" onclick="changeImage(-1)">❮</button>
+    <img id="mainImage" src="" alt="Product Preview" />
+    <button class="nav-button next" onclick="changeImage(1)">❯</button>
+    <button class="close-btn" onclick="hideViewer()">Exit Fullscreen</button>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Catfish Empire™. All rights reserved.</p>
+    <p>Owned and operated by <a href="https://richmediaempire.com" target="_blank">Rich Media Empire LLC</a></p>
+  </footer>
+
+  <script>
+    const BACKEND_URL = "https://catfish-stripe-backend.onrender.com";
+    const products = [
+      { color: "Blue", image: "sunglasses-blue.webp" },
+      { color: "Green", image: "sunglasses-green.webp" },
+      { color: "Red", image: "sunglasses-red.webp" },
+      { color: "Silver", image: "sunglasses-silver.webp" },
+      { color: "Black", image: "sunglasses-black.webp" },
+      { color: "Brown", image: "sunglasses-brown.webp" }
+    ];
+    
+    let inventory = {};
+    let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+    let currentIndex = 0;
+    const blockedStates = ['CO', 'PA', 'CA'];
+
+    // Cart Management
+    function updateLocalCart() {
+      localStorage.setItem("cart", JSON.stringify(cart));
+    }
+
+    function updateCartCount() {
+      const total = cart.reduce((sum, item) => sum + item.qty, 0);
+      const cartLink = document.querySelector(".cart-link");
+      if (cartLink) cartLink.textContent = `Cart (${total})`;
+    }
+
+    // State Management
+    function getShippingState() {
+      return localStorage.getItem("shippingState");
+    }
+
+    function updateStateBanner() {
+      const state = getShippingState();
+      const banner = document.getElementById("state-banner");
+      const status = document.getElementById("state-status");
+      
+      if (state) {
+        banner.classList.add("selected");
+        status.textContent = `✅ Shipping to: ${state}`;
+      } else {
+        banner.classList.remove("selected");
+        status.textContent = "❌ No state selected - required before checkout";
+      }
+    }
+
+    function askForShippingState() {
+      const states = ["AL","AR","AZ","DE","FL","GA","IA","ID","IL","IN","KS","KY","LA","MA","MD","ME","MI","MN","MO","MS","MT","NC","ND","NE","NH","NJ","NM","NV","NY","OH","OK","OR","RI","SC","SD","TN","TX","UT","VA","VT","WA","WI","WV","WY"];
+      
+      let dropdown = document.createElement("select");
+      dropdown.style = "padding:0.5rem;margin:1rem;font-size:1rem;background:#222;color:white;border:2px solid gold;border-radius:5px;";
+      dropdown.innerHTML = `<option value="">Select Your State</option>` + 
+        states.map(s => `<option value="${s}">${s}</option>`).join("");
+      
+      let popup = document.createElement("div");
+      popup.style = "position:fixed;top:20%;left:50%;transform:translateX(-50%);background:#111;padding:2rem;border:3px solid gold;border-radius:10px;z-index:9999;text-align:center;color:white;max-width:400px;";
+      popup.innerHTML = `<h3 style="color:gold;margin-top:0;">🗺️ Select Shipping State</h3><p>Required before adding items to cart</p>`;
+      popup.appendChild(dropdown);
+      
+      let confirmBtn = document.createElement("button");
+      confirmBtn.textContent = "Confirm";
+      confirmBtn.style = "margin-top:1rem;padding:0.75rem 1.5rem;font-weight:bold;background:gold;color:black;border:none;border-radius:5px;cursor:pointer;font-size:1rem;";
+      popup.appendChild(confirmBtn);
+      
+      let overlay = document.createElement("div");
+      overlay.style = "position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.8);z-index:9998;";
+      
+      document.body.appendChild(overlay);
+      document.body.appendChild(popup);
+      
+      return new Promise(resolve => {
+        confirmBtn.onclick = () => {
+          const val = dropdown.value;
+          if (!val) {
+            alert("Please select a state");
+            return;
+          }
+          if (blockedStates.includes(val)) {
+            alert("Sorry, we do not ship to CO, PA, or CA due to state restrictions.");
+            document.body.removeChild(overlay);
+            document.body.removeChild(popup);
+            resolve(null);
+          } else {
+            localStorage.setItem("shippingState", val);
+            document.body.removeChild(overlay);
+            document.body.removeChild(popup);
+            updateStateBanner();
+            resolve(val);
+          }
+        };
+        
+        overlay.onclick = () => {
+          document.body.removeChild(overlay);
+          document.body.removeChild(popup);
+          resolve(null);
+        };
+      });
+    }
+
+    async function ensureShippingState() {
+      const saved = getShippingState();
+      if (!saved || blockedStates.includes(saved)) {
+        return await askForShippingState();
+      }
+      return saved;
+    }
+
+    // Add to Cart
+    async function handleAdd(color) {
+      const qtyInput = document.getElementById(`qty-${color}`);
+      const qty = parseInt(qtyInput.value);
+      
+      if (!qty || qty < 1) {
+        alert("Please enter a valid quantity");
+        return;
+      }
+
+      const state = await ensureShippingState();
+      if (!state) return;
+
+      if (inventory[color] === undefined || qty > inventory[color]) {
+        alert(`Sorry! Only ${inventory[color] || 0} ${color} sunglasses in stock.`);
+        return;
+      }
+
+      const existingItem = cart.find(item => item.color === color);
+      if (existingItem) {
+        if (existingItem.qty + qty > inventory[color]) {
+          alert(`Cannot add ${qty} more. Total would exceed stock of ${inventory[color]}.`);
+          return;
+        }
+        existingItem.qty += qty;
+      } else {
+        cart.push({ color, qty });
+      }
+
+      updateLocalCart();
+      updateCartCount();
+      qtyInput.value = "1"; // Reset quantity
+      alert(`✅ Added ${qty}× ${color} sunglasses to cart!`);
+    }
+
+    // Product Display
+    function createProductCard(product) {
+      const div = document.createElement("div");
+      div.className = "product";
+      
+      const stockCount = inventory[product.color] || 0;
+      const inStock = stockCount > 0;
+      
+      div.innerHTML = `
+        <img loading="lazy" src="${product.image}" alt="${product.color} Sunglasses" 
+             onclick="openViewer(${products.findIndex(p => p.color === product.color)})" />
+        <h3>${product.color}</h3>
+        <div class="price">$14.99</div>
+        <p class="stock">In Stock: <span id="stock-${product.color}">${stockCount}</span></p>
+        <input type="number" min="1" max="${stockCount}" value="1" id="qty-${product.color}" 
+               ${!inStock ? 'disabled' : ''} />
+        <button onclick="handleAdd('${product.color}')" ${!inStock ? 'disabled' : ''}>
+          ${inStock ? 'Add to Cart' : 'Out of Stock'}
+        </button>
+      `;
+      return div;
+    }
+
+    function renderProducts() {
+      const container = document.getElementById("product-list");
+      container.innerHTML = "";
+      products.forEach(product => {
+        container.appendChild(createProductCard(product));
+      });
+    }
+
+    // Inventory Loading
+    function loadInventory() {
+      fetch(`${BACKEND_URL}/public-inventory`)
+        .then(response => response.json())
+        .then(data => {
+          inventory = data;
+          renderProducts(); // Re-render with updated stock
+        })
+        .catch(err => {
+          console.error("Failed to fetch inventory:", err);
+          inventory = {}; // Fallback to empty inventory
+          renderProducts();
+        });
+    }
+
+    // Image Viewer
+    const viewer = document.getElementById("viewer");
+    const mainImage = document.getElementById("mainImage");
+
+    function openViewer(index) {
+      currentIndex = index;
+      viewer.style.display = "flex";
+      showImage(currentIndex);
+    }
+
+    function showImage(index) {
+      const product = products[index];
+      if (!product) return;
+      mainImage.src = product.image;
+      mainImage.alt = `${product.color} Sunglasses`;
+    }
+
+    function changeImage(step) {
+      currentIndex = (currentIndex + step + products.length) % products.length;
+      showImage(currentIndex);
+    }
+
+    function hideViewer() {
+      viewer.style.display = "none";
+    }
+
+    // Keyboard Navigation for Image Viewer
+    document.addEventListener('keydown', function(e) {
+      if (viewer.style.display === 'flex') {
+        if (e.key === 'ArrowLeft') changeImage(-1);
+        if (e.key === 'ArrowRight') changeImage(1);
+        if (e.key === 'Escape') hideViewer();
+      }
+    });
+
+    // Click outside viewer to close
+    viewer.addEventListener('click', function(e) {
+      if (e.target === viewer) hideViewer();
+    });
+
+    // Initialize
+    renderProducts();
+    loadInventory();
+    updateCartCount();
+    updateStateBanner();
+  </script>
+
+</body>
+</html>
