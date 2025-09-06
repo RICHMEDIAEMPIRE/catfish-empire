@@ -669,8 +669,8 @@
         }
 
         // Fetch from new section-based backend API
-        console.log('➡️ Requesting:', `${BACKEND_URL}/products/printful/catfish-empire`);
-        const response = await fetch(`${BACKEND_URL}/products/printful/catfish-empire`, {
+        console.log('➡️ Requesting:', `${BACKEND_URL}/api/printful-products?section=catfish-empire`);
+        const response = await fetch(`${BACKEND_URL}/api/printful-products?section=catfish-empire`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
