@@ -749,14 +749,17 @@
       });
     }
 
+    // Simple in-memory cache for variant data by external_id
+    const printfulVariantCache = window.printfulVariantCache || (window.printfulVariantCache = {});
+
     function createPrintfulCard(product) {
       console.log('🎨 Creating card for product:', product.name);
       
       const card = document.createElement('div');
       card.className = 'product-card';
       
-      const price = parseFloat(product.price || 0);
-      const formattedPrice = price > 0 ? `$${price.toFixed(2)}` : 'Price on request';
+      const priceNum = parseFloat(product.price || 0);
+      let formattedPrice = priceNum > 0 ? `$${priceNum.toFixed(2)}` : 'Price on request';
       
       let description = product.description || '';
       if (description.length > 100) {
@@ -782,13 +785,95 @@
           ${freeShippingBadge}
           <h3>${product.name}</h3>
           <p>${description}</p>
-          <div class="price">${formattedPrice}</div>
-          <button class="add-to-cart-btn" onclick="addPrintfulProductToCart('${product.id}')">
+          <div class="price" id="price-${product.id}">${formattedPrice}</div>
+          <div style="display:flex; gap:.5rem; margin: .5rem 0; align-items:center;">
+            <select id="color-${product.id}" disabled aria-label="Select color">
+              <option value="">Loading colors...</option>
+            </select>
+            <select id="size-${product.id}" disabled aria-label="Select size">
+              <option value="">Loading sizes...</option>
+            </select>
+          </div>
+          <button class="add-to-cart-btn" id="btn-${product.id}" disabled>
             Add to Cart
           </button>
         </div>
       `;
       
+      // Variant logic
+      const colorSel = card.querySelector(`#color-${product.id}`);
+      const sizeSel = card.querySelector(`#size-${product.id}`);
+      const priceEl = card.querySelector(`#price-${product.id}`);
+      const btn = card.querySelector(`#btn-${product.id}`);
+
+      async function fetchVariants() {
+        const extId = product.external_id || product.id;
+        if (printfulVariantCache[extId]) return printfulVariantCache[extId];
+        try {
+          const resp = await fetch(`https://api.printful.com/products/${extId}`);
+          const data = await resp.json();
+          const variants = data?.result?.variants || [];
+          printfulVariantCache[extId] = variants;
+          return variants;
+        } catch (e) {
+          console.warn('Variant fetch failed:', e);
+          return [];
+        }
+      }
+
+      function unique(list) { return Array.from(new Set(list)); }
+
+      function populateSelectors(variants) {
+        const colors = unique(variants.map(v => v.color).filter(Boolean));
+        const sizes = unique(variants.map(v => v.size).filter(Boolean));
+        colorSel.innerHTML = `<option value="">Color</option>` + colors.map(c => `<option value="${c}">${c}</option>`).join('');
+        sizeSel.innerHTML = `<option value="">Size</option>` + sizes.map(s => `<option value="${s}">${s}</option>`).join('');
+        colorSel.disabled = false;
+        sizeSel.disabled = false;
+      }
+
+      function updateSizeOptions(variants) {
+        const selectedColor = colorSel.value;
+        const sizes = unique(variants.filter(v => !selectedColor || v.color === selectedColor).map(v => v.size).filter(Boolean));
+        const current = sizeSel.value;
+        sizeSel.innerHTML = `<option value="">Size</option>` + sizes.map(s => `<option value="${s}">${s}</option>`).join('');
+        if (sizes.includes(current)) sizeSel.value = current; else sizeSel.value = '';
+      }
+
+      function updateColorOptions(variants) {
+        const selectedSize = sizeSel.value;
+        const colors = unique(variants.filter(v => !selectedSize || v.size === selectedSize).map(v => v.color).filter(Boolean));
+        const current = colorSel.value;
+        colorSel.innerHTML = `<option value="">Color</option>` + colors.map(c => `<option value="${c}">${c}</option>`).join('');
+        if (colors.includes(current)) colorSel.value = current; else colorSel.value = '';
+      }
+
+      function applySelection(variants) {
+        const c = colorSel.value; const s = sizeSel.value;
+        const variant = variants.find(v => (!c || v.color === c) && (!s || v.size === s) && v.retail_price || v.price);
+        const exact = variants.find(v => v.color === c && v.size === s);
+        const chosen = exact || variant;
+        if (c && s && chosen) {
+          const pr = parseFloat(chosen.retail_price || chosen.price || 0);
+          priceEl.textContent = pr > 0 ? `$${pr.toFixed(2)}` : 'Price on request';
+          btn.disabled = !(chosen && pr > 0);
+          btn.onclick = () => {
+            console.log('Selected variant:', { productId: product.id, external_id: product.external_id, variantId: chosen.id, color: c, size: s, price: pr });
+          };
+        } else {
+          btn.disabled = true;
+          btn.onclick = null;
+          priceEl.textContent = formattedPrice;
+        }
+      }
+
+      (async () => {
+        const variants = await fetchVariants();
+        populateSelectors(variants);
+        colorSel.addEventListener('change', () => { updateSizeOptions(variants); applySelection(variants); });
+        sizeSel.addEventListener('change', () => { updateColorOptions(variants); applySelection(variants); });
+      })();
+
       console.log(`✅ Created card for ${product.name} with ${hasMultipleImages ? 'zoom' : 'no zoom'} functionality`);
       return card;
     }
