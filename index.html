@@ -794,25 +794,46 @@
               <option value="">Loading sizes...</option>
             </select>
           </div>
-          <button class="add-to-cart-btn" id="btn-${product.id}" disabled>
-            Add to Cart
-          </button>
+          <div style="display:flex; gap:.5rem; margin-top:.5rem;">
+            <button class="add-to-cart-btn" id="btn-${product.id}" disabled>
+              Add to Cart
+            </button>
+            <button class="add-to-cart-btn" id="buy-${product.id}" disabled style="background:linear-gradient(45deg,#0069d9,#1e90ff)">
+              Buy Now
+            </button>
+          </div>
         </div>
       `;
-      
       // Variant logic
       const colorSel = card.querySelector(`#color-${product.id}`);
       const sizeSel = card.querySelector(`#size-${product.id}`);
       const priceEl = card.querySelector(`#price-${product.id}`);
       const btn = card.querySelector(`#btn-${product.id}`);
+      const buyBtn = card.querySelector(`#buy-${product.id}`);
+      const imgEl = card.querySelector('img');
+
+      // If backend provided colors/sizes/variantMap, use them without extra fetch
+      const hasVariantMap = product.variantMap && Object.keys(product.variantMap).length > 0;
 
       async function fetchVariants() {
+        if (hasVariantMap) {
+          // Transform variantMap to array-like for unified handling
+          const variants = Object.values(product.variantMap).map(v => ({
+            id: v.id,
+            color: v.color,
+            size: v.size,
+            retail_price: v.price,
+            price: v.price,
+            files: v.image ? [{ preview_url: v.image }] : []
+          }));
+          return variants;
+        }
         const extId = product.external_id || product.id;
         if (printfulVariantCache[extId]) return printfulVariantCache[extId];
         try {
           const resp = await fetch(`https://api.printful.com/products/${extId}`);
           const data = await resp.json();
-          const variants = data?.result?.variants || [];
+          const variants = data?.result?.variants || data?.result?.sync_variants || [];
           printfulVariantCache[extId] = variants;
           return variants;
         } catch (e) {
@@ -856,10 +877,13 @@
         if (c && s && chosen) {
           const pr = parseFloat(chosen.retail_price || chosen.price || 0);
           priceEl.textContent = pr > 0 ? `$${pr.toFixed(2)}` : 'Price on request';
+          if (chosen.files && chosen.files[0] && (chosen.files[0].preview_url || chosen.files[0].thumbnail_url)) {
+            imgEl.src = chosen.files[0].preview_url || chosen.files[0].thumbnail_url;
+          }
           btn.disabled = !(chosen && pr > 0);
+          buyBtn.disabled = btn.disabled;
           btn.onclick = () => {
             console.log('Selected variant:', { productId: product.id, external_id: product.external_id, variantId: chosen.id, color: c, size: s, price: pr });
-            // Add minimal cart entry compatible with backend
             addPrintfulToCart({
               id: product.id,
               productId: product.id,
@@ -868,12 +892,39 @@
               price: pr,
               currency: 'USD',
               thumbnail: product.image || product.thumbnail || cardImage,
-              freeShipping: false
+              freeShipping: true
             }, 1);
+          };
+          buyBtn.onclick = async () => {
+            try {
+              const items = [{
+                type: 'printful',
+                id: product.id,
+                variant_id: chosen.id,
+                name: `${product.name} - ${c} / ${s}`,
+                price: pr,
+                currency: 'USD',
+                image: imgEl.src,
+                qty: 1,
+                external_id: product.external_id
+              }];
+              const resp = await fetch(`${BACKEND_URL}/create-checkout-session`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ items })
+              });
+              const data = await resp.json();
+              if (data.url) window.location.href = data.url; else alert('Checkout failed');
+            } catch (e) {
+              console.error('Checkout error', e);
+              alert('Checkout failed');
+            }
           };
         } else {
           btn.disabled = true;
+          buyBtn.disabled = true;
           btn.onclick = null;
+          buyBtn.onclick = null;
           priceEl.textContent = formattedPrice;
         }
       }
