@@ -850,8 +850,8 @@
 
       function applySelection(variants) {
         const c = colorSel.value; const s = sizeSel.value;
-        const variant = variants.find(v => (!c || v.color === c) && (!s || v.size === s) && v.retail_price || v.price);
         const exact = variants.find(v => v.color === c && v.size === s);
+        const variant = exact || variants.find(v => v.color === c || v.size === s);
         const chosen = exact || variant;
         if (c && s && chosen) {
           const pr = parseFloat(chosen.retail_price || chosen.price || 0);
@@ -859,6 +859,17 @@
           btn.disabled = !(chosen && pr > 0);
           btn.onclick = () => {
             console.log('Selected variant:', { productId: product.id, external_id: product.external_id, variantId: chosen.id, color: c, size: s, price: pr });
+            // Add minimal cart entry compatible with backend
+            addPrintfulToCart({
+              id: product.id,
+              productId: product.id,
+              variantId: chosen.id,
+              name: `${product.name} - ${c} / ${s}`,
+              price: pr,
+              currency: 'USD',
+              thumbnail: product.image || product.thumbnail || cardImage,
+              freeShipping: false
+            }, 1);
           };
         } else {
           btn.disabled = true;
