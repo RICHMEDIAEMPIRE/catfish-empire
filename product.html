@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Product – Catfish Empire™</title>
+  <style>
+    body { margin: 0; background: #000; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .nav { background: linear-gradient(45deg, gold, #ffd700); color: #000; padding: 1rem; display:flex; justify-content:space-between; align-items:center; }
+    .nav a { color:#000; text-decoration:none; font-weight:bold; margin-left:1rem; }
+    .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; display:grid; grid-template-columns: 1fr 1fr; gap:2rem; }
+    .gallery { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 1rem; }
+    .main-img { width: 100%; height: 520px; object-fit: contain; background:#111; border-radius:10px; }
+    .thumbs { display:flex; gap:.5rem; margin-top:.75rem; flex-wrap:wrap; }
+    .thumbs img { width:80px; height:80px; object-fit:cover; border-radius:8px; cursor:pointer; border:2px solid transparent; }
+    .thumbs img.active, .thumbs img:hover { border-color: gold; }
+    .details { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 1.25rem; }
+    h1 { color: gold; margin: .25rem 0 1rem; font-size:1.8rem; }
+    .desc { color:#ccc; line-height:1.6; margin-bottom:1rem; }
+    .row { display:flex; gap:.75rem; margin: .5rem 0; align-items:center; }
+    select { background:#111; color:#fff; border:1px solid #444; padding:.6rem .8rem; border-radius:8px; min-width: 160px; }
+    .price { font-size:1.6rem; font-weight:bold; margin: 1rem 0; }
+    .btn { background: linear-gradient(45deg, #28a745, #34ce57); color:#fff; border:none; padding: .9rem 1.5rem; font-weight:bold; border-radius:10px; cursor:pointer; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; }
+    @media (max-width: 900px) { .container { grid-template-columns: 1fr; } .main-img { height: 380px; } }
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <div><strong>CATFISH EMPIRE™</strong></div>
+    <div>
+      <a href="index.html">Home</a>
+      <a href="cart.html">Cart</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="gallery">
+      <img id="mainImage" class="main-img" src="TM.png" alt="Product" />
+      <div id="thumbs" class="thumbs"></div>
+    </div>
+    <div class="details">
+      <h1 id="title">Loading…</h1>
+      <div id="desc" class="desc"></div>
+      <div class="row">
+        <label for="colorSel">Primary color</label>
+        <select id="colorSel"><option value="">Select color</option></select>
+      </div>
+      <div class="row">
+        <label for="sizeSel">Size</label>
+        <select id="sizeSel"><option value="">Select size</option></select>
+      </div>
+      <div id="price" class="price">Select options</div>
+      <button id="addBtn" class="btn" disabled>Add to Cart</button>
+    </div>
+  </div>
+
+  <script>
+    const BACKEND_URL = "https://catfish-stripe-backend.onrender.com";
+
+    function getQueryId() {
+      const p = new URLSearchParams(location.search);
+      return p.get('id');
+    }
+
+    function titleCase(s) { return (s || '').toString().replace(/\b\w/g, c => c.toUpperCase()); }
+
+    function updateCartCount() {
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      const total = cart.reduce((n, i) => n + i.qty, 0);
+      // optional: could update a badge here
+    }
+
+    function addToCart(item) {
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      const existing = cart.find(i => i.type==='printful' && i.variantId === item.variantId);
+      if (existing) existing.qty += item.qty; else cart.push(item);
+      localStorage.setItem('cart', JSON.stringify(cart));
+      updateCartCount();
+      alert('Added to cart');
+    }
+
+    async function loadProduct() {
+      const id = getQueryId();
+      if (!id) { alert('Product not found'); return; }
+      const r = await fetch(`${BACKEND_URL}/api/printful-product/${encodeURIComponent(id)}`);
+      const data = await r.json();
+      if (!r.ok || data.error) { alert('Failed to load product'); return; }
+
+      // Populate title/desc
+      document.getElementById('title').textContent = data.name || 'Product';
+      document.getElementById('desc').textContent = data.description || '';
+
+      // Gallery
+      const imgs = (data.images || []).map(i => i.url).filter(Boolean);
+      const mainImage = document.getElementById('mainImage');
+      mainImage.src = imgs[0] || 'TM.png';
+      const thumbs = document.getElementById('thumbs');
+      thumbs.innerHTML = '';
+      imgs.forEach((src, idx) => {
+        const img = document.createElement('img');
+        img.src = src; img.alt = `Image ${idx+1}`;
+        if (idx === 0) img.classList.add('active');
+        img.onclick = () => {
+          Array.from(thumbs.children).forEach(n => n.classList.remove('active'));
+          img.classList.add('active');
+          mainImage.src = src;
+        };
+        thumbs.appendChild(img);
+      });
+
+      // Build options
+      const colorSel = document.getElementById('colorSel');
+      const sizeSel = document.getElementById('sizeSel');
+      const priceEl = document.getElementById('price');
+      const addBtn = document.getElementById('addBtn');
+
+      const variants = Array.isArray(data.variants) ? data.variants : [];
+      const colors = Array.from(new Set(variants.map(v => v.color).filter(Boolean)));
+      const sizes = Array.from(new Set(variants.map(v => v.size).filter(Boolean)));
+      colorSel.innerHTML = '<option value="">Select color</option>' + colors.map(c => `<option value="${c}">${titleCase(c)}</option>`).join('');
+      sizeSel.innerHTML = '<option value="">Select size</option>' + sizes.map(s => `<option value="${s}">${titleCase(s)}</option>`).join('');
+
+      const index = new Map();
+      variants.forEach(v => {
+        const key = `${(v.color||'').toLowerCase()}|${(v.size||'').toLowerCase()}`;
+        index.set(key, v);
+      });
+
+      function resolve() {
+        const c = colorSel.value; const s = sizeSel.value;
+        const key = `${(c||'').toLowerCase()}|${(s||'').toLowerCase()}`;
+        const v = index.get(key);
+        if (v && v.priceCents > 0) {
+          priceEl.textContent = `$${(v.priceCents/100).toFixed(2)}`;
+          if (v.image) mainImage.src = v.image;
+          addBtn.disabled = false;
+          addBtn.onclick = () => {
+            addToCart({
+              type: 'printful',
+              productId: Number(data.id),
+              variantId: v.id,
+              qty: 1,
+              name: `${data.name} – ${titleCase(v.color||'')}/${titleCase(v.size||'')}`,
+              price: v.priceCents/100,
+              currency: 'USD',
+              image: v.image || mainImage.src
+            });
+          };
+        } else {
+          priceEl.textContent = 'Select options';
+          addBtn.disabled = true;
+          addBtn.onclick = null;
+        }
+      }
+
+      colorSel.addEventListener('change', resolve);
+      sizeSel.addEventListener('change', resolve);
+    }
+
+    document.addEventListener('DOMContentLoaded', loadProduct);
+  </script>
+</body>
+</html>
