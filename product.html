@@ -14,6 +14,8 @@
     .thumbs { display:flex; gap:.5rem; margin-top:.75rem; flex-wrap:wrap; }
     .thumbs img { width:80px; height:80px; object-fit:cover; border-radius:8px; cursor:pointer; border:2px solid transparent; }
     .thumbs img.active, .thumbs img:hover { border-color: gold; }
+    /* Minimal additions for requested hooks */
+    .gallery-main img { width:100%; max-width:560px; border-radius:12px; }
     .details { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 1.25rem; }
     h1 { color: gold; margin: .25rem 0 1rem; font-size:1.8rem; }
     .desc { color:#ccc; line-height:1.6; margin-bottom:1rem; }
@@ -36,175 +38,124 @@
 
   <div class="container">
     <div class="gallery">
-      <img id="mainImage" class="main-img" src="TM.png" alt="Product" />
-      <div id="thumbs" class="thumbs"></div>
+      <div class="gallery-main"><img id="g-main" class="main-img" src="TM.png" alt="Product image" /></div>
+      <div id="g-thumbs" class="thumbs"></div>
     </div>
     <div class="details">
-      <h1 id="title">Loading…</h1>
-      <div id="desc" class="desc"></div>
+      <h1 id="p-title">Loading…</h1>
+      <div id="p-desc" class="desc"></div>
       <div class="row">
-        <label for="colorSel">Primary color</label>
-        <select id="colorSel"><option value="">Select color</option></select>
+        <label for="sel-color">Primary color</label>
+        <select id="sel-color"><option value="">Select color</option></select>
       </div>
       <div class="row">
-        <label for="sizeSel">Size</label>
-        <select id="sizeSel"><option value="">Select size</option></select>
+        <label for="sel-size">Size</label>
+        <select id="sel-size"><option value="">Select size</option></select>
       </div>
-      <div id="price" class="price">Select options</div>
-      <button id="addBtn" class="btn" disabled>Add to Cart</button>
+      <div class="row">
+        <label for="sel-qty">Qty</label>
+        <input id="sel-qty" type="number" min="1" value="1" />
+      </div>
+      <div id="p-price" class="price">Select options</div>
+      <button id="btn-add" class="btn" disabled>Add to Cart</button>
     </div>
   </div>
 
   <script>
-    const BACKEND_URL = "https://catfish-stripe-backend.onrender.com";
+    const BACKEND_URL = window.BACKEND_URL || "https://catfish-stripe-backend.onrender.com";
+    const $ = (id) => document.getElementById(id);
+    const SIZE_ORDER = ["XS","S","M","L","XL","2XL","3XL","4XL","5XL"];
+    const qs = new URLSearchParams(location.search);
+    const productId = qs.get("id");
 
-    function getQueryId() {
-      const p = new URLSearchParams(location.search);
-      return p.get('id');
-    }
+    let productData = null;
+    let currentColor = null;
+    let currentSize = null;
+    let currentVariantId = null;
+    let currentPriceCents = null;
+    let currentMainImg = null;
 
-    function titleCase(s) { return (s || '').toString().replace(/\b\w/g, c => c.toUpperCase()); }
+    function titleCase(s){ return (s||"").replace(/\b\w/g,c=>c.toUpperCase()); }
+    function unique(arr){ const seen=new Set(), out=[]; for (const u of arr){ if(u && !seen.has(u)){ seen.add(u); out.push(u); } } return out; }
 
-    function updateCartCount() {
-      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-      const total = cart.reduce((n, i) => n + i.qty, 0);
-      // optional: could update a badge here
-    }
-
-    function addToCart(item) {
-      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-      const existing = cart.find(i => i.type==='printful' && i.variantId === item.variantId);
-      if (existing) existing.qty += item.qty; else cart.push(item);
-      localStorage.setItem('cart', JSON.stringify(cart));
-      updateCartCount();
-      alert('Added to cart');
-    }
-
-    async function loadProduct() {
-      const id = getQueryId();
-      if (!id) { alert('Product not found'); return; }
-      const r = await fetch(`${BACKEND_URL}/api/printful-product/${encodeURIComponent(id)}?nocache=1`);
-      const data = await r.json();
-      if (!r.ok || data.error) { alert('Failed to load product'); return; }
-
-      // Populate title/desc
-      document.getElementById('title').textContent = data.name || 'Product';
-      document.getElementById('desc').textContent = data.description || '';
-
-      // Gallery utilities
-      const mainImage = document.getElementById('mainImage');
-      const thumbs = document.getElementById('thumbs');
-      function angleWeight(url){
-        const u = String(url).toLowerCase();
-        if (u.includes('front')) return 1;
-        if (u.includes('left')) return 2;
-        if (u.includes('right')) return 3;
-        if (u.includes('back')) return 4;
-        return 99;
-      }
-      function isDesignImage(url){
-        const u = String(url).toLowerCase();
-        return u.includes('printfile') || u.includes('design');
-      }
-      function renderThumbsLegacy(imgs){
-        thumbs.innerHTML = '';
-        imgs.forEach((src, idx) => {
-          const img = document.createElement('img');
-          img.src = src; img.alt = `Image ${idx+1}`;
-          if (idx === 0) img.classList.add('active');
-          img.onclick = () => {
-            Array.from(thumbs.children).forEach(n => n.classList.remove('active'));
-            img.classList.add('active');
-            mainImage.src = src;
-          };
-          thumbs.appendChild(img);
-        });
-        mainImage.src = imgs[0] || 'TM.png';
-      }
-
-      function pickImageForColor(color){
-        const cLow = String(color||'').toLowerCase();
-        // Try to find an image in global gallery that includes color name (preferred)
-        const byName = globalImgs.find(u => cLow && String(u).toLowerCase().includes(cLow));
-        if (byName) return byName;
-        // Prefer variant image if it's not a design image
-        const varImg = (variants || []).find(v => (v.color||'').toLowerCase() === cLow && v.image && !isDesignImage(v.image))?.image;
-        if (varImg) return varImg;
-        // Fallback to first global mockup
-        return globalImgs[0] || 'TM.png';
-      }
-
-      // Build options
-      const colorSel = document.getElementById('colorSel');
-      const sizeSel = document.getElementById('sizeSel');
-      const priceEl = document.getElementById('price');
-      const addBtn = document.getElementById('addBtn');
-
-      const variants = Array.isArray(data.variants) ? data.variants : [];
-      const colors = Array.from(new Set(variants.map(v => v.color).filter(Boolean)));
-      const sizes = Array.from(new Set(variants.map(v => v.size).filter(Boolean)));
-      colorSel.innerHTML = '<option value="">Select color</option>' + colors.map(c => `<option value="${c}">${titleCase(c)}</option>`).join('');
-      sizeSel.innerHTML = '<option value="">Select size</option>' + sizes.map(s => `<option value="${s}">${titleCase(s)}</option>`).join('');
-
-      const index = new Map();
-      variants.forEach(v => {
-        const key = `${(v.color||'').toLowerCase()}|${(v.size||'').toLowerCase()}`;
-        index.set(key, v);
+    function setMain(src){
+      $("g-main").src = src || "";
+      currentMainImg = src || "";
+      Array.from($("g-thumbs").querySelectorAll("img")).forEach(img=>{
+        img.classList.toggle("active", img.dataset.src === src);
       });
-
-      // Build global mockups list (filter design images)
-      let globalImgs = (data.images || [])
-        .filter(Boolean)
-        .filter(u => !isDesignImage(u))
-        .sort((a,b)=>angleWeight(a)-angleWeight(b));
-      // If filenames contain color names, prefer only those with any color token (avoid logos)
-      const colorTokens = (colors || []).map(c => String(c).toLowerCase());
-      const tokenFiltered = globalImgs.filter(u => {
-        const ul = String(u).toLowerCase();
-        return colorTokens.some(t => ul.includes(t));
-      });
-      if (tokenFiltered.length) globalImgs = tokenFiltered;
-      renderThumbsLegacy(globalImgs);
-
-      function resolve() {
-        const c = colorSel.value; const s = sizeSel.value;
-        const key = `${(c||'').toLowerCase()}|${(s||'').toLowerCase()}`;
-        let v = index.get(key);
-        // If only color is selected (no size yet), show a preview mockup for the color (non-design)
-        if (!v && c) {
-          mainImage.src = pickImageForColor(c);
-        }
-        if (v && v.priceCents > 0) {
-          priceEl.textContent = `$${(v.priceCents/100).toFixed(2)}`;
-          // Use mockup for the selected color instead of variant design image
-          mainImage.src = pickImageForColor(v.color);
-          addBtn.disabled = false;
-          addBtn.onclick = () => {
-            const item = {
-              type: 'printful',
-              productId: Number(data.id),
-              name: data.name,
-              variantId: v.id,
-              price: v.priceCents/100,
-              currency: 'USD',
-              image: v.image || mainImage.src,
-              qty: 1
-            };
-            addToCart(item);
-          };
-        } else {
-          priceEl.textContent = 'Select options';
-          addBtn.disabled = true;
-          addBtn.onclick = null;
-        }
-        // Do not change gallery on color now (legacy behavior)
-      }
-
-      colorSel.addEventListener('change', resolve);
-      sizeSel.addEventListener('change', resolve);
     }
 
-    document.addEventListener('DOMContentLoaded', loadProduct);
+    function buildGalleryForColor(colorLower){
+      const byColor = productData.galleryByColor?.[colorLower];
+      let imgs = [];
+      if (byColor?.images?.length){ imgs = byColor.images.slice(0); }
+      else if (byColor?.views){ const v = byColor.views; imgs = unique([v.front, v.back, v.left, v.right].filter(Boolean)); }
+      if (!imgs.length && Array.isArray(productData.images)) imgs = productData.images.slice(0);
+      const wrap = $("g-thumbs");
+      wrap.innerHTML = "";
+      imgs.forEach(url=>{
+        const t = document.createElement("img");
+        t.loading = "lazy"; t.decoding = "async"; t.src = url; t.dataset.src = url; t.onclick = () => setMain(url);
+        wrap.appendChild(t);
+      });
+      const candidate = byColor?.views?.front || imgs[0] || "";
+      setMain(candidate);
+    }
+
+    function buildColorSelect(){
+      const colors = Object.keys(productData.galleryByColor || {}).sort((a,b)=>a.localeCompare(b));
+      const def = (productData.defaultColor || "").toLowerCase();
+      const sel = $("sel-color"); sel.innerHTML = "";
+      colors.forEach(c=>{ const opt=document.createElement("option"); opt.value=c; opt.textContent=titleCase(c); if (c===def) opt.selected=true; sel.appendChild(opt); });
+      currentColor = sel.value || def || colors[0] || null;
+      sel.onchange = ()=>{ currentColor = sel.value; buildGalleryForColor(currentColor); buildSizeSelect(currentColor); refreshPriceAndVariant(); };
+    }
+
+    function buildSizeSelect(colorLower){
+      const keys = productData.priceByKey || {}; const sizes = new Set();
+      Object.keys(keys).forEach(k=>{ const [c,s]=k.split("|"); if (c===colorLower && s) sizes.add(s); });
+      const ordered = Array.from(sizes).sort((a,b)=>{
+        const ia = SIZE_ORDER.indexOf(a.toUpperCase()); const ib = SIZE_ORDER.indexOf(b.toUpperCase());
+        if (ia===-1 && ib===-1) return a.localeCompare(b); if (ia===-1) return 1; if (ib===-1) return -1; return ia-ib;
+      });
+      const sel = $("sel-size"); sel.innerHTML = "";
+      ordered.forEach(s=>{ const opt=document.createElement("option"); opt.value=s; opt.textContent=s.toUpperCase(); sel.appendChild(opt); });
+      currentSize = sel.value || ordered[0] || null;
+      sel.onchange = ()=>{ currentSize = sel.value; refreshPriceAndVariant(); };
+    }
+
+    function refreshPriceAndVariant(){
+      if (!currentColor || !currentSize){ $("p-price").textContent = "$—"; $("btn-add").disabled = true; return; }
+      const key = `${currentColor}|${currentSize}`.toLowerCase();
+      currentPriceCents = productData.priceByKey?.[key] ?? null;
+      currentVariantId   = productData.variantMatrix?.[key] ?? null;
+      if (Number.isFinite(currentPriceCents) && currentVariantId){ $("p-price").textContent = `$${(currentPriceCents/100).toFixed(2)}`; $("btn-add").disabled = false; }
+      else { $("p-price").textContent = "$—"; $("btn-add").disabled = true; }
+    }
+
+    function addToCart(){
+      const qty = Math.max(1, parseInt(($("sel-qty").value||"1"),10));
+      if (!currentVariantId || !currentPriceCents){ alert("Please choose a color and size."); return; }
+      const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+      cart.push({ type:"printful", productId: productData.id, name: productData.name, color: currentColor, size: currentSize, variantId: currentVariantId, priceCents: currentPriceCents, currency:"USD", image: currentMainImg || productData.coverImage || null, qty });
+      localStorage.setItem("cart", JSON.stringify(cart));
+      if (window.updateCartCount) window.updateCartCount();
+      $("btn-add").textContent = "Added!"; setTimeout(()=>($("btn-add").textContent = "Add to Cart"), 900);
+    }
+
+    async function boot(){
+      if (!productId){ $("p-title").textContent = "Missing product id"; $("btn-add").disabled = true; return; }
+      const r = await fetch(`${BACKEND_URL}/api/printful-product/${encodeURIComponent(productId)}`);
+      const data = await r.json(); if (!r.ok || data.error){ $("p-title").textContent = "Product not found"; $("btn-add").disabled = true; return; }
+      productData = data;
+      $("p-title").textContent = productData.name || "Catfish Empire Product";
+      $("p-desc").innerHTML = (productData.description || "").replace(/\n/g,"<br>");
+      buildColorSelect(); buildGalleryForColor(currentColor); buildSizeSelect(currentColor); refreshPriceAndVariant();
+      $("btn-add").onclick = addToCart;
+    }
+
+    document.addEventListener('DOMContentLoaded', boot);
   </script>
 </body>
 </html>

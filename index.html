@@ -796,8 +796,9 @@
     function createPrintfulCard(product) {
       console.log('🎨 Creating card for product:', product.name);
       
-      const card = document.createElement('div');
-      card.className = 'product-card';
+      const card = document.createElement('a');
+      card.className = 'product-card card-link';
+      card.href = `product.html?id=${encodeURIComponent(product.id)}`;
       
       const priceCents = (typeof product.priceCents === 'number' && product.priceCents > 0) ? product.priceCents : null;
       let formattedPrice = priceCents != null ? `$${(priceCents / 100).toFixed(2)}` : 'View options';
@@ -819,8 +820,7 @@
       const freeShippingBadge = product.freeShipping ? '<div class="flagship-badge" style="background: #28a745; color: white; margin-bottom: 1rem;">Free Shipping</div>' : '';
       
       card.innerHTML = `
-        <img src="${cardImage}" alt="${product.name}" loading="lazy" 
-             onerror="this.src='TM.png'" />
+        <img src="${cardImage}" alt="${product.name}" loading="lazy" onerror="this.src='TM.png'" />
         <div class="product-card-content">
           ${freeShippingBadge}
           <h3>${product.name}</h3>
@@ -828,12 +828,6 @@
           <div class="price" id="price-${product.id}">${formattedPrice}</div>
         </div>
       `;
-
-      // Make entire card clickable to go to product page
-      card.style.cursor = 'pointer';
-      card.onclick = () => {
-        window.location.href = `product.html?id=${encodeURIComponent(product.id)}`;
-      };
 
       console.log(`✅ Created card for ${product.name} - clickable to product page`);
       return card;
