@@ -706,14 +706,15 @@
         console.log(`📦 Received ${data.count} Catfish Empire products from backend`);
         console.log('🎯 Sample product data:', data.products[0]);
 
-        // Cache the results
+        // Normalize before caching/rendering
+        const normalized = (data.products || []).map(normalizePrintful);
         printfulCache = {
-          products: data.products || [],
+          products: normalized,
           timestamp: now,
           TTL: printfulCache.TTL
         };
 
-        displayPrintfulProducts(data.products || []);
+        displayPrintfulProducts(normalized);
       } catch (error) {
         console.error('❌ Catfish Empire API Error:', error);
         if (printfulCache.products && printfulCache.products.length > 0) {
@@ -767,14 +768,28 @@
     // Simple in-memory cache for variant data by external_id
     const printfulVariantCache = window.printfulVariantCache || (window.printfulVariantCache = {});
 
+    function normalizePrintful(p) {
+      const priceCents =
+        (p.priceMinCents ?? p.price_cents ?? (typeof p.price === 'number' ? Math.round(p.price * 100) : null));
+      const img = p.thumb || p.image || p.mainImage || p.thumbnail || p.thumbnail_url || '';
+      return {
+        id: p.id,
+        name: p.name || 'Product',
+        img,
+        priceCents,
+        currency: (p.currency || 'USD').toUpperCase(),
+        hasVariants: !!p.hasVariants
+      };
+    }
+
     function createPrintfulCard(product) {
       console.log('🎨 Creating card for product:', product.name);
       
       const card = document.createElement('div');
       card.className = 'product-card';
       
-      const priceMin = (typeof product.priceMinCents === 'number' && product.priceMinCents > 0) ? product.priceMinCents : null;
-      let formattedPrice = priceMin ? `From $${(priceMin / 100).toFixed(2)}` : 'See options';
+      const priceCents = (typeof product.priceCents === 'number' && product.priceCents > 0) ? product.priceCents : null;
+      let formattedPrice = priceCents != null ? `$${(priceCents / 100).toFixed(2)}` : 'View options';
       
       let description = product.description || '';
       if (description.length > 100) {
@@ -782,7 +797,7 @@
       }
 
       // Use thumbnail or main image for card display
-      const cardImage = product.thumb || product.thumbnail || product.mainImage || product.image || 'TM.png';
+      const cardImage = product.img || 'TM.png';
       
       // Add zoom functionality if product has multiple images
       const hasMultipleImages = product.images && product.images.length > 0;
@@ -806,7 +821,7 @@
       // Make entire card clickable to go to product page
       card.style.cursor = 'pointer';
       card.onclick = () => {
-        window.location.href = `product.html?id=${product.id}`;
+        window.location.href = `product.html?id=${encodeURIComponent(product.id)}`;
       };
 
       console.log(`✅ Created card for ${product.name} - clickable to product page`);
