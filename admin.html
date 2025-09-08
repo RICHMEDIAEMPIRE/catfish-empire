@@ -57,7 +57,7 @@
     <hr/>
     <h2>Product Overrides</h2>
     <p class="muted">Edit product titles, descriptions, and mockups for individual Printful products. These overrides affect product.html rendering only and do not change Printful.</p>
-    <div id="products-tabs"></div>
+    <div id="products-tabs" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
     <div id="product-editor" class="hidden">
       <h3 id="pe-title">Product Editor</h3>
       <label>Title Override<br/>
@@ -67,12 +67,16 @@
       <label>Description Override<br/>
         <textarea id="pe-desc-input" rows="5" style="width:100%"></textarea>
       </label>
-      <h4>Custom Mockups (URLs)</h4>
-      <div id="pe-custom-list"></div>
-      <button id="pe-add-mockup">Add Mockup URL</button>
-      <h4>Hidden Mockups (URLs to hide)</h4>
-      <div id="pe-hidden-list"></div>
-      <button id="pe-add-hidden">Add Hidden URL</button>
+      <h4>Custom Mockups</h4>
+      <div id="pe-custom-list" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+      <div style="margin-top:8px;">
+        <button id="pe-add-mockup">+ Add by URL</button>
+        <input type="file" id="pe-upload" accept="image/*" style="margin-left:8px;" />
+        <button id="pe-upload-btn">Upload</button>
+      </div>
+      <h4>Hidden Mockups</h4>
+      <div id="pe-hidden-list" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+      <button id="pe-add-hidden">+ Add Hidden URL</button>
       <br/>
       <button id="pe-save">Save Overrides</button>
       <button id="pe-cancel">Close</button>
@@ -139,10 +143,34 @@
       const box = document.getElementById('products-tabs');
       box.innerHTML = '';
       products.forEach(p => {
-        const btn = el('button','', p.name || `Product ${p.id}`);
-        btn.style.marginRight = '8px';
-        btn.onclick = () => openEditor(p);
-        box.appendChild(btn);
+        const tab = el('div','tab', `<span>${p.name || `Product ${p.id}`}</span>`);
+        tab.draggable = true;
+        tab.style.padding = '6px 10px';
+        tab.style.background = '#222';
+        tab.style.border = '1px solid #444';
+        tab.style.borderRadius = '6px';
+        tab.style.cursor = 'move';
+        tab.addEventListener('click', () => openEditor(p));
+        tab.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', String(p.id)); });
+        tab.addEventListener('dragover', e => e.preventDefault());
+        tab.addEventListener('drop', async e => {
+          e.preventDefault();
+          const fromId = e.dataTransfer.getData('text/plain');
+          const toId = String(p.id);
+          if (!fromId || fromId===toId) return;
+          // naive reorder: send both indices to backend
+          try {
+            await fetch(`${backendURL}/admin/product-sort`, {
+              method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
+              body: JSON.stringify({ fromId, toId })
+            });
+            // reload tabs with nocache to reflect new order
+            const res = await fetch(`${backendURL}/api/printful-products?nocache=1`);
+            const json = await res.json();
+            if (json && Array.isArray(json.products)) renderProductTabs(json.products);
+          } catch {}
+        });
+        box.appendChild(tab);
       });
     }
     async function openEditor(p){
@@ -158,12 +186,22 @@
       document.getElementById('pe-desc-input').value = existing?.description_override || '';
       const customList = document.getElementById('pe-custom-list');
       customList.innerHTML = '';
-      (existing?.custom_mockups || []).forEach(u => addRow(customList, u));
+      (existing?.custom_mockups || []).forEach(u => addThumb(customList, u));
       const hiddenList = document.getElementById('pe-hidden-list');
       hiddenList.innerHTML = '';
-      (existing?.hidden_mockups || []).forEach(u => addRow(hiddenList, u));
+      (existing?.hidden_mockups || []).forEach(u => addThumb(hiddenList, u));
       document.getElementById('pe-add-mockup').onclick = () => addRow(customList, '');
       document.getElementById('pe-add-hidden').onclick = () => addRow(hiddenList, '');
+      document.getElementById('pe-upload-btn').onclick = async () => {
+        const file = document.getElementById('pe-upload').files[0];
+        if (!file) { alert('Choose a file'); return; }
+        // simple inline upload via base64 (for prototype). In production, switch to storage bucket.
+        const reader = new FileReader();
+        reader.onload = () => {
+          addThumb(customList, reader.result);
+        };
+        reader.readAsDataURL(file);
+      };
       document.getElementById('pe-save').onclick = async () => {
         const payload = {
           title_override: document.getElementById('pe-title-input').value.trim() || null,
@@ -184,8 +222,20 @@
       const row = el('div','');
       const input = el('input',''); input.type='text'; input.style.width='80%'; input.value = value||'';
       const btn = el('button','', 'Remove'); btn.style.marginLeft='8px';
-      btn.onclick = () => container.removeChild(row);
+      btn.onclick = async () => {
+        if (confirm('Remove this URL?')) container.removeChild(row);
+      };
       row.appendChild(input); row.appendChild(btn); container.appendChild(row);
+    }
+
+    function addThumb(container, url){
+      const wrap = el('div','');
+      wrap.style.position='relative'; wrap.style.width='90px'; wrap.style.height='90px';
+      const img = el('img',''); img.src = url; img.style.width='100%'; img.style.height='100%'; img.style.objectFit='cover';
+      const x = el('button','', '✕');
+      x.style.position='absolute'; x.style.top='-8px'; x.style.right='-8px'; x.style.background='#c00'; x.style.color='#fff'; x.style.border='none'; x.style.borderRadius='50%'; x.style.width='22px'; x.style.height='22px'; x.style.cursor='pointer';
+      x.onclick = () => { if (confirm('Delete this mockup?')) container.removeChild(wrap); };
+      wrap.appendChild(img); wrap.appendChild(x); container.appendChild(wrap);
     }
     function rowsToArray(container){
       return Array.from(container.querySelectorAll('input')).map(i=>i.value.trim()).filter(Boolean);
