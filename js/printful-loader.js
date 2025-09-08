@@ -1,11 +1,7 @@
 (() => {
   const BACKEND_URL = (window.BACKEND_URL || "https://catfish-stripe-backend.onrender.com").replace(/\/+$/,"");
 
-  const ENDPOINTS = [
-    `${BACKEND_URL}/api/printful-products?nocache=1`,
-    `${BACKEND_URL}/products/printful/catfish-empire?nocache=1`,
-    `${BACKEND_URL}/printful/products?nocache=1`
-  ];
+  const ENDPOINT = `${BACKEND_URL}/api/printful-products?nocache=1`;
 
   const grid = document.getElementById("printful-grid");
   if (!grid) {
@@ -60,34 +56,32 @@
     `;
   }
 
-  async function fetchFirstWorking() {
-    for (const url of ENDPOINTS) {
-      try {
-        const res = await fetch(url, { credentials: "omit" });
-        if (!res.ok) {
-          console.warn("[printful] endpoint failed", url, res.status);
-          continue;
-        }
-        const json = await res.json();
-        let list = null;
-        if (Array.isArray(json)) list = json;
-        else if (Array.isArray(json.products)) list = json.products;
-        else if (Array.isArray(json.result)) list = json.result;
-        if (!list || list.length === 0) {
-          console.warn("[printful] no products in response", url, json);
-          continue;
-        }
-        return list;
-      } catch (err) {
-        console.warn("[printful] fetch error", url, err);
+  async function fetchList() {
+    try {
+      const res = await fetch(ENDPOINT, {
+        method: 'GET',
+        mode: 'cors',
+        credentials: 'omit',
+        headers: { 'Accept': 'application/json' }
+      });
+      if (!res.ok) {
+        console.warn('[printful] list failed', ENDPOINT, res.status);
+        return null;
       }
+      const json = await res.json().catch(() => null);
+      if (!json) return null;
+      const list = Array.isArray(json.products) ? json.products : (Array.isArray(json) ? json : (Array.isArray(json.result) ? json.result : null));
+      if (!list || !list.length) return null;
+      return list;
+    } catch (e) {
+      console.warn('[printful] fetch error', ENDPOINT, e);
+      return null;
     }
-    return null;
   }
 
   async function init() {
     try {
-      const list = await fetchFirstWorking();
+      const list = await fetchList();
       if (!list) {
         grid.innerHTML = `<p class="muted">No products available right now.</p>`;
         return;
