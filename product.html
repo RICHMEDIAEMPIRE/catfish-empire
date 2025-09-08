@@ -85,12 +85,25 @@
       });
     }
 
+    const HIDDEN_URLS = new Set([
+      'https://files.cdn.printful.com/files/913/913bbbe9ca436bd693757d21dce528c2_preview.png',
+      'https://files.cdn.printful.com/files/b87/b87af5e750905c48adce2f19a3096443_preview.png',
+      'https://files.cdn.printful.com/files/f63/f6377c84da44db6dc356547e9066da18_preview.png'
+    ]);
+    const isDesign = (u='') => {
+      const s = String(u).toLowerCase();
+      return s.includes('printfile') || s.includes('design');
+    };
+    function filterImgs(arr){
+      return (arr||[]).filter(u => u && !HIDDEN_URLS.has(String(u)) && !isDesign(u));
+    }
+
     function buildGalleryForColor(colorLower){
       const byColor = productData.galleryByColor?.[colorLower];
       let imgs = [];
-      if (byColor?.images?.length){ imgs = byColor.images.slice(0); }
-      else if (byColor?.views){ const v = byColor.views; imgs = unique([v.front, v.back, v.left, v.right].filter(Boolean)); }
-      if (!imgs.length && Array.isArray(productData.images)) imgs = productData.images.slice(0);
+      if (byColor?.images?.length){ imgs = filterImgs(byColor.images.slice(0)); }
+      else if (byColor?.views){ const v = byColor.views; imgs = filterImgs(unique([v.front, v.back, v.left, v.right].filter(Boolean))); }
+      if (!imgs.length && Array.isArray(productData.images)) imgs = filterImgs(productData.images.slice(0));
       const wrap = $("g-thumbs");
       wrap.innerHTML = "";
       imgs.forEach(url=>{
@@ -98,7 +111,7 @@
         t.loading = "lazy"; t.decoding = "async"; t.src = url; t.dataset.src = url; t.onclick = () => setMain(url);
         wrap.appendChild(t);
       });
-      const candidate = byColor?.views?.front || imgs[0] || "";
+      const candidate = filterImgs([byColor?.views?.front]).find(Boolean) || imgs[0] || "";
       setMain(candidate);
     }
 
