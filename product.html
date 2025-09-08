@@ -91,8 +91,8 @@
       document.getElementById('title').textContent = data.name || 'Product';
       document.getElementById('desc').textContent = data.description || '';
 
-      // Gallery
-      const imgs = (data.images || []).map(i => i.url).filter(Boolean);
+      // Gallery - images are now just strings, not objects
+      const imgs = (data.images || []).filter(Boolean);
       const mainImage = document.getElementById('mainImage');
       mainImage.src = imgs[0] || 'TM.png';
       const thumbs = document.getElementById('thumbs');

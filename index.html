@@ -625,6 +625,19 @@
     // Backend API Configuration
     const BACKEND_URL = "https://catfish-stripe-backend.onrender.com";
 
+    // Feature flag for Printful UI
+    function isPrintfulEnabled() {
+      // Check URL parameter first
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('printful') === '1') {
+        localStorage.setItem('enablePrintfulUI', 'true');
+        return true;
+      }
+      
+      // Check localStorage
+      return localStorage.getItem('enablePrintfulUI') === 'true';
+    }
+
     let printfulCache = {
       products: null,
       timestamp: 0,
@@ -645,8 +658,10 @@
         const sunglassesProduct = createSunglassesCard();
         gridEl.appendChild(sunglassesProduct);
 
-        // Then fetch and add Printful products
-        await fetchAndDisplayPrintfulProducts();
+        // Then fetch and add Printful products (if enabled)
+        if (isPrintfulEnabled()) {
+          await fetchAndDisplayPrintfulProducts();
+        }
         
         loadingEl.style.display = 'none';
       } catch (error) {
@@ -668,9 +683,9 @@
           return;
         }
 
-        // Fetch from new section-based backend API
-        console.log('➡️ Requesting:', `${BACKEND_URL}/api/printful-products?section=catfish-empire`);
-        const response = await fetch(`${BACKEND_URL}/api/printful-products?section=catfish-empire`, {
+        // Fetch from new backend API
+        console.log('➡️ Requesting:', `${BACKEND_URL}/api/printful-products`);
+        const response = await fetch(`${BACKEND_URL}/api/printful-products`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
@@ -745,10 +760,6 @@
       
       products.forEach(product => {
         const card = createPrintfulCard(product);
-        card.style.cursor = 'pointer';
-        card.onclick = () => {
-          window.location.href = `/product.html?id=${product.id}`;
-        };
         gridEl.appendChild(card);
       });
     }
@@ -783,7 +794,6 @@
       
       card.innerHTML = `
         <img src="${cardImage}" alt="${product.name}" loading="lazy" 
-             class="${zoomClass}" ${zoomOnClick} 
              onerror="this.src='TM.png'" />
         <div class="product-card-content">
           ${freeShippingBadge}
@@ -793,7 +803,13 @@
         </div>
       `;
 
-      console.log(`✅ Created card for ${product.name} with ${hasMultipleImages ? 'zoom' : 'no zoom'} functionality`);
+      // Make entire card clickable to go to product page
+      card.style.cursor = 'pointer';
+      card.onclick = () => {
+        window.location.href = `product.html?id=${product.id}`;
+      };
+
+      console.log(`✅ Created card for ${product.name} - clickable to product page`);
       return card;
     }
 
@@ -955,7 +971,10 @@
     document.addEventListener('DOMContentLoaded', function() {
       updateCartCount();
       loadAllProducts();
-      setInterval(fetchAndDisplayPrintfulProducts, 30 * 60 * 1000);
+      // Periodic refresh only if Printful is enabled
+      if (isPrintfulEnabled()) {
+        setInterval(fetchAndDisplayPrintfulProducts, 30 * 60 * 1000);
+      }
     });
 
     // Enhanced Debug Functions for Catfish Empire Integration

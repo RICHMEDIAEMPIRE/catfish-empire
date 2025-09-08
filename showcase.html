@@ -315,46 +315,6 @@
       font-weight: bold;
     }
 
-    /* Etsy Store Section */
-    .etsy-footer {
-      margin: 4rem auto 2rem;
-      text-align: center;
-      padding: 2rem;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 15px;
-      max-width: 800px;
-    }
-
-    .etsy-footer h3 {
-      color: gold;
-      font-size: 1.8rem;
-      margin-bottom: 1rem;
-    }
-
-    .etsy-footer img {
-      max-width: 350px;
-      width: 100%;
-      border-radius: 10px;
-      margin-bottom: 1.5rem;
-    }
-
-    .etsy-footer a {
-      display: inline-block;
-      background: linear-gradient(45deg, gold, #ffd700);
-      color: black;
-      text-decoration: none;
-      padding: 1rem 2rem;
-      font-weight: bold;
-      border-radius: 8px;
-      font-size: 1.1rem;
-      transition: all 0.3s ease;
-    }
-
-    .etsy-footer a:hover {
-      background: linear-gradient(45deg, #ffd700, gold);
-      transform: translateY(-3px);
-      box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
-    }
 
     /* Footer */
     footer {
@@ -526,14 +486,6 @@
     <button class="viewer-close" onclick="closeImageViewer()">✕ Close</button>
   </div>
 
-  <div class="etsy-footer">
-    <h3>🛍️ Visit Our Etsy Store</h3>
-    <img src="shopbanner.jpg" alt="Visit Our Etsy Store" />
-    <br/>
-    <a href="https://www.etsy.com/shop/RICHMEDIAEMPIRE?ref=profile_header&sort_order=price_asc&section_id=54071039" target="_blank">
-      Browse Etsy Shop
-    </a>
-  </div>
 
   <footer>
     <p>&copy; 2025 Catfish Empire™. All rights reserved.</p>
@@ -553,7 +505,7 @@
     let currentImageIndex = 0;
 
     // Update Cart Count in Navigation
-    function updateCartCount() {
+function updateCartCount() {
       const cart = JSON.parse(localStorage.getItem("cart") || "[]");
       const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
       const totalPrice = cart.reduce((sum, item) => {
@@ -561,7 +513,7 @@
         return sum + (price * item.qty);
       }, 0);
       
-      const cartLink = document.querySelector(".cart-link");
+  const cartLink = document.querySelector(".cart-link");
       if (cartLink) {
         if (totalItems > 0) {
           cartLink.textContent = `Cart (${totalItems} - $${totalPrice.toFixed(2)})`;
