@@ -54,6 +54,30 @@
       <tbody id="inventory-body"></tbody>
     </table>
 
+    <hr/>
+    <h2>Product Overrides</h2>
+    <p class="muted">Edit product titles, descriptions, and mockups for individual Printful products. These overrides affect product.html rendering only and do not change Printful.</p>
+    <div id="products-tabs"></div>
+    <div id="product-editor" class="hidden">
+      <h3 id="pe-title">Product Editor</h3>
+      <label>Title Override<br/>
+        <input type="text" id="pe-title-input" style="width:100%" />
+      </label>
+      <br/>
+      <label>Description Override<br/>
+        <textarea id="pe-desc-input" rows="5" style="width:100%"></textarea>
+      </label>
+      <h4>Custom Mockups (URLs)</h4>
+      <div id="pe-custom-list"></div>
+      <button id="pe-add-mockup">Add Mockup URL</button>
+      <h4>Hidden Mockups (URLs to hide)</h4>
+      <div id="pe-hidden-list"></div>
+      <button id="pe-add-hidden">Add Hidden URL</button>
+      <br/>
+      <button id="pe-save">Save Overrides</button>
+      <button id="pe-cancel">Close</button>
+    </div>
+
     <button id="logout-btn">Logout</button>
   </div>
 
@@ -80,7 +104,15 @@
       });
     }
 
-    function fetchInventory() {
+    async function fetchInventory() {
+      // Also fetch products list for tabs
+      try {
+        const res = await fetch(`${backendURL}/api/printful-products?nocache=1`);
+        const json = await res.json();
+        if (json && Array.isArray(json.products)) {
+          renderProductTabs(json.products);
+        }
+      } catch {}
       fetch(`${backendURL}/inventory`, {
         credentials: "include",
       })
@@ -100,6 +132,63 @@
       .catch(err => {
         document.getElementById("inventory-body").innerHTML = `<tr><td colspan="2">${err.message}</td></tr>`;
       });
+    }
+
+    function el(tag, cls, html){ const x=document.createElement(tag); if(cls) x.className=cls; if(html!=null) x.innerHTML=html; return x; }
+    function renderProductTabs(products){
+      const box = document.getElementById('products-tabs');
+      box.innerHTML = '';
+      products.forEach(p => {
+        const btn = el('button','', p.name || `Product ${p.id}`);
+        btn.style.marginRight = '8px';
+        btn.onclick = () => openEditor(p);
+        box.appendChild(btn);
+      });
+    }
+    async function openEditor(p){
+      document.getElementById('product-editor').classList.remove('hidden');
+      document.getElementById('pe-title').textContent = `Editing: ${p.name} (#${p.id})`;
+      // Load existing overrides
+      let existing = null;
+      try {
+        const res = await fetch(`${backendURL}/admin/product-override/${p.id}`, { credentials:'include' });
+        if (res.ok) existing = await res.json();
+      } catch {}
+      document.getElementById('pe-title-input').value = existing?.title_override || '';
+      document.getElementById('pe-desc-input').value = existing?.description_override || '';
+      const customList = document.getElementById('pe-custom-list');
+      customList.innerHTML = '';
+      (existing?.custom_mockups || []).forEach(u => addRow(customList, u));
+      const hiddenList = document.getElementById('pe-hidden-list');
+      hiddenList.innerHTML = '';
+      (existing?.hidden_mockups || []).forEach(u => addRow(hiddenList, u));
+      document.getElementById('pe-add-mockup').onclick = () => addRow(customList, '');
+      document.getElementById('pe-add-hidden').onclick = () => addRow(hiddenList, '');
+      document.getElementById('pe-save').onclick = async () => {
+        const payload = {
+          title_override: document.getElementById('pe-title-input').value.trim() || null,
+          description_override: document.getElementById('pe-desc-input').value.trim() || null,
+          custom_mockups: rowsToArray(customList),
+          hidden_mockups: rowsToArray(hiddenList)
+        };
+        const r = await fetch(`${backendURL}/admin/product-override/${p.id}`,{
+          method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(payload)
+        });
+        if (!r.ok) alert('Save failed'); else alert('Saved');
+      };
+      document.getElementById('pe-cancel').onclick = () => {
+        document.getElementById('product-editor').classList.add('hidden');
+      };
+    }
+    function addRow(container, value){
+      const row = el('div','');
+      const input = el('input',''); input.type='text'; input.style.width='80%'; input.value = value||'';
+      const btn = el('button','', 'Remove'); btn.style.marginLeft='8px';
+      btn.onclick = () => container.removeChild(row);
+      row.appendChild(input); row.appendChild(btn); container.appendChild(row);
+    }
+    function rowsToArray(container){
+      return Array.from(container.querySelectorAll('input')).map(i=>i.value.trim()).filter(Boolean);
     }
 
     function updateInventory() {
