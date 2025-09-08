@@ -12,8 +12,10 @@
     .gallery { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 1rem; }
     .main-img { width: 100%; height: 520px; object-fit: contain; background:#111; border-radius:10px; }
     .thumbs { display:flex; gap:.5rem; margin-top:.75rem; flex-wrap:wrap; }
-    .thumbs img { width:80px; height:80px; object-fit:cover; border-radius:8px; cursor:pointer; border:2px solid transparent; }
-    .thumbs img.active, .thumbs img:hover { border-color: gold; }
+    .thumbs .thumb-wrap { position: relative; width:80px; height:80px; border-radius:8px; overflow:hidden; cursor:pointer; border:2px solid transparent; }
+    .thumbs .thumb-wrap.active, .thumbs .thumb-wrap:hover { border-color: gold; }
+    .thumbs .thumb-wrap img { width:100%; height:100%; object-fit:cover; display:block; }
+    .thumbs .thumb-caption { position:absolute; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); color:#fff; font-size:11px; line-height:1.2; padding:2px 4px; text-align:center; }
     .details { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 1.25rem; }
     h1 { color: gold; margin: .25rem 0 1rem; font-size:1.8rem; }
     .desc { color:#ccc; line-height:1.6; margin-bottom:1rem; }
@@ -98,15 +100,31 @@
       const thumbs = document.getElementById('thumbs');
       thumbs.innerHTML = '';
       imgs.forEach((src, idx) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'thumb-wrap';
+        if (idx === 0) wrap.classList.add('active');
+
         const img = document.createElement('img');
         img.src = src; img.alt = `Image ${idx+1}`;
-        if (idx === 0) img.classList.add('active');
-        img.onclick = () => {
+
+        // Determine color name for this image if possible (match variant image)
+        let colorCaption = '';
+        const match = (data.variants || []).find(v => v.image && v.image === src && v.color);
+        if (match && match.color) colorCaption = match.color;
+
+        const cap = document.createElement('div');
+        cap.className = 'thumb-caption';
+        cap.textContent = colorCaption ? colorCaption : '';
+
+        wrap.onclick = () => {
           Array.from(thumbs.children).forEach(n => n.classList.remove('active'));
-          img.classList.add('active');
+          wrap.classList.add('active');
           mainImage.src = src;
         };
-        thumbs.appendChild(img);
+
+        wrap.appendChild(img);
+        wrap.appendChild(cap);
+        thumbs.appendChild(wrap);
       });
 
       // Build options
