@@ -146,7 +146,7 @@
 
     async function boot(){
       if (!productId){ $("p-title").textContent = "Missing product id"; $("btn-add").disabled = true; return; }
-      const r = await fetch(`${BACKEND_URL}/api/printful-product/${encodeURIComponent(productId)}`);
+      const r = await fetch(`${BACKEND_URL}/api/printful-product/${encodeURIComponent(productId)}?nocache=1`);
       const data = await r.json(); if (!r.ok || data.error){ $("p-title").textContent = "Product not found"; $("btn-add").disabled = true; return; }
       productData = data;
       $("p-title").textContent = productData.name || "Catfish Empire Product";
