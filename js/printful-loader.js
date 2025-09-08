@@ -2,9 +2,9 @@
   const BACKEND_URL = (window.BACKEND_URL || "https://catfish-stripe-backend.onrender.com").replace(/\/+$/,"");
 
   const ENDPOINTS = [
-    `${BACKEND_URL}/api/printful-products`,
-    `${BACKEND_URL}/products/printful/catfish-empire`,
-    `${BACKEND_URL}/printful/products`
+    `${BACKEND_URL}/api/printful-products?nocache=1`,
+    `${BACKEND_URL}/products/printful/catfish-empire?nocache=1`,
+    `${BACKEND_URL}/printful/products?nocache=1`
   ];
 
   const grid = document.getElementById("printful-grid");
@@ -44,8 +44,9 @@
   }
 
   function cardHTML(p) {
+    const href = `/product.html?id=${encodeURIComponent(p.id)}`;
     return `
-      <div class="product-card">
+      <a class="product-card product-card--printful" href="${href}">
         <div class="product-image">
           <img src="${p.img || ""}" alt="${(p.name || '').replace(/"/g,"&quot;")}" loading="lazy">
         </div>
@@ -54,20 +55,9 @@
           <div class="product-meta">
             <span class="product-price">${priceLabel(p)}</span>
           </div>
-          <button class="btn view-btn" data-id="${p.id}">View</button>
         </div>
-      </div>
+      </a>
     `;
-  }
-
-  function attachEvents() {
-    grid.addEventListener("click", (e) => {
-      const btn = e.target.closest(".view-btn");
-      if (!btn) return;
-      const id = btn.getAttribute("data-id");
-      if (!id) return;
-      window.location.href = `/product.html?id=${encodeURIComponent(id)}`;
-    });
   }
 
   async function fetchFirstWorking() {
@@ -104,7 +94,6 @@
       }
       const normalized = list.map(normalizeOne);
       grid.innerHTML = normalized.map(cardHTML).join("");
-      attachEvents();
       console.debug("[printful] rendered", normalized.length, "products");
     } catch (err) {
       console.error("[printful] fatal", err);

@@ -83,7 +83,7 @@
     async function loadProduct() {
       const id = getQueryId();
       if (!id) { alert('Product not found'); return; }
-      const r = await fetch(`${BACKEND_URL}/api/printful-product/${encodeURIComponent(id)}`);
+      const r = await fetch(`${BACKEND_URL}/api/printful-product/${encodeURIComponent(id)}?nocache=1`);
       const data = await r.json();
       if (!r.ok || data.error) { alert('Failed to load product'); return; }
 
@@ -136,16 +136,17 @@
           if (v.image) mainImage.src = v.image;
           addBtn.disabled = false;
           addBtn.onclick = () => {
-            addToCart({
+            const item = {
               type: 'printful',
               productId: Number(data.id),
+              name: data.name,
               variantId: v.id,
-              qty: 1,
-              name: `${data.name} – ${titleCase(v.color||'')}/${titleCase(v.size||'')}`,
               price: v.priceCents/100,
               currency: 'USD',
-              image: v.image || mainImage.src
-            });
+              image: v.image || mainImage.src,
+              qty: 1
+            };
+            addToCart(item);
           };
         } else {
           priceEl.textContent = 'Select options';
