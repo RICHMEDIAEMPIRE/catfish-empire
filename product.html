@@ -12,10 +12,8 @@
     .gallery { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 1rem; }
     .main-img { width: 100%; height: 520px; object-fit: contain; background:#111; border-radius:10px; }
     .thumbs { display:flex; gap:.5rem; margin-top:.75rem; flex-wrap:wrap; }
-    .thumbs .thumb-wrap { position: relative; width:80px; height:80px; border-radius:8px; overflow:hidden; cursor:pointer; border:2px solid transparent; }
-    .thumbs .thumb-wrap.active, .thumbs .thumb-wrap:hover { border-color: gold; }
-    .thumbs .thumb-wrap img { width:100%; height:100%; object-fit:cover; display:block; }
-    .thumbs .thumb-caption { position:absolute; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); color:#fff; font-size:11px; line-height:1.2; padding:2px 4px; text-align:center; }
+    .thumbs img { width:80px; height:80px; object-fit:cover; border-radius:8px; cursor:pointer; border:2px solid transparent; }
+    .thumbs img.active, .thumbs img:hover { border-color: gold; }
     .details { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 1.25rem; }
     h1 { color: gold; margin: .25rem 0 1rem; font-size:1.8rem; }
     .desc { color:#ccc; line-height:1.6; margin-bottom:1rem; }
@@ -104,41 +102,18 @@
         if (u.includes('back')) return 4;
         return 99;
       }
-      // Precompute color -> images map from variants
-      const colorToImages = (() => {
-        const map = new Map();
-        (data.variants||[]).forEach(v => {
-          const c = (v.color||'').toLowerCase();
-          if (!c || !v.image) return;
-          if (!map.has(c)) map.set(c, []);
-          if (!map.get(c).includes(v.image)) map.get(c).push(v.image);
-        });
-        return map;
-      })();
-
-      function renderThumbsForColor(color){
-        const key = String(color||'').toLowerCase();
-        let imgs = Array.from(new Set((colorToImages.get(key) || [])));
-        if (!imgs.length) imgs = (data.images || []).filter(Boolean);
-        imgs.sort((a,b)=>angleWeight(a)-angleWeight(b));
+      function renderThumbsLegacy(imgs){
         thumbs.innerHTML = '';
         imgs.forEach((src, idx) => {
-          const wrap = document.createElement('div');
-          wrap.className = 'thumb-wrap';
-          if (idx === 0) wrap.classList.add('active');
           const img = document.createElement('img');
           img.src = src; img.alt = `Image ${idx+1}`;
-          const cap = document.createElement('div');
-          cap.className = 'thumb-caption';
-          cap.textContent = color ? String(color) : '';
-          wrap.onclick = () => {
+          if (idx === 0) img.classList.add('active');
+          img.onclick = () => {
             Array.from(thumbs.children).forEach(n => n.classList.remove('active'));
-            wrap.classList.add('active');
+            img.classList.add('active');
             mainImage.src = src;
           };
-          wrap.appendChild(img);
-          wrap.appendChild(cap);
-          thumbs.appendChild(wrap);
+          thumbs.appendChild(img);
         });
         mainImage.src = imgs[0] || 'TM.png';
       }
@@ -161,13 +136,9 @@
         index.set(key, v);
       });
 
-      // Default to first color if available, otherwise render global images
-      if (colors.length > 0) {
-        colorSel.value = colors[0];
-        renderThumbsForColor(colors[0]);
-      } else {
-        renderThumbsForColor('');
-      }
+      // Always render legacy global images list to revert behavior
+      const globalImgs = (data.images || []).filter(Boolean).sort((a,b)=>angleWeight(a)-angleWeight(b));
+      renderThumbsLegacy(globalImgs);
 
       function resolve() {
         const c = colorSel.value; const s = sizeSel.value;
@@ -195,8 +166,7 @@
           addBtn.disabled = true;
           addBtn.onclick = null;
         }
-        // Update mockups when color changes
-        if (c) renderThumbsForColor(c);
+        // Do not change gallery on color now (legacy behavior)
       }
 
       colorSel.addEventListener('change', resolve);
