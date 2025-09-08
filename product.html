@@ -139,6 +139,7 @@
       const cart = JSON.parse(localStorage.getItem("cart") || "[]");
       cart.push({ type:"printful", productId: productData.id, name: productData.name, color: currentColor, size: currentSize, variantId: currentVariantId, priceCents: currentPriceCents, currency:"USD", image: currentMainImg || productData.coverImage || null, qty });
       localStorage.setItem("cart", JSON.stringify(cart));
+      try { window.dispatchEvent(new CustomEvent('cart:changed')); } catch(_){}
       if (window.updateCartCount) window.updateCartCount();
       $("btn-add").textContent = "Added!"; setTimeout(()=>($("btn-add").textContent = "Add to Cart"), 900);
     }
