@@ -124,12 +124,12 @@
 
       function pickImageForColor(color){
         const cLow = String(color||'').toLowerCase();
-        // Prefer variant image for this color if it's not a design image
-        const varImg = (variants || []).find(v => (v.color||'').toLowerCase() === cLow && v.image && !isDesignImage(v.image))?.image;
-        if (varImg) return varImg;
-        // Try to find an image in global gallery that includes color name
+        // Try to find an image in global gallery that includes color name (preferred)
         const byName = globalImgs.find(u => cLow && String(u).toLowerCase().includes(cLow));
         if (byName) return byName;
+        // Prefer variant image if it's not a design image
+        const varImg = (variants || []).find(v => (v.color||'').toLowerCase() === cLow && v.image && !isDesignImage(v.image))?.image;
+        if (varImg) return varImg;
         // Fallback to first global mockup
         return globalImgs[0] || 'TM.png';
       }
@@ -152,11 +152,18 @@
         index.set(key, v);
       });
 
-      // Always render legacy global images list to revert behavior
-      const globalImgs = (data.images || [])
+      // Build global mockups list (filter design images)
+      let globalImgs = (data.images || [])
         .filter(Boolean)
         .filter(u => !isDesignImage(u))
         .sort((a,b)=>angleWeight(a)-angleWeight(b));
+      // If filenames contain color names, prefer only those with any color token (avoid logos)
+      const colorTokens = (colors || []).map(c => String(c).toLowerCase());
+      const tokenFiltered = globalImgs.filter(u => {
+        const ul = String(u).toLowerCase();
+        return colorTokens.some(t => ul.includes(t));
+      });
+      if (tokenFiltered.length) globalImgs = tokenFiltered;
       renderThumbsLegacy(globalImgs);
 
       function resolve() {
