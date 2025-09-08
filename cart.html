@@ -179,15 +179,15 @@
 
     function updateCartCount() {
       const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
-      const totalPrice = cart.reduce((sum, item) => {
-        const price = item.type === 'printful' ? item.price : 14.99;
-        return sum + (price * item.qty);
+      const totalCents = cart.reduce((sum, item) => {
+        const cents = item.type === 'printful' ? Number(item.priceCents||0) : 1499;
+        return sum + (cents * item.qty);
       }, 0);
       
       const countEl = document.getElementById("cart-count");
       if (countEl) {
         if (totalItems > 0) {
-          countEl.textContent = `${totalItems} ($${totalPrice.toFixed(2)})`;
+          countEl.textContent = `${totalItems} ($${(totalCents/100).toFixed(2)})`;
         } else {
           countEl.textContent = '0';
         }
@@ -199,7 +199,7 @@
       const subtotalEl = document.getElementById("subtotal");
 
       cartList.innerHTML = "";
-      let subtotal = 0;
+      let subtotalCents = 0;
 
       if (cart.length === 0) {
         localStorage.setItem("cart", JSON.stringify([]));
@@ -210,30 +210,27 @@
       }
 
       cart.forEach((item, index) => {
-        let itemPrice, itemName;
+        let itemCents, itemName;
         
         if (item.type === 'printful') {
-          // Printful product
-          itemPrice = item.price;
+          itemCents = Number(item.priceCents || 0);
           itemName = item.name;
         } else {
-          // Sunglasses product
-          itemPrice = 14.99;
+          itemCents = 1499;
           itemName = `${item.color} Sunglasses`;
         }
-        
-        const itemTotal = (item.qty * itemPrice).toFixed(2);
-        subtotal += parseFloat(itemTotal);
+        const itemTotalCents = (item.qty * itemCents);
+        subtotalCents += itemTotalCents;
 
         const li = document.createElement("li");
         li.innerHTML = `
-          ${item.qty}× ${itemName} - $${itemTotal}
+          ${item.qty}× ${itemName} - $${(itemTotalCents/100).toFixed(2)}
           <button class="remove" onclick="removeItem(${index})">Remove</button>
         `;
         cartList.appendChild(li);
       });
 
-      subtotalEl.textContent = subtotal.toFixed(2);
+      subtotalEl.textContent = (subtotalCents/100).toFixed(2);
       localStorage.setItem("cart", JSON.stringify(cart));
       updateCartCount();
     }
@@ -257,12 +254,14 @@
           // Printful product
           return {
             type: 'printful',
-            id: item.id,
-            variant_id: item.variant_id,
+            productId: item.productId,
+            variantId: item.variantId || item.variant_id,
             name: item.name,
-            price: item.price,
+            priceCents: Number(item.priceCents || Math.round((item.price||0)*100)),
             currency: item.currency,
             image: item.image,
+            color: item.color,
+            size: item.size,
             qty: item.qty
           };
         } else {
