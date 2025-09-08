@@ -93,39 +93,46 @@
       document.getElementById('title').textContent = data.name || 'Product';
       document.getElementById('desc').textContent = data.description || '';
 
-      // Gallery - images are now just strings, not objects
-      const imgs = (data.images || []).filter(Boolean);
+      // Gallery utilities
       const mainImage = document.getElementById('mainImage');
-      mainImage.src = imgs[0] || 'TM.png';
       const thumbs = document.getElementById('thumbs');
-      thumbs.innerHTML = '';
-      imgs.forEach((src, idx) => {
-        const wrap = document.createElement('div');
-        wrap.className = 'thumb-wrap';
-        if (idx === 0) wrap.classList.add('active');
-
-        const img = document.createElement('img');
-        img.src = src; img.alt = `Image ${idx+1}`;
-
-        // Determine color name for this image if possible (match variant image)
-        let colorCaption = '';
-        const match = (data.variants || []).find(v => v.image && v.image === src && v.color);
-        if (match && match.color) colorCaption = match.color;
-
-        const cap = document.createElement('div');
-        cap.className = 'thumb-caption';
-        cap.textContent = colorCaption ? colorCaption : '';
-
-        wrap.onclick = () => {
-          Array.from(thumbs.children).forEach(n => n.classList.remove('active'));
-          wrap.classList.add('active');
-          mainImage.src = src;
-        };
-
-        wrap.appendChild(img);
-        wrap.appendChild(cap);
-        thumbs.appendChild(wrap);
-      });
+      function angleWeight(url){
+        const u = String(url).toLowerCase();
+        if (u.includes('front')) return 1;
+        if (u.includes('left')) return 2;
+        if (u.includes('right')) return 3;
+        if (u.includes('back')) return 4;
+        return 99;
+      }
+      function renderThumbsForColor(color){
+        const variantsForColor = (data.variants||[]).filter(v => (v.color||'').toLowerCase() === String(color||'').toLowerCase());
+        let imgs = Array.from(new Set(variantsForColor.map(v => v.image).filter(Boolean)));
+        if (imgs.length === 0) {
+          // Fallback to global images list
+          imgs = (data.images || []).filter(Boolean);
+        }
+        imgs.sort((a,b)=>angleWeight(a)-angleWeight(b));
+        thumbs.innerHTML = '';
+        imgs.forEach((src, idx) => {
+          const wrap = document.createElement('div');
+          wrap.className = 'thumb-wrap';
+          if (idx === 0) wrap.classList.add('active');
+          const img = document.createElement('img');
+          img.src = src; img.alt = `Image ${idx+1}`;
+          const cap = document.createElement('div');
+          cap.className = 'thumb-caption';
+          cap.textContent = color ? String(color) : '';
+          wrap.onclick = () => {
+            Array.from(thumbs.children).forEach(n => n.classList.remove('active'));
+            wrap.classList.add('active');
+            mainImage.src = src;
+          };
+          wrap.appendChild(img);
+          wrap.appendChild(cap);
+          thumbs.appendChild(wrap);
+        });
+        mainImage.src = imgs[0] || 'TM.png';
+      }
 
       // Build options
       const colorSel = document.getElementById('colorSel');
@@ -144,6 +151,15 @@
         const key = `${(v.color||'').toLowerCase()}|${(v.size||'').toLowerCase()}`;
         index.set(key, v);
       });
+
+      // Default to first color and render its mockups
+      if (colors.length > 0) {
+        colorSel.value = colors[0];
+        renderThumbsForColor(colors[0]);
+      } else {
+        // Fallback render with whatever images exist
+        renderThumbsForColor('');
+      }
 
       function resolve() {
         const c = colorSel.value; const s = sizeSel.value;
@@ -171,6 +187,8 @@
           addBtn.disabled = true;
           addBtn.onclick = null;
         }
+        // Update mockups when color changes
+        if (c) renderThumbsForColor(c);
       }
 
       colorSel.addEventListener('change', resolve);
