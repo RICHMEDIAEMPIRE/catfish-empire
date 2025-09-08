@@ -165,21 +165,31 @@
 
   <main>
     <h1>Your Cart</h1>
-    <ul id="cart-list"></ul>
-    <div class="summary">
-      <p><strong>Subtotal:</strong> $<span id="subtotal">0.00</span></p>
+    <div data-role="cart-root">
+      <div data-role="cart-lines"></div>
+
+      <div class="cart-summary">
+        <div>Subtotal: <span data-role="subtotal">$0.00</span></div>
+        <div class="cart-actions">
+          <button class="btn" data-role="update-cart">Update Cart</button>
+          <button class="btn btn-primary" data-role="checkout">🔒 Secure checkout with Stripe</button>
+        </div>
+      </div>
       <p style="font-size: 0.95rem; color: gray;">Tax and shipping calculated at checkout</p>
     </div>
-    <button id="checkout">Checkout</button>
   </main>
 
   <script>
     const BACKEND_URL = "https://catfish-stripe-backend.onrender.com";
 
-    function dollars(c){ return (c/100).toFixed(2); }
-    function normalizeColor(v){ return String(v || '').trim().toLowerCase(); }
-    function normalizeSizeLower(v){ return String(v || '').trim().toLowerCase(); }
+    // Utilities
+    function qSel(s){ return document.querySelector(s); }
+    function n(v){ const x = Number(v); return Number.isFinite(x) ? x : 0; }
+    function dollars(c){ return (n(c)/100).toFixed(2); }
+    function normalizeColor(v){ return String(v||'').trim().toLowerCase(); }
+    function normalizeSizeLower(v){ return String(v||'').trim().toLowerCase(); }
 
+    // Heal legacy/missing priceCents and variantId using backend product detail
     async function hydratePrintfulItem(item){
       if (Number.isFinite(item.priceCents) && item.variantId) return item;
       try {
@@ -191,13 +201,11 @@
         const priceCents = data.priceByKey?.[key];
         if (variantId) item.variantId = variantId;
         if (Number.isFinite(priceCents)) item.priceCents = Number(priceCents);
-        return item;
-      } catch {
-        return item;
-      }
+      } catch {}
+      return item;
     }
 
-    async function loadCart(){
+    function loadCart(){
       let cart = JSON.parse(localStorage.getItem('cart') || '[]');
       cart = cart.map(it => {
         if (it.type === 'printful') {
@@ -206,83 +214,174 @@
           }
           if (!Number.isFinite(it.priceCents)) it.priceCents = 0;
         }
+        it.qty = Math.max(1, n(it.qty || 1));
         return it;
       });
+      return cart;
+    }
+
+    function saveCart(cart){ localStorage.setItem('cart', JSON.stringify(cart)); }
+
+    function keyFor(it){
+      if (it.type === 'printful') return `pf|${it.productId}|${it.variantId||''}|${normalizeColor(it.color)}|${normalizeSizeLower(it.size)}`;
+      return `sg|${normalizeColor(it.color)}`;
+    }
+
+    function mergeDuplicates(items){
+      const map = new Map();
+      for (const it of items){
+        const k = keyFor(it);
+        if (!map.has(k)) map.set(k, { ...it });
+        else map.get(k).qty += it.qty;
+      }
+      return Array.from(map.values());
+    }
+
+    function sortByVariant(items){
+      return items.slice().sort((a,b)=>{
+        if (a.type !== b.type) return a.type.localeCompare(b.type);
+        const an = (a.name||'').localeCompare(b.name||''); if (an) return an;
+        const ac = normalizeColor(a.color).localeCompare(normalizeColor(b.color)); if (ac) return ac;
+        return normalizeSizeLower(a.size).localeCompare(normalizeSizeLower(b.size));
+      });
+    }
+
+    function subtotalCents(items){
+      return items.reduce((sum, it) => sum + ((it.type==='printful'? n(it.priceCents):1499) * (it.qty||1)), 0);
+    }
+
+    function renderLines(cart){
+      const root = qSel('[data-role="cart-lines"]');
+      if (!cart.length){
+        root.innerHTML = '<div class="cart-line">Your cart is empty.</div>';
+        return;
+      }
+      root.innerHTML = '';
+      cart.forEach((it, idx) => {
+        const unit = it.type==='printful' ? n(it.priceCents) : 1499;
+        const line = document.createElement('div');
+        line.className = 'cart-line';
+        line.dataset.index = String(idx);
+        const variants = it.type==='printful' ? `Color: ${it.color||'-'} · Size: ${(it.size||'').toString().toUpperCase()}` : `${it.color} Sunglasses`;
+        line.innerHTML = `
+          <div class="line-left">${it.name || 'Catfish Empire Product'}<div style=\"font-size:.9rem;color:#aaa;\">${variants}</div></div>
+          <div class="line-mid">
+            <div class="qty-control">
+              <button type=\"button\" class=\"qty-down\">-</button>
+              <input type=\"number\" class=\"qty-input\" min=\"1\" max=\"100\" value=\"${it.qty}\">
+              <button type=\"button\" class=\"qty-up\">+</button>
+            </div>
+          </div>
+          <div class="line-right">$${dollars(unit * it.qty)} <button type=\"button\" class=\"remove-line\">Remove</button></div>
+        `;
+        root.appendChild(line);
+      });
+    }
+
+    function bindLineEvents(cart){
+      const root = qSel('[data-role="cart-lines"]');
+      root.addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if(!btn) return;
+        const row = btn.closest('.cart-line');
+        const idx = Number(row.dataset.index);
+        if(btn.classList.contains('qty-up')){
+          const input = row.querySelector('.qty-input');
+          input.value = String(Math.min(100, n(input.value) + 1));
+        }
+        if(btn.classList.contains('qty-down')){
+          const input = row.querySelector('.qty-input');
+          input.value = String(Math.max(1, n(input.value) - 1));
+        }
+        if(btn.classList.contains('remove-line')){
+          cart.splice(idx,1);
+          saveCart(cart);
+          return renderCart();
+        }
+      });
+    }
+
+    function readQuantitiesInto(cart){
+      const rows = [...document.querySelectorAll('.cart-line')];
+      rows.forEach((row) => {
+        const idx = Number(row.dataset.index);
+        const input = row.querySelector('.qty-input');
+        const qty = Math.max(1, Math.min(100, n(input.value)));
+        cart[idx].qty = qty;
+      });
+    }
+
+    function renderTotals(cart){
+      const subtotal = subtotalCents(cart);
+      const subEl = qSel('[data-role="subtotal"]');
+      if(subEl) subEl.textContent = `$${dollars(subtotal)}`;
+      const countEl = document.getElementById('cart-count');
+      if (countEl){
+        const totalItems = cart.reduce((s,i)=>s+(i.qty||1),0);
+        countEl.textContent = totalItems > 0 ? `${totalItems} ($${dollars(subtotal)})` : '0';
+      }
+    }
+
+    async function healCart(cart){
       await Promise.all(cart.map(async (it, idx) => {
         if (it.type === 'printful' && (!Number.isFinite(it.priceCents) || !it.variantId)) {
           cart[idx] = await hydratePrintfulItem({ ...it });
         }
       }));
-      localStorage.setItem('cart', JSON.stringify(cart));
       return cart;
     }
 
-    function updateCartCount(cart) {
-      const totalItems = cart.reduce((sum, item) => sum + (item.qty||1), 0);
-      const totalCents = cart.reduce((sum, item) => {
-        const cents = item.type === 'printful' ? Number(item.priceCents||0) : 1499;
-        return sum + (cents * (item.qty||1));
-      }, 0);
-      const countEl = document.getElementById('cart-count');
-      if (countEl) {
-        countEl.textContent = totalItems > 0 ? `${totalItems} ($${dollars(totalCents)})` : '0';
-      }
-    }
-
     async function renderCart(){
-      const cart = await loadCart();
-      const cartList = document.getElementById('cart-list');
-      const subtotalEl = document.getElementById('subtotal');
-      cartList.innerHTML = '';
-      if (!cart.length){
-        cartList.innerHTML = '<li>Your cart is empty.</li>';
-        subtotalEl.textContent = '0.00';
-        updateCartCount(cart);
-        return;
+      let cart = loadCart();
+      cart = await healCart(cart);
+      cart = mergeDuplicates(cart);
+      cart = sortByVariant(cart);
+      saveCart(cart);
+      renderLines(cart);
+      bindLineEvents(cart);
+      renderTotals(cart);
+      const updateBtn = qSel('[data-role="update-cart"]');
+      if(updateBtn){
+        updateBtn.onclick = () => {
+          let current = loadCart();
+          readQuantitiesInto(current);
+          current = mergeDuplicates(current);
+          current = sortByVariant(current);
+          saveCart(current);
+          renderCart();
+        };
       }
-      let subtotalCents = 0;
-      cart.forEach((item, index) => {
-        const itemCents = item.type === 'printful' ? Number(item.priceCents||0) : 1499;
-        const itemName = item.type === 'printful' ? (item.name || 'Catfish Empire Product') : `${item.color} Sunglasses`;
-        const itemTotalCents = (item.qty||1) * itemCents;
-        subtotalCents += itemTotalCents;
-        const li = document.createElement('li');
-        li.innerHTML = `${item.qty}× ${itemName} - $${dollars(itemTotalCents)} <button class="remove" onclick="removeItem(${index})">Remove</button>`;
-        cartList.appendChild(li);
-      });
-      subtotalEl.textContent = dollars(subtotalCents);
-      updateCartCount(cart);
+      const checkoutBtn = qSel('[data-role="checkout"]');
+      if (checkoutBtn){
+        checkoutBtn.onclick = async () => {
+          let current = loadCart();
+          readQuantitiesInto(current);
+          current = await healCart(current);
+          current = mergeDuplicates(current);
+          current = sortByVariant(current);
+          saveCart(current);
+          if (!current.length){ alert('Your cart is empty.'); return; }
+          const shippingState = localStorage.getItem('shippingState') || 'Unknown';
+          const items = current.map(item => item.type === 'printful' ? ({
+            type: 'printful',
+            productId: item.productId,
+            variantId: item.variantId || item.variant_id,
+            name: item.name,
+            priceCents: Number(item.priceCents||0),
+            currency: item.currency || 'USD',
+            image: item.image,
+            color: item.color,
+            size: item.size,
+            qty: item.qty||1
+          }) : ({ color: item.color, qty: item.qty||1 }));
+          fetch(`${BACKEND_URL}/create-checkout-session`, { method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'include', body: JSON.stringify({ items, shippingState }) })
+            .then(r=>r.json()).then(data=>{ if (data.url) window.location = data.url; else alert('Checkout session failed to create.'); })
+            .catch(err=>{ console.error('Error:', err); alert('Failed to connect to payment server.'); });
+        };
+      }
     }
 
-    function removeItem(index) {
-      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-      cart.splice(index, 1);
-      localStorage.setItem('cart', JSON.stringify(cart));
-      renderCart();
-    }
-
-    document.getElementById('checkout').addEventListener('click', async () => {
-      const cart = await loadCart();
-      if (!cart.length){ alert('Your cart is empty.'); return; }
-      const shippingState = localStorage.getItem('shippingState') || 'Unknown';
-      const items = cart.map(item => item.type === 'printful' ? ({
-        type: 'printful',
-        productId: item.productId,
-        variantId: item.variantId || item.variant_id,
-        name: item.name,
-        priceCents: Number(item.priceCents||0),
-        currency: item.currency || 'USD',
-        image: item.image,
-        color: item.color,
-        size: item.size,
-        qty: item.qty||1
-      }) : ({ color: item.color, qty: item.qty||1 }));
-      fetch(`${BACKEND_URL}/create-checkout-session`, { method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'include', body: JSON.stringify({ items, shippingState }) })
-        .then(r=>r.json()).then(data=>{ if (data.url) window.location = data.url; else alert('Checkout session failed to create.'); })
-        .catch(err=>{ console.error('Error:', err); alert('Failed to connect to payment server.'); });
-    });
-
-    renderCart();
+    document.addEventListener('DOMContentLoaded', renderCart);
   </script>
 </body>
 </html>
