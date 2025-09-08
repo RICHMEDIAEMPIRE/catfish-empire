@@ -102,6 +102,10 @@
         if (u.includes('back')) return 4;
         return 99;
       }
+      function isDesignImage(url){
+        const u = String(url).toLowerCase();
+        return u.includes('printfile') || u.includes('design');
+      }
       function renderThumbsLegacy(imgs){
         thumbs.innerHTML = '';
         imgs.forEach((src, idx) => {
@@ -137,13 +141,23 @@
       });
 
       // Always render legacy global images list to revert behavior
-      const globalImgs = (data.images || []).filter(Boolean).sort((a,b)=>angleWeight(a)-angleWeight(b));
+      const globalImgs = (data.images || [])
+        .filter(Boolean)
+        .filter(u => !isDesignImage(u))
+        .sort((a,b)=>angleWeight(a)-angleWeight(b));
       renderThumbsLegacy(globalImgs);
 
       function resolve() {
         const c = colorSel.value; const s = sizeSel.value;
         const key = `${(c||'').toLowerCase()}|${(s||'').toLowerCase()}`;
-        const v = index.get(key);
+        let v = index.get(key);
+        // If only color is selected (no size yet), show a preview mockup for the color
+        if (!v && c) {
+          const preview = variants.find(x => (x.color||'').toLowerCase() === (c||'').toLowerCase() && x.image);
+          if (preview && preview.image) {
+            mainImage.src = preview.image;
+          }
+        }
         if (v && v.priceCents > 0) {
           priceEl.textContent = `$${(v.priceCents/100).toFixed(2)}`;
           if (v.image) mainImage.src = v.image;
