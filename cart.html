@@ -175,126 +175,114 @@
 
   <script>
     const BACKEND_URL = "https://catfish-stripe-backend.onrender.com";
-    let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-    function updateCartCount() {
-      const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
-      const totalCents = cart.reduce((sum, item) => {
-        const cents = item.type === 'printful' ? Number(item.priceCents||0) : 1499;
-        return sum + (cents * item.qty);
-      }, 0);
-      
-      const countEl = document.getElementById("cart-count");
-      if (countEl) {
-        if (totalItems > 0) {
-          countEl.textContent = `${totalItems} ($${(totalCents/100).toFixed(2)})`;
-        } else {
-          countEl.textContent = '0';
-        }
+    function dollars(c){ return (c/100).toFixed(2); }
+    function normalizeColor(v){ return String(v || '').trim().toLowerCase(); }
+    function normalizeSizeLower(v){ return String(v || '').trim().toLowerCase(); }
+
+    async function hydratePrintfulItem(item){
+      if (Number.isFinite(item.priceCents) && item.variantId) return item;
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/printful-product/${item.productId}`);
+        if (!res.ok) return item;
+        const data = await res.json();
+        const key = `${normalizeColor(item.color)}|${normalizeSizeLower(item.size)}`;
+        const variantId = data.variantMatrix?.[key];
+        const priceCents = data.priceByKey?.[key];
+        if (variantId) item.variantId = variantId;
+        if (Number.isFinite(priceCents)) item.priceCents = Number(priceCents);
+        return item;
+      } catch {
+        return item;
       }
     }
 
-    function updateCartPage() {
-      const cartList = document.getElementById("cart-list");
-      const subtotalEl = document.getElementById("subtotal");
+    async function loadCart(){
+      let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+      cart = cart.map(it => {
+        if (it.type === 'printful') {
+          if (!Number.isFinite(it.priceCents) && Number.isFinite(it.price)) {
+            it.priceCents = Math.round(Number(it.price) * 100);
+          }
+          if (!Number.isFinite(it.priceCents)) it.priceCents = 0;
+        }
+        return it;
+      });
+      await Promise.all(cart.map(async (it, idx) => {
+        if (it.type === 'printful' && (!Number.isFinite(it.priceCents) || !it.variantId)) {
+          cart[idx] = await hydratePrintfulItem({ ...it });
+        }
+      }));
+      localStorage.setItem('cart', JSON.stringify(cart));
+      return cart;
+    }
 
-      cartList.innerHTML = "";
-      let subtotalCents = 0;
+    function updateCartCount(cart) {
+      const totalItems = cart.reduce((sum, item) => sum + (item.qty||1), 0);
+      const totalCents = cart.reduce((sum, item) => {
+        const cents = item.type === 'printful' ? Number(item.priceCents||0) : 1499;
+        return sum + (cents * (item.qty||1));
+      }, 0);
+      const countEl = document.getElementById('cart-count');
+      if (countEl) {
+        countEl.textContent = totalItems > 0 ? `${totalItems} ($${dollars(totalCents)})` : '0';
+      }
+    }
 
-      if (cart.length === 0) {
-        localStorage.setItem("cart", JSON.stringify([]));
-        cartList.innerHTML = "<li>Your cart is empty.</li>";
-        subtotalEl.textContent = "0.00";
-        updateCartCount();
+    async function renderCart(){
+      const cart = await loadCart();
+      const cartList = document.getElementById('cart-list');
+      const subtotalEl = document.getElementById('subtotal');
+      cartList.innerHTML = '';
+      if (!cart.length){
+        cartList.innerHTML = '<li>Your cart is empty.</li>';
+        subtotalEl.textContent = '0.00';
+        updateCartCount(cart);
         return;
       }
-
+      let subtotalCents = 0;
       cart.forEach((item, index) => {
-        let itemCents, itemName;
-        
-        if (item.type === 'printful') {
-          itemCents = Number(item.priceCents || 0);
-          itemName = item.name;
-        } else {
-          itemCents = 1499;
-          itemName = `${item.color} Sunglasses`;
-        }
-        const itemTotalCents = (item.qty * itemCents);
+        const itemCents = item.type === 'printful' ? Number(item.priceCents||0) : 1499;
+        const itemName = item.type === 'printful' ? (item.name || 'Catfish Empire Product') : `${item.color} Sunglasses`;
+        const itemTotalCents = (item.qty||1) * itemCents;
         subtotalCents += itemTotalCents;
-
-        const li = document.createElement("li");
-        li.innerHTML = `
-          ${item.qty}× ${itemName} - $${(itemTotalCents/100).toFixed(2)}
-          <button class="remove" onclick="removeItem(${index})">Remove</button>
-        `;
+        const li = document.createElement('li');
+        li.innerHTML = `${item.qty}× ${itemName} - $${dollars(itemTotalCents)} <button class="remove" onclick="removeItem(${index})">Remove</button>`;
         cartList.appendChild(li);
       });
-
-      subtotalEl.textContent = (subtotalCents/100).toFixed(2);
-      localStorage.setItem("cart", JSON.stringify(cart));
-      updateCartCount();
+      subtotalEl.textContent = dollars(subtotalCents);
+      updateCartCount(cart);
     }
 
     function removeItem(index) {
+      const cart = JSON.parse(localStorage.getItem('cart') || '[]');
       cart.splice(index, 1);
-      localStorage.setItem("cart", JSON.stringify(cart));
-      updateCartPage();
+      localStorage.setItem('cart', JSON.stringify(cart));
+      renderCart();
     }
 
-    document.getElementById("checkout").addEventListener("click", () => {
-      if (cart.length === 0) {
-        alert("Your cart is empty.");
-        return;
-      }
-
-      const shippingState = localStorage.getItem("shippingState") || "Unknown";
-
-      const items = cart.map(item => {
-        if (item.type === 'printful') {
-          // Printful product
-          return {
-            type: 'printful',
-            productId: item.productId,
-            variantId: item.variantId || item.variant_id,
-            name: item.name,
-            priceCents: Number(item.priceCents || Math.round((item.price||0)*100)),
-            currency: item.currency,
-            image: item.image,
-            color: item.color,
-            size: item.size,
-            qty: item.qty
-          };
-        } else {
-          // Sunglasses product (legacy format)
-          return {
-            color: item.color,
-            qty: item.qty
-          };
-        }
-      });
-
-      fetch(`${BACKEND_URL}/create-checkout-session`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ items, shippingState })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.url) {
-          // Do NOT clear cart here — wait for success.html
-          window.location = data.url;
-        } else {
-          alert("Checkout session failed to create.");
-        }
-      })
-      .catch(err => {
-        console.error("Error:", err);
-        alert("Failed to connect to payment server.");
-      });
+    document.getElementById('checkout').addEventListener('click', async () => {
+      const cart = await loadCart();
+      if (!cart.length){ alert('Your cart is empty.'); return; }
+      const shippingState = localStorage.getItem('shippingState') || 'Unknown';
+      const items = cart.map(item => item.type === 'printful' ? ({
+        type: 'printful',
+        productId: item.productId,
+        variantId: item.variantId || item.variant_id,
+        name: item.name,
+        priceCents: Number(item.priceCents||0),
+        currency: item.currency || 'USD',
+        image: item.image,
+        color: item.color,
+        size: item.size,
+        qty: item.qty||1
+      }) : ({ color: item.color, qty: item.qty||1 }));
+      fetch(`${BACKEND_URL}/create-checkout-session`, { method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'include', body: JSON.stringify({ items, shippingState }) })
+        .then(r=>r.json()).then(data=>{ if (data.url) window.location = data.url; else alert('Checkout session failed to create.'); })
+        .catch(err=>{ console.error('Error:', err); alert('Failed to connect to payment server.'); });
     });
 
-    updateCartPage();
+    renderCart();
   </script>
 </body>
 </html>
