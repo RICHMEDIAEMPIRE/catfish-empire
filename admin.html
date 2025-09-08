@@ -15,6 +15,9 @@
     table { margin-top: 1rem; border-collapse: collapse; }
     th, td { padding: 0.5rem 1rem; border: 1px solid #fff; }
     button { margin-top: 1rem; padding: 0.5rem 1rem; background: gold; border: none; cursor: pointer; }
+    .chip-strip { display:flex; gap:8px; flex-wrap:nowrap; overflow-x:auto; }
+    .prod-chip { user-select:none; padding:6px 10px; border-radius:16px; background:#222; color:#fff; cursor:grab; white-space:nowrap; }
+    .prod-chip.dragging { opacity:0.6; }
   </style>
 </head>
 <body>
@@ -57,7 +60,7 @@
     <hr/>
     <h2>Product Overrides</h2>
     <p class="muted">Edit product titles, descriptions, and mockups for individual Printful products. These overrides affect product.html rendering only and do not change Printful.</p>
-    <div id="products-tabs" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+    <div id="products-tabs" class="chip-strip"></div>
     <div id="product-editor" class="hidden">
       <h3 id="pe-title">Product Editor</h3>
       <label>Title Override<br/>
@@ -143,34 +146,39 @@
       const box = document.getElementById('products-tabs');
       box.innerHTML = '';
       products.forEach(p => {
-        const tab = el('div','tab', `<span>${p.name || `Product ${p.id}`}</span>`);
+        const tab = el('span','prod-chip');
+        tab.dataset.productId = String(p.id);
+        tab.textContent = p.name || `Product ${p.id}`;
         tab.draggable = true;
-        tab.style.padding = '6px 10px';
-        tab.style.background = '#222';
-        tab.style.border = '1px solid #444';
-        tab.style.borderRadius = '6px';
-        tab.style.cursor = 'move';
         tab.addEventListener('click', () => openEditor(p));
-        tab.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', String(p.id)); });
-        tab.addEventListener('dragover', e => e.preventDefault());
-        tab.addEventListener('drop', async e => {
-          e.preventDefault();
-          const fromId = e.dataTransfer.getData('text/plain');
-          const toId = String(p.id);
-          if (!fromId || fromId===toId) return;
-          // naive reorder: send both indices to backend
-          try {
-            await fetch(`${backendURL}/admin/product-sort`, {
-              method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
-              body: JSON.stringify({ fromId, toId })
-            });
-            // reload tabs with nocache to reflect new order
-            const res = await fetch(`${backendURL}/api/printful-products?nocache=1`);
-            const json = await res.json();
-            if (json && Array.isArray(json.products)) renderProductTabs(json.products);
-          } catch {}
-        });
         box.appendChild(tab);
+      });
+      initChipDrag();
+    }
+
+    function initChipDrag(){
+      const strip = document.getElementById('products-tabs');
+      let dragEl = null;
+      strip.addEventListener('dragstart', e => {
+        const t = e.target.closest('.prod-chip');
+        if (!t) return;
+        dragEl = t; t.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move';
+      });
+      strip.addEventListener('dragend', async () => {
+        if (dragEl) dragEl.classList.remove('dragging');
+        dragEl = null;
+        const ids = [...strip.querySelectorAll('.prod-chip')].map(ch => ch.dataset.productId);
+        try {
+          await fetch(`${backendURL}/admin/product-sort`, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ order: ids }) });
+        } catch {}
+      });
+      strip.addEventListener('dragover', e => {
+        e.preventDefault();
+        const t = e.target.closest('.prod-chip');
+        if (!dragEl || !t || t===dragEl) return;
+        const rect = t.getBoundingClientRect();
+        const before = (e.clientX - rect.left) < rect.width/2;
+        strip.insertBefore(dragEl, before ? t : t.nextSibling);
       });
     }
     async function openEditor(p){
