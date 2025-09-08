@@ -489,7 +489,7 @@
       CATFISH EMPIRE™
     </div>
     <div class="nav-links">
-      <a href="cart.html" class="cart-link">Cart (<span id="cart-count">0</span>)</a>
+      <a href="cart.html" class="cart-link" data-role="cart-badge">Cart (0 – $0.00)</a>
       <a href="showcase.html">Gallery</a>
       <a href="https://youtube.com/@catfishempire" target="_blank">YouTube</a>
       <a href="https://x.com/CATFISH_EMPIRE" target="_blank">X (Twitter)</a>
@@ -553,6 +553,8 @@
     window.BACKEND_URL = window.BACKEND_URL || "https://catfish-stripe-backend.onrender.com";
   </script>
   <script src="/js/printful-loader.js" defer></script>
+  <script type="module" src="/js/header-cart-badge.js"></script>
+  <script type="module" src="/js/header-cart-badge.js"></script>
 
   <script>
     // Cart Management
@@ -989,7 +991,6 @@
 
     // Initialization
     document.addEventListener('DOMContentLoaded', function() {
-      updateCartCount();
       loadAllProducts();
       // Periodic refresh only if Printful is enabled
       if (isPrintfulEnabled()) {

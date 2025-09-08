@@ -8,6 +8,7 @@
     body { margin: 0; background: #000; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     .nav { background: linear-gradient(45deg, gold, #ffd700); color: #000; padding: 1rem; display:flex; justify-content:space-between; align-items:center; }
     .nav a { color:#000; text-decoration:none; font-weight:bold; margin-left:1rem; }
+    .topbar.centered { display:flex; justify-content:center; align-items:center; gap:12px; }
     .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; display:grid; grid-template-columns: 1fr 1fr; gap:2rem; }
     .gallery { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 1rem; }
     .main-img { width: 100%; height: 520px; object-fit: contain; background:#111; border-radius:10px; }
@@ -28,12 +29,9 @@
   </style>
 </head>
 <body>
-  <div class="nav">
-    <div><strong>CATFISH EMPIRE™</strong></div>
-    <div>
-      <a href="index.html">Home</a>
-      <a href="cart.html">Cart</a>
-    </div>
+  <div class="nav topbar centered">
+    <a href="index.html" class="btn">Home</a>
+    <a href="cart.html" class="btn" data-role="cart-badge">Cart (0 – $0.00)</a>
   </div>
 
   <div class="container">
@@ -61,6 +59,7 @@
     </div>
   </div>
 
+  <script type="module" src="/js/header-cart-badge.js"></script>
   <script>
     const BACKEND_URL = window.BACKEND_URL || "https://catfish-stripe-backend.onrender.com";
     const $ = (id) => document.getElementById(id);
