@@ -170,6 +170,18 @@
 
       <div class="cart-summary">
         <div>Subtotal: <span data-role="subtotal">$0.00</span></div>
+        <div id="promo-row" style="margin-top:10px">
+          <label for="promoCode">Promo code</label>
+          <input id="promoCode" type="text" placeholder="Enter code" style="margin-left:8px;padding:6px 8px;">
+          <button id="applyPromoBtn" style="margin-left:8px;padding:6px 10px;">Update promo code</button>
+          <small id="promoHint" style="display:block;margin-top:4px;color:#aaa"></small>
+        </div>
+        <div id="totalsBox" style="margin-top:12px">
+          <div>Subtotal: <strong id="subtotalAmount">$0.00</strong></div>
+          <div>Discount: <strong id="discountAmount">$0.00</strong></div>
+          <div>Shipping: <strong id="shippingAmount">$0.00</strong></div>
+          <div>Estimated total (pre-tax): <strong id="estimatedTotalAmount">$0.00</strong></div>
+        </div>
         <div class="cart-actions">
           <button class="btn" data-role="update-cart">Update Cart</button>
           <button class="btn btn-primary" data-role="checkout">🔒 Secure checkout with Stripe</button>
@@ -322,6 +334,50 @@
       }
     }
 
+    // Promo preview helpers
+    const PROMOS = { 'catfish123': { factor: 0.001, label: '99.9% test discount' } };
+    const PREVIEW_MIN_CHARGE_CENTS = 50;
+    function dollarsLabel(cents){ return `$${(n(cents)/100).toFixed(2)}`; }
+    function getActivePromoCode(){ return (localStorage.getItem('cartPromoCode')||'').trim().toLowerCase(); }
+    function setActivePromoCode(code){ if(code) localStorage.setItem('cartPromoCode', code.trim().toLowerCase()); else localStorage.removeItem('cartPromoCode'); }
+    function computeDiscountedUnitCents(original, promo){ if(!promo) return original; const d = Math.ceil(n(original) * promo.factor); return Math.max(d, PREVIEW_MIN_CHARGE_CENTS); }
+    function recalcTotalsPreview(){
+      const items = loadCart();
+      const code = getActivePromoCode();
+      const promo = PROMOS[code] || null;
+      let subtotal = 0, discounted = 0;
+      for(const it of items){
+        const unit = it.type==='printful' ? n(it.priceCents) : 1499;
+        const qty = n(it.qty||1);
+        subtotal += unit * qty;
+        discounted += computeDiscountedUnitCents(unit, promo) * qty;
+      }
+      const discount = Math.max(0, subtotal - discounted);
+      const shipping = 599;
+      return { subtotal, discount, shipping, estimated: discounted + shipping };
+    }
+    function renderTotalsPreview(){
+      const els = {
+        sub: document.getElementById('subtotalAmount'),
+        disc: document.getElementById('discountAmount'),
+        ship: document.getElementById('shippingAmount'),
+        tot: document.getElementById('estimatedTotalAmount'),
+        hint: document.getElementById('promoHint'),
+        input: document.getElementById('promoCode')
+      };
+      const code = getActivePromoCode();
+      const promo = PROMOS[code] || null;
+      const t = recalcTotalsPreview();
+      if(els.sub) els.sub.textContent = dollarsLabel(t.subtotal);
+      if(els.disc) els.disc.textContent = `- ${dollarsLabel(t.discount)}`;
+      if(els.ship) els.ship.textContent = dollarsLabel(t.shipping);
+      if(els.tot) els.tot.textContent = dollarsLabel(t.estimated);
+      if(els.hint){
+        if(promo){ els.hint.textContent = `Promo applied: ${promo.label}. One promo per checkout.`; els.hint.style.color = '#2bb24c'; }
+        else { els.hint.textContent=''; els.hint.style.color = '#aaa'; }
+      }
+    }
+
     async function healCart(cart){
       await Promise.all(cart.map(async (it, idx) => {
         if (it.type === 'printful' && (!Number.isFinite(it.priceCents) || !it.variantId)) {
@@ -362,6 +418,7 @@
           saveCart(current);
           if (!current.length){ alert('Your cart is empty.'); return; }
           const shippingState = localStorage.getItem('shippingState') || 'Unknown';
+          const promoCode = (document.getElementById('promoCode')?.value || '').trim();
           const items = current.map(item => item.type === 'printful' ? ({
             type: 'printful',
             productId: item.productId,
@@ -374,14 +431,27 @@
             size: item.size,
             qty: item.qty||1
           }) : ({ color: item.color, qty: item.qty||1 }));
-          fetch(`${BACKEND_URL}/create-checkout-session`, { method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'include', body: JSON.stringify({ items, shippingState }) })
+          fetch(`${BACKEND_URL}/create-checkout-session`, { method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'include', body: JSON.stringify({ items, shippingState, promoCode }) })
             .then(r=>r.json()).then(data=>{ if (data.url) window.location = data.url; else alert('Checkout session failed to create.'); })
             .catch(err=>{ console.error('Error:', err); alert('Failed to connect to payment server.'); });
         };
       }
     }
 
-    document.addEventListener('DOMContentLoaded', renderCart);
+    document.addEventListener('DOMContentLoaded', () => {
+      renderCart();
+      const input = document.getElementById('promoCode');
+      const btn = document.getElementById('applyPromoBtn');
+      if (input) input.value = (localStorage.getItem('cartPromoCode')||'');
+      if (btn){
+        btn.addEventListener('click', () => {
+          const code = (document.getElementById('promoCode')?.value||'').trim().toLowerCase();
+          if (code && code !== 'catfish123') localStorage.setItem('cartPromoCode',''); else localStorage.setItem('cartPromoCode', code);
+          renderTotalsPreview();
+        });
+      }
+      renderTotalsPreview();
+    });
   </script>
   <script type="module" src="/js/header-cart-badge.js"></script>
 </body>
