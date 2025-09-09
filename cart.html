@@ -173,7 +173,8 @@
         <div id="promo-row" style="margin-top:10px">
           <label for="promoCode">Promo code</label>
           <input id="promoCode" type="text" placeholder="Enter code" style="margin-left:8px;padding:6px 8px;">
-          <button id="applyPromoBtn" style="margin-left:8px;padding:6px 10px;">Update promo code</button>
+          <button id="applyPromoBtn" style="margin-left:8px;padding:6px 10px;">Apply/Update</button>
+          <button id="clearPromoBtn" style="margin-left:8px;padding:6px 10px;">Remove</button>
           <small id="promoHint" style="display:block;margin-top:4px;color:#aaa"></small>
         </div>
         <div id="totalsBox" style="margin-top:12px">
@@ -334,29 +335,25 @@
       }
     }
 
-    // Promo preview helpers
-    const PROMOS = { 'catfish123': { factor: 0.001, label: '99.9% test discount' } };
-    const PREVIEW_MIN_CHARGE_CENTS = 50;
+    // Promo helpers via backend
     function dollarsLabel(cents){ return `$${(n(cents)/100).toFixed(2)}`; }
-    function getActivePromoCode(){ return (localStorage.getItem('cartPromoCode')||'').trim().toLowerCase(); }
-    function setActivePromoCode(code){ if(code) localStorage.setItem('cartPromoCode', code.trim().toLowerCase()); else localStorage.removeItem('cartPromoCode'); }
-    function computeDiscountedUnitCents(original, promo){ if(!promo) return original; const d = Math.ceil(n(original) * promo.factor); return Math.max(d, PREVIEW_MIN_CHARGE_CENTS); }
-    function recalcTotalsPreview(){
+    async function recalcTotalsPreview(){
       const items = loadCart();
-      const code = getActivePromoCode();
-      const promo = PROMOS[code] || null;
-      let subtotal = 0, discounted = 0;
+      let subtotal = 0;
       for(const it of items){
         const unit = it.type==='printful' ? n(it.priceCents) : 1499;
         const qty = n(it.qty||1);
         subtotal += unit * qty;
-        discounted += computeDiscountedUnitCents(unit, promo) * qty;
       }
+      const r = await fetch('/api/promo/active', { credentials:'include' });
+      const pj = await r.json();
+      const pct = pj?.promo?.percent || 0;
+      const discounted = Math.max(0, Math.round(subtotal * (100 - pct) / 100));
       const discount = Math.max(0, subtotal - discounted);
-      const shipping = (code === 'catfish123') ? 0 : 599;
-      return { subtotal, discount, shipping, estimated: discounted + shipping };
+      const shipping = 599;
+      return { subtotal, discount, shipping, estimated: discounted + shipping, promo: pj?.promo || null };
     }
-    function renderTotalsPreview(){
+    async function renderTotalsPreview(){
       const els = {
         sub: document.getElementById('subtotalAmount'),
         disc: document.getElementById('discountAmount'),
@@ -365,15 +362,13 @@
         hint: document.getElementById('promoHint'),
         input: document.getElementById('promoCode')
       };
-      const code = getActivePromoCode();
-      const promo = PROMOS[code] || null;
-      const t = recalcTotalsPreview();
+      const t = await recalcTotalsPreview();
       if(els.sub) els.sub.textContent = dollarsLabel(t.subtotal);
       if(els.disc) els.disc.textContent = `- ${dollarsLabel(t.discount)}`;
       if(els.ship) els.ship.textContent = dollarsLabel(t.shipping);
       if(els.tot) els.tot.textContent = dollarsLabel(t.estimated);
       if(els.hint){
-        if(promo){ els.hint.textContent = `Promo applied: ${promo.label}. One promo per checkout.`; els.hint.style.color = '#2bb24c'; }
+        if(t.promo){ els.hint.textContent = `Promo applied: ${t.promo.code.toUpperCase()} (${t.promo.percent}%). One promo per checkout.`; els.hint.style.color = '#2bb24c'; }
         else { els.hint.textContent=''; els.hint.style.color = '#aaa'; }
       }
     }
@@ -446,13 +441,22 @@
     document.addEventListener('DOMContentLoaded', () => {
       renderCart();
       const input = document.getElementById('promoCode');
-      const btn = document.getElementById('applyPromoBtn');
-      if (input) input.value = (localStorage.getItem('cartPromoCode')||'');
-      if (btn){
-        btn.addEventListener('click', () => {
-          const code = (document.getElementById('promoCode')?.value||'').trim().toLowerCase();
-          if (code && code !== 'catfish123') localStorage.setItem('cartPromoCode',''); else localStorage.setItem('cartPromoCode', code);
-          renderTotalsPreview();
+      const applyBtn = document.getElementById('applyPromoBtn');
+      const clearBtn = document.getElementById('clearPromoBtn');
+      if (applyBtn){
+        applyBtn.addEventListener('click', async () => {
+          const code = (input?.value||'').trim();
+          const r = await fetch('/api/promo/apply', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ code }) });
+          if (!r.ok){ alert('Invalid promo code'); return; }
+          await renderTotalsPreview();
+          window.dispatchEvent(new CustomEvent('cart:changed'));
+        });
+      }
+      if (clearBtn){
+        clearBtn.addEventListener('click', async () => {
+          await fetch('/api/promo/clear', { method:'POST' });
+          await renderTotalsPreview();
+          window.dispatchEvent(new CustomEvent('cart:changed'));
         });
       }
       renderTotalsPreview();
