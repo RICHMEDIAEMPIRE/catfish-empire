@@ -187,10 +187,10 @@
 
   <main>
     <h1>Your Cart</h1>
-    <div data-role="cart-root" class="cart-card">
+    <div id="cart-root" data-role="cart-root" class="cart-card">
       <div data-role="cart-lines"></div>
 
-      <div class="totals-card" style="margin-top:16px">
+      <div id="cart-totals" class="totals-card" style="margin-top:16px">
         <div class="promo-row" style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.5rem">
           <input id="promoCode" class="input" type="text" placeholder="Promo code" />
           <button id="applyPromoBtn" class="btn btn-primary">Apply / Update</button>
@@ -312,26 +312,31 @@
       });
     }
 
-    function bindLineEvents(cart){
-      const root = qSel('[data-role="cart-lines"]');
-      root.addEventListener('click', (e) => {
-        const btn = e.target.closest('button');
-        if(!btn) return;
-        const row = btn.closest('.cart-line');
+    let delegated = false;
+    function bindLineEvents(){
+      if (delegated) return; delegated = true;
+      document.addEventListener('click', (e) => {
+        const row = e.target.closest('.cart-line');
+        if (!row) return;
         const idx = Number(row.dataset.index);
-        if(btn.classList.contains('qty-up')){
-          const input = row.querySelector('.qty-input');
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        const input = row.querySelector('.qty-input');
+        if (btn.classList.contains('qty-up') || btn.matches('.qty-btn.qty-up')){
           input.value = String(Math.min(100, n(input.value) + 1));
-        }
-        if(btn.classList.contains('qty-down')){
-          const input = row.querySelector('.qty-input');
+          const current = getCart(); current[idx].qty = Math.min(100, n(input.value)); setCart(current); renderCart();
+        } else if (btn.classList.contains('qty-down') || btn.matches('.qty-btn.qty-down')){
           input.value = String(Math.max(1, n(input.value) - 1));
+          const current = getCart(); current[idx].qty = Math.max(1, n(input.value)); setCart(current); renderCart();
+        } else if (btn.classList.contains('remove-line')){
+          const current = getCart(); current.splice(idx,1); setCart(current); renderCart();
         }
-        if(btn.classList.contains('remove-line')){
-          cart.splice(idx,1);
-          saveCart(cart);
-          return renderCart();
-        }
+      });
+      document.addEventListener('change', (e) => {
+        if (!e.target.classList.contains('qty-input')) return;
+        const row = e.target.closest('.cart-line'); if (!row) return;
+        const idx = Number(row.dataset.index);
+        const current = getCart(); current[idx].qty = Math.max(1, Math.min(100, n(e.target.value))); setCart(current); renderCart();
       });
     }
 

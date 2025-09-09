@@ -69,6 +69,25 @@ export function setCart(nextCart) {
   try { window.dispatchEvent(new CustomEvent('cart:changed')); } catch {}
   return sanitized;
 }
+export function broadcast(){ try { window.dispatchEvent(new CustomEvent('cart:changed')); } catch {} }
+
+export function itemKey(it){
+  if (!it) return '';
+  if (it.type === 'printful') return `p|${it.productId}|${it.variantId||''}|${String(it.color||'')}|${String(it.size||'')}`;
+  if (it.type === 'sunglasses') return `s|${String(it.color||'')}`;
+  return `x|${String(it.name||'')}|${String(it.priceCents||0)}`;
+}
+
+export function setQtyByKey(key, newQty){
+  const cart = getCart();
+  const idx = cart.findIndex(it => itemKey(it) === key);
+  if (idx >= 0){ cart[idx].qty = clampQuantity(newQty); setCart(cart); }
+}
+
+export function removeByKey(key){
+  const cart = getCart().filter(it => itemKey(it) !== key);
+  setCart(cart);
+}
 
 export function getPromo() {
   try {
