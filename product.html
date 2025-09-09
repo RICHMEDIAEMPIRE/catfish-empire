@@ -118,8 +118,8 @@
       for (const u of flatImages) { if (!imagesSet.has(u)) imgs.push(u); }
       if (!imgs.length && Array.isArray(productData.images)) imgs = filterImgs(productData.images.slice(0));
 
-      // Fallback: if this color has too few mockups, borrow ordered views from defaultColor
-      if (imgs.length < 2 && productData.defaultColor) {
+      // Fallback: only if this color has no images at all, borrow ordered views from defaultColor
+      if (imgs.length === 0 && productData.defaultColor) {
         const defKey = String(productData.defaultColor||'').toLowerCase();
         if (defKey && defKey !== colorLower) {
           const def = productData.galleryByColor?.[defKey];
