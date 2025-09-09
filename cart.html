@@ -501,38 +501,44 @@
       const clearBtn = document.getElementById('clearPromoBtn');
       if (applyBtn){
         applyBtn.addEventListener('click', async () => {
-          const code = (input?.value||'').trim().toLowerCase();
+          const codeInput = (input?.value||'').trim().toLowerCase().replace(/\s+/g,'');
           const hint = document.getElementById('promoHint');
-          if (!code) {
+          if (!codeInput) {
             setPromo(null);
-            if (hint) { hint.textContent=''; hint.style.color='#aaa'; }
+            if (hint) { hint.textContent=''; hint.style.color='#aaa'; hint.style.display='none'; }
             renderSummary();
             renderToolbarTotals();
             return;
           }
-          // Try validate; if not available, fall back to apply
-          let resp = await fetch(`${BACKEND_URL}/api/promo/validate`, { method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'include', body: JSON.stringify({ code }) }).catch(()=>null);
+          // Validate server-side (supports code1..code5)
+          let resp = await fetch(`${BACKEND_URL}/api/promo/validate`, {
+            method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'include', body: JSON.stringify({ code: codeInput })
+          }).catch(()=>null);
           if (!resp || !resp.ok) {
-            resp = await fetch(`${BACKEND_URL}/api/promo/apply`, { method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'include', body: JSON.stringify({ code }) }).catch(()=>null);
-          }
-          if (!resp || !resp.ok) {
-            if (hint) { hint.textContent = 'Invalid code'; hint.style.color = '#ff6b6b'; }
+            if (hint) { hint.textContent = 'Invalid code'; hint.style.color = '#ff6b6b'; hint.style.display='block'; }
+            setPromo(null);
+            renderSummary();
+            renderToolbarTotals();
             return;
           }
           const data = await resp.json().catch(()=>({}));
-          const percent = Number(data?.percent || 0);
-          if (percent <= 0) {
-            if (hint) { hint.textContent = 'Invalid or inactive code'; hint.style.color = '#ff6b6b'; }
+          const percent = Number(data?.percent || data?.promo?.percent || 0);
+          const code = String(data?.code || data?.promo?.code || codeInput).toLowerCase();
+          if (!(percent > 0)) {
+            if (hint) { hint.textContent = 'Invalid or inactive code'; hint.style.color = '#ff6b6b'; hint.style.display='block'; }
+            setPromo(null);
+            renderSummary();
+            renderToolbarTotals();
             return;
           }
-          // Ensure server session also has it
-          try { await fetch(`${BACKEND_URL}/api/promo/apply`, { method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'include', body: JSON.stringify({ code }) }); } catch {}
+          // Persist promo locally and in session for checkout
           setPromo({ code, percent });
+          try { await fetch(`${BACKEND_URL}/api/promo/apply`, { method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'include', body: JSON.stringify({ code }) }); } catch {}
           // Force recompute/paint immediately for cart + toolbar
           try { window.dispatchEvent(new CustomEvent('cart:changed')); } catch {}
           renderSummary();
-          if (hint) { hint.style.display='none'; }
           renderToolbarTotals();
+          if (hint) { hint.textContent = `Promo applied: ${code.toUpperCase()} (${percent}%)`; hint.style.color = '#2bb24c'; hint.style.display='block'; }
         });
       }
       if (clearBtn){
