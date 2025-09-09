@@ -72,7 +72,8 @@
     </div>
   </div>
 
-  <script type="module" src="/js/header-cart-badge.js"></script>
+  <script type="module" src="/js/cart-state.js"></script>
+  <script type="module" src="/js/toolbar.js"></script>
   <script>
     const BACKEND_URL = window.BACKEND_URL || "https://catfish-stripe-backend.onrender.com";
     const $ = (id) => document.getElementById(id);
@@ -224,11 +225,18 @@
     function addToCart(){
       const qty = Math.max(1, parseInt(($("sel-qty").value||"1"),10));
       if (!currentVariantId || !currentPriceCents){ alert("Please choose a color and size."); return; }
-      const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-      cart.push({ type:"printful", productId: productData.id, name: productData.name, color: currentColor, size: currentSize, variantId: currentVariantId, priceCents: currentPriceCents, currency:"USD", image: currentMainImg || productData.coverImage || null, qty });
-      localStorage.setItem("cart", JSON.stringify(cart));
-      try { window.dispatchEvent(new CustomEvent('cart:changed')); } catch(_){}
-      if (window.updateCartCount) window.updateCartCount();
+      const { setCart, getCart } = window.CFECart || {};
+      if (setCart && getCart){
+        const next = getCart();
+        next.push({ type:"printful", productId: productData.id, name: productData.name, color: currentColor, size: currentSize, variantId: currentVariantId, priceCents: currentPriceCents, currency:"USD", image: currentMainImg || productData.coverImage || null, qty });
+        setCart(next);
+      } else {
+        const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+        cart.push({ type:"printful", productId: productData.id, name: productData.name, color: currentColor, size: currentSize, variantId: currentVariantId, priceCents: currentPriceCents, currency:"USD", image: currentMainImg || productData.coverImage || null, qty });
+        localStorage.setItem("cart", JSON.stringify(cart));
+        try { window.dispatchEvent(new CustomEvent('cart:changed')); } catch(_){}
+      }
+      try { if (window.renderToolbarTotals) window.renderToolbarTotals(); } catch(_){ }
       $("btn-add").textContent = "Added!"; setTimeout(()=>($("btn-add").textContent = "Add to Cart"), 900);
     }
 
