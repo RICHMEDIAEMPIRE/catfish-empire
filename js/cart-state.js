@@ -92,18 +92,21 @@ export function setPromo(promoObjectOrNull) {
   try { window.dispatchEvent(new CustomEvent('promo:changed')); } catch {}
 }
 
-export function getTotals(cart, promoPercent) {
+export function getTotals(cart, promoPercent, minCents = 50, shippingCents = 599) {
   const items = Array.isArray(cart) ? cart : [];
   const qty = items.reduce((q, it) => q + clampQuantity(it.qty), 0);
   const subtotalCents = items.reduce((sum, it) => {
     const unit = (it.type === 'printful') ? toNumber(it.priceCents) : SUNGLASSES_PRICE_CENTS;
     return sum + (unit * clampQuantity(it.qty));
   }, 0);
-  const pct = Math.max(0, Math.min(100, toNumber(promoPercent)));
-  const discountCents = Math.floor(subtotalCents * (pct / 100));
-  const shippingCents = subtotalCents > 0 ? 599 : 0;
-  const totalCents = Math.max(0, subtotalCents - discountCents) + shippingCents;
-  return { qty, subtotalCents, discountCents, shippingCents, totalCents };
+  const pct = Math.max(0, Math.min(99, toNumber(promoPercent)));
+  const rawDiscount = Math.round(subtotalCents * (pct / 100));
+  const maxDiscount = Math.max(0, subtotalCents - (minCents || 0));
+  const discountCents = Math.min(rawDiscount, maxDiscount);
+  const discountedSubtotal = Math.max(minCents || 0, subtotalCents - discountCents);
+  const ship = subtotalCents > 0 ? (shippingCents || 0) : 0;
+  const totalCents = Math.max(0, discountedSubtotal + ship);
+  return { qty, subtotalCents, discountCents, discountedSubtotal, shippingCents: ship, totalCents };
 }
 
 export function formatMoney(cents) {

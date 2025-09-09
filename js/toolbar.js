@@ -1,14 +1,16 @@
 import { getCart, getPromo, getTotals, formatMoney } from './cart-state.js';
+const SHIPPING_CENTS = (typeof window !== 'undefined' && window.CFE_SHIPPING_CENTS) || 599;
+const MIN_CENTS = 50;
 
 export function renderToolbarTotals() {
   const el = document.querySelector('[data-role="cart-badge"]');
   if (!el) return;
   const cart = getCart();
   const promo = getPromo();
-  const { qty, totalCents, subtotalCents, discountCents, shippingCents } = getTotals(cart, promo?.percent || 0);
+  const { qty, totalCents } = getTotals(cart, promo?.percent || 0, MIN_CENTS, SHIPPING_CENTS);
   const label = `Cart (${qty} – ${formatMoney(totalCents)})`;
   el.textContent = label;
-  el.setAttribute('aria-label', `Cart, ${qty} items, subtotal ${formatMoney(subtotalCents)}, discount ${formatMoney(discountCents)}, shipping ${formatMoney(shippingCents)}, total ${formatMoney(totalCents)}`);
+  el.setAttribute('aria-label', `Cart, ${qty} items, total ${formatMoney(totalCents)}`);
 }
 
 export function initToolbar() {

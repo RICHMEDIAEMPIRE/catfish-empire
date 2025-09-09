@@ -100,10 +100,20 @@
       cursor: pointer;
       border-radius: 4px;
     }
-    .summary {
-      margin-top: 20px;
-      font-size: 1.1rem;
-    }
+    .cart-card { background:#0f1318; border:1px solid #1f2937; border-radius:18px; box-shadow:0 8px 24px rgba(0,0,0,.25); padding:24px; }
+    .totals-card { background:#0b0f14; border:1px solid #1c2533; border-radius:16px; padding:20px; }
+    .btn { display:inline-flex; gap:.5rem; align-items:center; padding:.6rem 1rem; border-radius:12px; border:0; font-weight:700; cursor:pointer; transition:.15s transform ease; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { background:#16a34a; color:#fff; }
+    .btn-secondary { background:#334155; color:#e5e7eb; }
+    .btn-danger { background:#dc2626; color:#fff; }
+    .input { background:#0b0f14; color:#e5e7eb; border:1px solid #293241; border-radius:10px; padding:.55rem .75rem; }
+    .qty { display:inline-flex; align-items:center; gap:.5rem; }
+    .qty button { width:32px; height:32px; border-radius:8px; }
+    .line { display:flex; justify-content:space-between; padding:.4rem 0; }
+    .line .label { color:#a1a1aa; }
+    .line .value { color:#fff; font-weight:600; }
+    .text-error{color:#ef4444}
     #checkout {
       margin-top: 20px;
       width: 100%;
@@ -168,26 +178,22 @@
 
   <main>
     <h1>Your Cart</h1>
-    <div data-role="cart-root">
+    <div data-role="cart-root" class="cart-card">
       <div data-role="cart-lines"></div>
 
-      <div class="cart-summary">
-        <div>Subtotal: <span data-role="subtotal">$0.00</span></div>
-        <div id="promo-row" style="margin-top:10px">
-          <label for="promoCode">Promo code</label>
-          <input id="promoCode" type="text" placeholder="Enter code" style="margin-left:8px;padding:6px 8px;">
-          <button id="applyPromoBtn" style="margin-left:8px;padding:6px 10px;">Apply/Update</button>
-          <button id="clearPromoBtn" style="margin-left:8px;padding:6px 10px;">Remove</button>
-          <small id="promoHint" style="display:block;margin-top:4px;color:#aaa"></small>
+      <div class="totals-card" style="margin-top:16px">
+        <div class="promo-row" style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-bottom:.5rem">
+          <input id="promoCode" class="input" type="text" placeholder="Promo code" />
+          <button id="applyPromoBtn" class="btn btn-primary">Apply / Update</button>
+          <small id="promoHint" class="text-error" style="display:none"></small>
+          <span id="applied-promo" class="promo-pill" style="display:none"></span>
         </div>
-        <div id="totalsBox" style="margin-top:12px">
-          <div>Subtotal: <strong id="subtotalAmount">$0.00</strong></div>
-          <div>Discount: <strong id="discountAmount">$0.00</strong> <span id="applied-promo" style="margin-left:.5rem"></span></div>
-          <div>Shipping: <strong id="shippingAmount">$0.00</strong></div>
-          <div>Estimated total (pre-tax): <strong id="estimatedTotalAmount">$0.00</strong></div>
-        </div>
-        <div class="cart-actions">
-          <button class="btn" data-role="update-cart">Update Cart</button>
+        <div class="line"><span class="label">Subtotal</span> <span class="value" id="subtotalAmount">$0.00</span></div>
+        <div class="line"><span class="label">Discount</span> <span class="value" id="discountAmount">—</span></div>
+        <div class="line"><span class="label">Shipping</span> <span class="value" id="shippingAmount">$0.00</span></div>
+        <div class="line"><span class="label">Estimated total (pre-tax)</span> <span class="value" id="estimatedTotalAmount">$0.00</span></div>
+        <div class="cart-actions" style="margin-top:12px;display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end">
+          <button class="btn btn-secondary" data-role="update-cart">Update Cart</button>
           <button class="btn btn-primary" data-role="checkout">🔒 Secure checkout with Stripe</button>
         </div>
       </div>
@@ -333,7 +339,8 @@
     function renderSummary(){
       const cart = getCart();
       const promo = getPromo();
-      const { qty, subtotalCents, discountCents, shippingCents, totalCents } = getTotals(cart, promo?.percent || 0);
+      const MIN_CENTS = 50; const SHIPPING_CENTS = 599;
+      const { subtotalCents, discountCents, shippingCents, totalCents } = getTotals(cart, promo?.percent || 0, MIN_CENTS, SHIPPING_CENTS);
       const els = {
         sub: document.getElementById('subtotalAmount'),
         disc: document.getElementById('discountAmount'),
@@ -345,19 +352,16 @@
       if (els.disc) els.disc.textContent = discountCents ? `- ${formatMoney(discountCents)}` : '—';
       if (els.ship) els.ship.textContent = formatMoney(shippingCents);
       if (els.tot) els.tot.textContent = formatMoney(totalCents);
-      if (els.pill) {
-        els.pill.innerHTML = '';
-        if (promo && promo.code) {
-          const span = document.createElement('span');
-          span.className = 'promo-pill';
-          span.innerHTML = `${promo.code.toUpperCase()} – ${promo.percent}% <button aria-label="Remove" id="remove-promo">×</button>`;
-          els.pill.appendChild(span);
-          const btn = span.querySelector('#remove-promo');
-          btn.addEventListener('click', () => {
-            setPromo(null);
-            renderSummary();
-            renderToolbarTotals();
-          });
+      const pillWrap = document.getElementById('applied-promo');
+      if (pillWrap){
+        if (promo && promo.code){
+          pillWrap.style.display = 'inline-flex';
+          pillWrap.innerHTML = `${promo.code.toUpperCase()} – ${promo.percent}% <button aria-label="Remove" id="remove-promo">×</button>`;
+          const btn = pillWrap.querySelector('#remove-promo');
+          btn.addEventListener('click', () => { setPromo(null); renderSummary(); renderToolbarTotals(); });
+        } else {
+          pillWrap.style.display = 'none';
+          pillWrap.innerHTML = '';
         }
       }
     }
@@ -483,7 +487,7 @@
       const clearBtn = document.getElementById('clearPromoBtn');
       if (applyBtn){
         applyBtn.addEventListener('click', async () => {
-          const code = (input?.value||'').trim();
+          const code = (input?.value||'').trim().toLowerCase();
           const hint = document.getElementById('promoHint');
           if (!code) {
             setPromo(null);
@@ -510,7 +514,7 @@
           // Ensure server session also has it
           try { await fetch(`${BACKEND_URL}/api/promo/apply`, { method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'include', body: JSON.stringify({ code }) }); } catch {}
           setPromo({ code, percent });
-          if (hint) { hint.textContent = `Promo applied: ${code.toUpperCase()} (${percent}%)`; hint.style.color = '#2bb24c'; }
+          if (hint) { hint.style.display='none'; }
           renderSummary();
           renderToolbarTotals();
         });
