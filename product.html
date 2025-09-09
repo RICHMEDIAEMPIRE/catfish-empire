@@ -100,18 +100,30 @@
 
     function buildGalleryForColor(colorLower){
       const byColor = productData.galleryByColor?.[colorLower];
-      let imgs = [];
-      if (byColor?.images?.length){ imgs = filterImgs(byColor.images.slice(0)); }
-      else if (byColor?.views){ const v = byColor.views; imgs = filterImgs(unique([v.front, v.back, v.left, v.right].filter(Boolean))); }
-      if (!imgs.length && Array.isArray(productData.images)) imgs = filterImgs(productData.images.slice(0));
       const wrap = $("g-thumbs");
       wrap.innerHTML = "";
+
+      // Build ordered list of views first (for consistent UX), then append any remaining images
+      const orderedKeys = ['front','left-front','right-front','left','right','back'];
+      const fromViews = [];
+      if (byColor?.views) {
+        for (const k of orderedKeys) {
+          const u = byColor.views[k];
+          if (u) fromViews.push(u);
+        }
+      }
+      let imgs = filterImgs(unique(fromViews));
+      const imagesSet = new Set(imgs);
+      const flatImages = filterImgs(byColor?.images?.slice(0) || []);
+      for (const u of flatImages) { if (!imagesSet.has(u)) imgs.push(u); }
+      if (!imgs.length && Array.isArray(productData.images)) imgs = filterImgs(productData.images.slice(0));
+
       imgs.forEach(url=>{
         const t = document.createElement("img");
         t.loading = "lazy"; t.decoding = "async"; t.src = url; t.dataset.src = url; t.onclick = () => setMain(url);
         wrap.appendChild(t);
       });
-      const candidate = filterImgs([byColor?.views?.front]).find(Boolean) || imgs[0] || "";
+      const candidate = filterImgs([byColor?.views?.front, imgs[0]]).find(Boolean) || "";
       setMain(candidate);
     }
 
