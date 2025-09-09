@@ -17,6 +17,7 @@
     .thumbs img.active, .thumbs img:hover { border-color: gold; }
     /* Minimal additions for requested hooks */
     .gallery-main img { width:100%; max-width:560px; border-radius:12px; }
+    .gallery-main, #g-thumbs { display:none; }
     /* Angle UI */
     .angle-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
     .angle-tab { padding:6px 10px; border:1px solid #ddd; background:#fff; color:#000; border-radius:8px; cursor:pointer; }
@@ -195,7 +196,7 @@
       const sel = $("sel-color"); sel.innerHTML = "";
       colors.forEach(c=>{ const opt=document.createElement("option"); opt.value=c; opt.textContent=titleCase(c); if (c===def) opt.selected=true; sel.appendChild(opt); });
       currentColor = sel.value || def || colors[0] || null;
-      sel.onchange = ()=>{ currentColor = sel.value; buildGalleryForColor(currentColor); renderAnglesUI(); renderThumbsUI(); buildSizeSelect(currentColor); refreshPriceAndVariant(); };
+      sel.onchange = ()=>{ currentColor = sel.value; renderAnglesUI(); renderThumbsUI(); buildSizeSelect(currentColor); refreshPriceAndVariant(); };
     }
 
     function buildSizeSelect(colorLower){
@@ -238,7 +239,7 @@
       productData = data;
       $("p-title").textContent = productData.name || "Catfish Empire Product";
       $("p-desc").innerHTML = (productData.description || "").replace(/\n/g,"<br>");
-      buildColorSelect(); buildGalleryForColor(currentColor); renderAnglesUI(); renderThumbsUI(); buildSizeSelect(currentColor); refreshPriceAndVariant();
+      buildColorSelect(); renderAnglesUI(); renderThumbsUI(); buildSizeSelect(currentColor); refreshPriceAndVariant();
       $("btn-add").onclick = addToCart;
     }
 
