@@ -462,6 +462,8 @@
           const data = await r.json().catch(()=>({}));
           await renderTotalsPreview({ code: data.code || code, percent: data.percent || 0 });
           window.dispatchEvent(new CustomEvent('cart:changed'));
+          // Also refresh header badge explicitly in case event listeners are late
+          try { if (window.renderCartBadge) window.renderCartBadge(); } catch(_) {}
         });
       }
       if (clearBtn){
@@ -469,6 +471,7 @@
           await fetch(`${BACKEND_URL}/api/promo/clear`, { method:'POST', credentials:'include' });
           await renderTotalsPreview({ code: '', percent: 0 });
           window.dispatchEvent(new CustomEvent('cart:changed'));
+          try { if (window.renderCartBadge) window.renderCartBadge(); } catch(_) {}
         });
       }
       renderTotalsPreview();

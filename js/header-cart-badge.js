@@ -1,7 +1,9 @@
 import { loadCart, subtotalCents, totalQty, dollars } from './cart-utils.js';
 
+const BE = (typeof window !== 'undefined' && window.BACKEND_URL) || 'https://catfish-stripe-backend.onrender.com';
+
 async function fetchActivePromo(){
-  try{ const r = await fetch('/api/promo/active', { credentials:'include' }); return (await r.json()).promo || null; }catch{ return null; }
+  try{ const r = await fetch(`${BE}/api/promo/active`, { credentials:'include' }); return (await r.json()).promo || null; }catch{ return null; }
 }
 
 async function renderBadge(){
