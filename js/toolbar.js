@@ -3,14 +3,10 @@ const SHIPPING_CENTS = (typeof window !== 'undefined' && window.CFE_SHIPPING_CEN
 const MIN_CENTS = 50;
 
 export function renderToolbarTotals() {
-  const el = document.querySelector('[data-role="cart-badge"]');
+  const el = document.querySelector('[data-role="cart-badge"]') || document.getElementById('toolbar-cart');
   if (!el) return;
-  const cart = getCart();
-  const promo = getPromo();
-  const { qty, totalCents } = getTotals(cart, promo?.percent || 0, MIN_CENTS, SHIPPING_CENTS);
-  const label = `Cart (${qty} – ${formatMoney(totalCents)})`;
-  el.textContent = label;
-  el.setAttribute('aria-label', `Cart, ${qty} items, total ${formatMoney(totalCents)}`);
+  const { qty, totalCents } = computeTotals(getCart(), getPromo());
+  el.textContent = qty === 0 ? 'Cart (empty)' : `Cart (${qty} – ${formatMoney(totalCents)})`;
 }
 
 export function initToolbar() {
@@ -37,6 +33,7 @@ function paint() {
   bubble.textContent = qty === 0 ? 'Cart (empty)' : `Cart (${qty} — $${(totalCents/100).toFixed(2)})`;
 }
 window.addEventListener('cart:changed', paint);
+window.addEventListener('promo:changed', paint);
 document.addEventListener('DOMContentLoaded', paint);
 
 
