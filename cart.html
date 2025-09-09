@@ -337,7 +337,7 @@
 
     // Promo helpers via backend
     function dollarsLabel(cents){ return `$${(n(cents)/100).toFixed(2)}`; }
-    async function recalcTotalsPreview(){
+    async function recalcTotalsPreview(override){
       const items = loadCart();
       let subtotal = 0;
       for(const it of items){
@@ -345,18 +345,23 @@
         const qty = n(it.qty||1);
         subtotal += unit * qty;
       }
-      let pct = 0, pj = null;
-      try {
-        const r = await fetch(`${BACKEND_URL}/api/promo/active`, { credentials:'include' });
-        pj = await r.json();
-        pct = pj?.promo?.percent || 0;
-      } catch (_) { pct = 0; }
+      let pct = 0, promoObj = null;
+      if (override && typeof override.percent === 'number') {
+        pct = override.percent; promoObj = { code: override.code||'', percent: pct };
+      } else {
+        try {
+          const r = await fetch(`${BACKEND_URL}/api/promo/active`, { credentials:'include' });
+          const pj = await r.json();
+          pct = pj?.promo?.percent || 0;
+          promoObj = pj?.promo || null;
+        } catch (_) { pct = 0; }
+      }
       const discounted = Math.max(0, Math.round(subtotal * (100 - pct) / 100));
       const discount = Math.max(0, subtotal - discounted);
       const shipping = 599;
-      return { subtotal, discount, shipping, estimated: discounted + shipping, promo: pj?.promo || null };
+      return { subtotal, discount, shipping, estimated: discounted + shipping, promo: promoObj };
     }
-    async function renderTotalsPreview(){
+    async function renderTotalsPreview(override){
       const els = {
         sub: document.getElementById('subtotalAmount'),
         disc: document.getElementById('discountAmount'),
@@ -365,7 +370,7 @@
         hint: document.getElementById('promoHint'),
         input: document.getElementById('promoCode')
       };
-      const t = await recalcTotalsPreview();
+      const t = await recalcTotalsPreview(override);
       if(els.sub) els.sub.textContent = dollarsLabel(t.subtotal);
       if(els.disc) els.disc.textContent = `- ${dollarsLabel(t.discount)}`;
       if(els.ship) els.ship.textContent = dollarsLabel(t.shipping);
@@ -454,14 +459,15 @@
           const code = (input?.value||'').trim();
           const r = await fetch(`${BACKEND_URL}/api/promo/apply`, { method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'include', body: JSON.stringify({ code }) });
           if (!r.ok){ alert('Invalid promo code'); return; }
-          await renderTotalsPreview();
+          const data = await r.json().catch(()=>({}));
+          await renderTotalsPreview({ code: data.code || code, percent: data.percent || 0 });
           window.dispatchEvent(new CustomEvent('cart:changed'));
         });
       }
       if (clearBtn){
         clearBtn.addEventListener('click', async () => {
           await fetch(`${BACKEND_URL}/api/promo/clear`, { method:'POST', credentials:'include' });
-          await renderTotalsPreview();
+          await renderTotalsPreview({ code: '', percent: 0 });
           window.dispatchEvent(new CustomEvent('cart:changed'));
         });
       }
