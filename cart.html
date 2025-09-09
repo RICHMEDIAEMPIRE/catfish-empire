@@ -200,13 +200,13 @@
         <div class="line"><span class="label">Subtotal</span> <span class="value" id="subtotalAmount">$0.00</span></div>
         <div class="line"><span class="label">Discount</span> <span class="value" id="discountAmount">—</span></div>
         <div class="line"><span class="label">Shipping</span> <span class="value" id="shippingAmount">$0.00</span></div>
-        <div class="line"><span class="label">Estimated total (pre-tax)</span> <span class="value" id="estimatedTotalAmount">$0.00</span></div>
+        <div class="line"><span class="label">Total</span> <span class="value" id="estimatedTotalAmount">$0.00</span></div>
         <div class="cart-actions" style="margin-top:12px;display:flex;gap:.5rem;flex-wrap:wrap;justify-content:flex-end">
           <button class="btn btn-secondary" data-role="update-cart">Update Cart</button>
           <button class="btn btn-primary" data-role="checkout">🔒 Secure checkout with Stripe</button>
         </div>
       </div>
-      <p style="font-size: 0.95rem; color: gray;">Tax and shipping calculated at checkout</p>
+      <p style="font-size: 0.95rem; color: gray;">Shipping calculated at checkout</p>
     </div>
   </main>
 
@@ -528,8 +528,10 @@
           // Ensure server session also has it
           try { await fetch(`${BACKEND_URL}/api/promo/apply`, { method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'include', body: JSON.stringify({ code }) }); } catch {}
           setPromo({ code, percent });
-          if (hint) { hint.style.display='none'; }
+          // Force recompute/paint immediately for cart + toolbar
+          try { window.dispatchEvent(new CustomEvent('cart:changed')); } catch {}
           renderSummary();
+          if (hint) { hint.style.display='none'; }
           renderToolbarTotals();
         });
       }

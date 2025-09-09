@@ -5,6 +5,8 @@ const CART_KEY_LEGACY = 'cart';
 const PROMO_KEY = 'cfe_promo_v1';
 
 const SUNGLASSES_PRICE_CENTS = 1499;
+export const SHIPPING_CENTS = 599;
+export const MIN_AFTER_DISCOUNT = 50;
 
 function toNumber(value) {
   const n = Number(value);
@@ -111,7 +113,7 @@ export function setPromo(promoObjectOrNull) {
   try { window.dispatchEvent(new CustomEvent('promo:changed')); } catch {}
 }
 
-export function getTotals(cart, promoPercent, minCents = 50, shippingCents = 599) {
+export function getTotals(cart, promoPercent, minCents = MIN_AFTER_DISCOUNT, shippingCents = SHIPPING_CENTS) {
   const items = Array.isArray(cart) ? cart : [];
   const qty = items.reduce((q, it) => q + clampQuantity(it.qty), 0);
   const subtotalCents = items.reduce((sum, it) => {
@@ -126,6 +128,27 @@ export function getTotals(cart, promoPercent, minCents = 50, shippingCents = 599
   const ship = subtotalCents > 0 ? (shippingCents || 0) : 0;
   const totalCents = Math.max(0, discountedSubtotal + ship);
   return { qty, subtotalCents, discountCents, discountedSubtotal, shippingCents: ship, totalCents };
+}
+
+// Replacement per spec: use floor only when subtotal>0, never on empty carts; clamp shipping
+export function computeTotals(cart = getCart(), promo = getPromo()) {
+  const normalized = Array.isArray(cart) ? cart : [];
+  const qty = normalized.reduce((q, it) => q + (Number(it.qty) || 0), 0);
+  const subtotalCents = normalized.reduce((s, it) => s + (Number(it.priceCents) || 0) * (Number(it.qty) || 0), 0);
+  const percent = promo?.percent ? Math.min(100, Math.max(0, Number(promo.percent))) : 0;
+  let discountCents = Math.round(subtotalCents * percent / 100);
+  if (subtotalCents > 0 && percent > 0) {
+    const discounted = subtotalCents - discountCents;
+    if (discounted < MIN_AFTER_DISCOUNT) {
+      discountCents = Math.max(0, subtotalCents - MIN_AFTER_DISCOUNT);
+    }
+  } else {
+    discountCents = 0;
+  }
+  const discountedSubtotal = Math.max(0, subtotalCents - discountCents);
+  const shippingCents = qty > 0 ? SHIPPING_CENTS : 0;
+  const totalCents = discountedSubtotal + shippingCents;
+  return { qty, subtotalCents, discountCents, shippingCents, totalCents, percent };
 }
 
 export function formatMoney(cents) {

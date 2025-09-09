@@ -1,4 +1,4 @@
-import { getCart, getPromo, getTotals, formatMoney } from './cart-state.js';
+import { getCart, getPromo, getTotals, formatMoney, computeTotals, readCart, readPromo } from './cart-state.js';
 const SHIPPING_CENTS = (typeof window !== 'undefined' && window.CFE_SHIPPING_CENTS) || 599;
 const MIN_CENTS = 50;
 
@@ -28,5 +28,15 @@ if (typeof window !== 'undefined') {
   // expose for inline scripts if needed
   window.renderToolbarTotals = renderToolbarTotals;
 }
+
+// Replace paint logic per spec for explicit "Cart (empty)"
+function paint() {
+  const bubble = document.getElementById('toolbar-cart');
+  if (!bubble) return;
+  const { qty, totalCents } = computeTotals(readCart(), readPromo());
+  bubble.textContent = qty === 0 ? 'Cart (empty)' : `Cart (${qty} — $${(totalCents/100).toFixed(2)})`;
+}
+window.addEventListener('cart:changed', paint);
+document.addEventListener('DOMContentLoaded', paint);
 
 
