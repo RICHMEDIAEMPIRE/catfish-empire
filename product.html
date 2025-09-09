@@ -118,6 +118,20 @@
       for (const u of flatImages) { if (!imagesSet.has(u)) imgs.push(u); }
       if (!imgs.length && Array.isArray(productData.images)) imgs = filterImgs(productData.images.slice(0));
 
+      // Fallback: if this color has too few mockups, borrow ordered views from defaultColor
+      if (imgs.length < 2 && productData.defaultColor) {
+        const defKey = String(productData.defaultColor||'').toLowerCase();
+        if (defKey && defKey !== colorLower) {
+          const def = productData.galleryByColor?.[defKey];
+          if (def?.views) {
+            for (const k of orderedKeys) {
+              const u = def.views[k];
+              if (u && !imagesSet.has(u)) { imgs.push(u); imagesSet.add(u); }
+            }
+          }
+        }
+      }
+
       imgs.forEach(url=>{
         const t = document.createElement("img");
         t.loading = "lazy"; t.decoding = "async"; t.src = url; t.dataset.src = url; t.onclick = () => setMain(url);
