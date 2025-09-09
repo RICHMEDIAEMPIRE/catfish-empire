@@ -345,9 +345,12 @@
         const qty = n(it.qty||1);
         subtotal += unit * qty;
       }
-      const r = await fetch(`${BACKEND_URL}/api/promo/active`, { credentials:'include' });
-      const pj = await r.json();
-      const pct = pj?.promo?.percent || 0;
+      let pct = 0, pj = null;
+      try {
+        const r = await fetch(`${BACKEND_URL}/api/promo/active`, { credentials:'include' });
+        pj = await r.json();
+        pct = pj?.promo?.percent || 0;
+      } catch (_) { pct = 0; }
       const discounted = Math.max(0, Math.round(subtotal * (100 - pct) / 100));
       const discount = Math.max(0, subtotal - discounted);
       const shipping = 599;
@@ -391,7 +394,8 @@
       renderLines(cart);
       bindLineEvents(cart);
       renderTotals(cart);
-      await renderTotalsPreview();
+      // Also render discounted totals box; don't block UI if promo fetch fails
+      try { await renderTotalsPreview(); } catch(_) {}
       const updateBtn = qSel('[data-role="update-cart"]');
       if(updateBtn){
         updateBtn.onclick = () => {
@@ -401,7 +405,7 @@
           current = sortByVariant(current);
           saveCart(current);
           renderCart();
-          renderTotalsPreview();
+          try { renderTotalsPreview(); } catch(_) {}
         };
       }
       const checkoutBtn = qSel('[data-role="checkout"]');
