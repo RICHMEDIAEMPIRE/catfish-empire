@@ -345,7 +345,7 @@
         const qty = n(it.qty||1);
         subtotal += unit * qty;
       }
-      const r = await fetch('/api/promo/active', { credentials:'include' });
+      const r = await fetch(`${BACKEND_URL}/api/promo/active`, { credentials:'include' });
       const pj = await r.json();
       const pct = pj?.promo?.percent || 0;
       const discounted = Math.max(0, Math.round(subtotal * (100 - pct) / 100));
@@ -446,7 +446,7 @@
       if (applyBtn){
         applyBtn.addEventListener('click', async () => {
           const code = (input?.value||'').trim();
-          const r = await fetch('/api/promo/apply', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ code }) });
+          const r = await fetch(`${BACKEND_URL}/api/promo/apply`, { method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'include', body: JSON.stringify({ code }) });
           if (!r.ok){ alert('Invalid promo code'); return; }
           await renderTotalsPreview();
           window.dispatchEvent(new CustomEvent('cart:changed'));
@@ -454,7 +454,7 @@
       }
       if (clearBtn){
         clearBtn.addEventListener('click', async () => {
-          await fetch('/api/promo/clear', { method:'POST' });
+          await fetch(`${BACKEND_URL}/api/promo/clear`, { method:'POST', credentials:'include' });
           await renderTotalsPreview();
           window.dispatchEvent(new CustomEvent('cart:changed'));
         });
