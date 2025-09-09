@@ -17,6 +17,15 @@
     .thumbs img.active, .thumbs img:hover { border-color: gold; }
     /* Minimal additions for requested hooks */
     .gallery-main img { width:100%; max-width:560px; border-radius:12px; }
+    /* Angle UI */
+    .angle-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+    .angle-tab { padding:6px 10px; border:1px solid #ddd; background:#fff; color:#000; border-radius:8px; cursor:pointer; }
+    .angle-tab.active { border-color:#111; font-weight:600; }
+    .angle-tab.disabled { opacity:.45; cursor:not-allowed; }
+    .main-image-wrap { text-align:center; margin-bottom:12px; }
+    #mainImage { max-width:520px; width:100%; border-radius:12px; background:#111; }
+    .thumb-strip { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+    .thumb-strip .thumb { width:76px; height:76px; object-fit:cover; border-radius:8px; border:1px solid #e6e6e6; cursor:pointer; }
     .details { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 1.25rem; }
     h1 { color: gold; margin: .25rem 0 1rem; font-size:1.8rem; }
     .desc { color:#ccc; line-height:1.6; margin-bottom:1rem; }
@@ -36,6 +45,9 @@
 
   <div class="container">
     <div class="gallery">
+      <div class="angle-tabs" id="angleTabs"></div>
+      <div class="main-image-wrap"><img id="mainImage" alt="product view" /></div>
+      <div class="thumb-strip" id="thumbStrip"></div>
       <div class="gallery-main"><img id="g-main" class="main-img" src="TM.png" alt="Product image" /></div>
       <div id="g-thumbs" class="thumbs"></div>
     </div>
@@ -116,6 +128,12 @@
       const imagesSet = new Set(imgs);
       const flatImages = filterImgs(byColor?.images?.slice(0) || []);
       for (const u of flatImages) { if (!imagesSet.has(u)) imgs.push(u); }
+      // If still only one unique image, try to infer more from any string containing color token
+      if (imgs.length < 2) {
+        const colorToken = String(colorLower||'').replace(/\s+/g,'').toLowerCase();
+        const extras = (byColor?.images||[]).filter(u => String(u).toLowerCase().replace(/\s+/g,'').includes(colorToken));
+        for (const u of filterImgs(extras)) { if (!imagesSet.has(u)) { imgs.push(u); imagesSet.add(u); } }
+      }
       if (!imgs.length && Array.isArray(productData.images)) imgs = filterImgs(productData.images.slice(0));
 
       // Fallback: only if this color has no images at all, borrow ordered views from defaultColor
@@ -141,13 +159,43 @@
       setMain(candidate);
     }
 
+    // Angle Tabs + Thumbs using galleryByColor
+    function renderAnglesUI(){
+      const tabs = document.getElementById('angleTabs');
+      if (!tabs || !productData) return;
+      const cKey = String(currentColor||'').toLowerCase();
+      const g = productData.galleryByColor?.[cKey] || {};
+      const views = g.views || {};
+      tabs.innerHTML = '';
+      const angles = [
+        { key:'front', label:'Front', has: !!views.front },
+        { key:'back',  label:'Back',  has: !!views.back  },
+        { key:'left',  label:'Left',  has: !!views.left  },
+        { key:'right', label:'Right', has: !!views.right }
+      ];
+      let sel = angles.find(a=>a.has)?.key || 'front';
+      angles.forEach(a=>{
+        const b = document.createElement('button'); b.type='button';
+        b.className = 'angle-tab' + (a.key===sel?' active':'') + (a.has?'':' disabled');
+        b.textContent = a.label; if (a.has){ b.onclick = ()=>{ setMain(views[a.key] || g.cover || (g.images||[])[0] || ''); renderAnglesUI(); }; }
+        tabs.appendChild(b);
+      });
+      const firstSrc = views[sel] || views.front || g.cover || (g.images||[])[0] || '';
+      const main = document.getElementById('mainImage'); if (main && firstSrc) main.src = firstSrc;
+    }
+    function renderThumbsUI(){
+      const strip = document.getElementById('thumbStrip'); if (!strip || !productData) return; strip.innerHTML='';
+      const cKey = String(currentColor||'').toLowerCase(); const g = productData.galleryByColor?.[cKey] || {};
+      (g.images||[]).forEach(u=>{ const t=document.createElement('img'); t.src=u; t.loading='lazy'; t.className='thumb'; t.onclick=()=> setMain(u); strip.appendChild(t); });
+    }
+
     function buildColorSelect(){
       const colors = Object.keys(productData.galleryByColor || {}).sort((a,b)=>a.localeCompare(b));
       const def = (productData.defaultColor || "").toLowerCase();
       const sel = $("sel-color"); sel.innerHTML = "";
       colors.forEach(c=>{ const opt=document.createElement("option"); opt.value=c; opt.textContent=titleCase(c); if (c===def) opt.selected=true; sel.appendChild(opt); });
       currentColor = sel.value || def || colors[0] || null;
-      sel.onchange = ()=>{ currentColor = sel.value; buildGalleryForColor(currentColor); buildSizeSelect(currentColor); refreshPriceAndVariant(); };
+      sel.onchange = ()=>{ currentColor = sel.value; buildGalleryForColor(currentColor); renderAnglesUI(); renderThumbsUI(); buildSizeSelect(currentColor); refreshPriceAndVariant(); };
     }
 
     function buildSizeSelect(colorLower){
@@ -190,7 +238,7 @@
       productData = data;
       $("p-title").textContent = productData.name || "Catfish Empire Product";
       $("p-desc").innerHTML = (productData.description || "").replace(/\n/g,"<br>");
-      buildColorSelect(); buildGalleryForColor(currentColor); buildSizeSelect(currentColor); refreshPriceAndVariant();
+      buildColorSelect(); buildGalleryForColor(currentColor); renderAnglesUI(); renderThumbsUI(); buildSizeSelect(currentColor); refreshPriceAndVariant();
       $("btn-add").onclick = addToCart;
     }
 
