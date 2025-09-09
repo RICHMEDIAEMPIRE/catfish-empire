@@ -391,6 +391,7 @@
       renderLines(cart);
       bindLineEvents(cart);
       renderTotals(cart);
+      await renderTotalsPreview();
       const updateBtn = qSel('[data-role="update-cart"]');
       if(updateBtn){
         updateBtn.onclick = () => {
@@ -400,6 +401,7 @@
           current = sortByVariant(current);
           saveCart(current);
           renderCart();
+          renderTotalsPreview();
         };
       }
       const checkoutBtn = qSel('[data-role="checkout"]');
