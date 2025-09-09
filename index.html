@@ -550,6 +550,7 @@
     window.BACKEND_URL = window.BACKEND_URL || "https://catfish-stripe-backend.onrender.com";
   </script>
   <script src="/js/printful-loader.js" defer></script>
+  <script src="/js/index-prefetch.js" defer></script>
   <script type="module" src="/js/cart-state.js"></script>
   <script type="module" src="/js/toolbar.js"></script>
 
@@ -784,6 +785,7 @@
       
       const card = document.createElement('a');
       card.className = 'product-card card-link';
+      card.setAttribute('data-product-id', String(product.id));
       card.href = `product.html?id=${encodeURIComponent(product.id)}`;
       
       const priceCents = (typeof product.priceCents === 'number' && product.priceCents > 0) ? product.priceCents : null;
