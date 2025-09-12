@@ -522,23 +522,41 @@
             return;
           }
           const data = await resp.json().catch(()=>({}));
-          const percent = Number(data?.percent || data?.promo?.percent || 0);
+          const isOneDollar = data?.mode === 'oneDollar';
+          const isFlat = data?.mode === 'flat50';
+          const percent = (isOneDollar || isFlat) ? 0 : Number(data?.percent || data?.promo?.percent || 0);
           const code = String(data?.code || data?.promo?.code || codeInput).toLowerCase();
           if (!(percent > 0)) {
-            if (hint) { hint.textContent = 'Invalid or inactive code'; hint.style.color = '#ff6b6b'; hint.style.display='block'; }
-            setPromo(null);
-            renderSummary();
-            renderToolbarTotals();
-            return;
+            if (!isOneDollar && !isFlat){
+              if (hint) { hint.textContent = 'Invalid or inactive code'; hint.style.color = '#ff6b6b'; hint.style.display='block'; }
+              setPromo(null);
+              renderSummary();
+              renderToolbarTotals();
+              return;
+            }
           }
           // Persist promo locally and in session for checkout
-          setPromo({ code, percent });
+          if (isOneDollar) {
+            setPromo({ code, percent: 0, mode: 'oneDollar' });
+          } else if (isFlat) {
+            setPromo({ code, percent: 0, mode: 'flat50' });
+        } else {
+            setPromo({ code, percent });
+          }
           try { await fetch(`${BACKEND_URL}/api/promo/apply`, { method:'POST', headers:{ 'Content-Type':'application/json' }, credentials:'include', body: JSON.stringify({ code }) }); } catch {}
           // Force recompute/paint immediately for cart + toolbar
           try { window.dispatchEvent(new CustomEvent('cart:changed')); } catch {}
           renderSummary();
           renderToolbarTotals();
-          if (hint) { hint.textContent = `Promo applied: ${code.toUpperCase()} (${percent}%)`; hint.style.color = '#2bb24c'; hint.style.display='block'; }
+          if (hint) { 
+            let msg = `Promo applied: ${code.toUpperCase()}`;
+            if (isOneDollar) msg += ' ($1 test mode)';
+            else if (isFlat) msg += ' ($0.50 per item)';
+            else msg += ` (${percent}%)`;
+            hint.textContent = msg; 
+            hint.style.color = '#2bb24c'; 
+            hint.style.display='block'; 
+          }
         });
       }
       if (clearBtn){

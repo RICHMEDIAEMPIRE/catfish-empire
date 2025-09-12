@@ -113,13 +113,21 @@ export function setPromo(promoObjectOrNull) {
   try { window.dispatchEvent(new CustomEvent('promo:changed')); } catch {}
 }
 
-export function getTotals(cart, promoPercent, minCents = MIN_AFTER_DISCOUNT, shippingCents = SHIPPING_CENTS) {
+export function getTotals(cart, promoPercent, minCents = MIN_AFTER_DISCOUNT, shippingCents = SHIPPING_CENTS, promoObj) {
   const items = Array.isArray(cart) ? cart : [];
   const qty = items.reduce((q, it) => q + clampQuantity(it.qty), 0);
   const subtotalCents = items.reduce((sum, it) => {
     const unit = (it.type === 'printful') ? toNumber(it.priceCents) : SUNGLASSES_PRICE_CENTS;
     return sum + (unit * clampQuantity(it.qty));
   }, 0);
+  if (promoObj && promoObj.mode === 'flat50') {
+    const targetSubtotal = qty * 50;
+    const discountCents = Math.max(0, subtotalCents - targetSubtotal);
+    const discountedSubtotal = Math.max(0, targetSubtotal);
+    const ship = qty > 0 ? 0 : 0;
+    const totalCents = Math.max(0, discountedSubtotal + ship);
+    return { qty, subtotalCents, discountCents, discountedSubtotal, shippingCents: ship, totalCents };
+  }
   const pct = Math.max(0, Math.min(99, toNumber(promoPercent)));
   const rawDiscount = Math.round(subtotalCents * (pct / 100));
   const maxDiscount = Math.max(0, subtotalCents - (minCents || 0));
@@ -135,6 +143,25 @@ export function computeTotals(cart = getCart(), promo = getPromo()) {
   const normalized = Array.isArray(cart) ? cart : [];
   const qty = normalized.reduce((q, it) => q + (Number(it.qty) || 0), 0);
   const subtotalCents = normalized.reduce((s, it) => s + (Number(it.priceCents) || 0) * (Number(it.qty) || 0), 0);
+  
+  // ONE-DOLLAR mode: TAKE5 -> $1 total
+  if (promo && promo.mode === 'oneDollar'){
+    const discountCents = Math.max(0, subtotalCents - 100); // discount to make total $1
+    const shippingCents = 0; // free shipping
+    const totalCents = 100; // exactly $1
+    return { qty, subtotalCents, discountCents, shippingCents, totalCents, percent: 0, mode: 'oneDollar' };
+  }
+  
+  // FLAT-50 mode: $0.50 per item
+  if (promo && promo.mode === 'flat50'){
+    const target = qty * 50;
+    const discountCents = Math.max(0, subtotalCents - target);
+    const shippingCents = qty > 0 ? 0 : 0;
+    const totalCents = target + shippingCents;
+    return { qty, subtotalCents, discountCents, shippingCents, totalCents, percent: 0, mode: 'flat50' };
+  }
+  
+  // Normal percent discount
   const percent = promo?.percent ? Math.min(100, Math.max(0, Number(promo.percent))) : 0;
   let discountCents = Math.round(subtotalCents * percent / 100);
   if (subtotalCents > 0 && percent > 0) {
