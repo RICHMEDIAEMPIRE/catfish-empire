@@ -140,6 +140,9 @@ function paintGallery() {
   console.log("[angles] colorKey=", CURRENT.colorKey, "angle=", CURRENT.angle);
   console.log("[angles] available=", CURRENT.data.availableAnglesByColor[CURRENT.colorKey]);
   console.log("[angles] bucket=", g);
+  console.log("[angles] galleryByColor keys=", Object.keys(CURRENT.data.galleryByColor || {}));
+  console.log("[angles] availableAnglesByColor=", CURRENT.data.availableAnglesByColor);
+  console.log("[angles] colors array=", CURRENT.data.colors);
 }
 
 function addToCart() {
