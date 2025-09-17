@@ -168,6 +168,11 @@
       const cKey = String(currentColor||'').toLowerCase();
       const g = productData.galleryByColor?.[cKey] || {};
       const views = g.views || {};
+      
+      console.log('Current color:', cKey);
+      console.log('Gallery for color:', g);
+      console.log('Available views:', views);
+      
       tabs.innerHTML = '';
       const angles = [
         { key:'front', label:'Front', has: !!views.front },
@@ -175,15 +180,31 @@
         { key:'left',  label:'Left',  has: !!views.left  },
         { key:'right', label:'Right', has: !!views.right }
       ];
-      let sel = angles.find(a=>a.has)?.key || 'front';
+      
+      let currentAngle = 'front';
       angles.forEach(a=>{
-        const b = document.createElement('button'); b.type='button';
-        b.className = 'angle-tab' + (a.key===sel?' active':'') + (a.has?'':' disabled');
-        b.textContent = a.label; if (a.has){ b.onclick = ()=>{ setMain(views[a.key] || g.cover || (g.images||[])[0] || ''); renderAnglesUI(); }; }
+        const b = document.createElement('button'); 
+        b.type='button';
+        b.className = 'angle-tab' + (a.key===currentAngle?' active':'') + (a.has?'':' disabled');
+        b.textContent = a.label; 
+        if (a.has){ 
+          b.onclick = ()=>{ 
+            currentAngle = a.key;
+            const src = views[a.key] || g.cover || (g.images||[])[0] || '';
+            setMain(src);
+            // Update active states
+            angles.forEach(angle => {
+              const btn = tabs.querySelector(`button:nth-child(${angles.indexOf(angle) + 1})`);
+              if (btn) btn.className = 'angle-tab' + (angle.key===currentAngle?' active':'') + (angle.has?'':' disabled');
+            });
+          }; 
+        }
         tabs.appendChild(b);
       });
-      const firstSrc = views[sel] || views.front || g.cover || (g.images||[])[0] || '';
-      const main = document.getElementById('mainImage'); if (main && firstSrc) main.src = firstSrc;
+      
+      const firstSrc = views[currentAngle] || views.front || g.cover || (g.images||[])[0] || '';
+      const main = document.getElementById('mainImage'); 
+      if (main && firstSrc) main.src = firstSrc;
     }
     function renderThumbsUI(){
       const strip = document.getElementById('thumbStrip'); if (!strip || !productData) return; strip.innerHTML='';
