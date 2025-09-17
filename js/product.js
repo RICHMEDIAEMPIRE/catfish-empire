@@ -34,9 +34,15 @@ function buildColorDropdown(colors) {
 }
 
 function buildAngleTabs() {
+  console.log("🚀 buildAngleTabs() called");
   const tabs = document.getElementById("angleTabs");
-  if (!tabs) return;
+  console.log("📋 angleTabs element:", tabs);
+  if (!tabs) {
+    console.error("❌ angleTabs element not found!");
+    return;
+  }
   tabs.innerHTML = "";
+  console.log("✅ angleTabs element found and cleared");
 
   console.log("🔧 buildAngleTabs - colorKey:", CURRENT.colorKey);
   console.log("🔧 buildAngleTabs - availableAnglesByColor:", CURRENT.data.availableAnglesByColor);
@@ -47,6 +53,8 @@ function buildAngleTabs() {
   const ordered = ["front","back","left","right"].filter(a => avail.includes(a));
   console.log("🔧 buildAngleTabs - ordered angles:", ordered);
 
+  console.log(`🎨 Creating ${ordered.length} angle tabs:`, ordered);
+  
   for (const a of ordered) {
     const btn = document.createElement("button");
     btn.type = "button";
@@ -58,7 +66,10 @@ function buildAngleTabs() {
       paintGallery();
     });
     tabs.appendChild(btn);
+    console.log(`✅ Created angle tab: ${a}`);
   }
+  
+  console.log(`🎯 Final tabs count: ${tabs.children.length}`);
 }
 
 function buildSizeDropdown() {
