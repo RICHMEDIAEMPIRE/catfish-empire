@@ -353,8 +353,7 @@
     function renderSummary(){
       const cart = getCart();
       const promo = getPromo();
-      const MIN_CENTS = 50; const SHIPPING_CENTS = 599;
-      const { subtotalCents, discountCents, shippingCents, totalCents } = getTotals(cart, promo?.percent || 0, MIN_CENTS, SHIPPING_CENTS);
+      const { subtotalCents, discountCents, shippingCents, totalCents } = computeTotals(cart, promo);
       const els = {
         sub: document.getElementById('subtotalAmount'),
         disc: document.getElementById('discountAmount'),
