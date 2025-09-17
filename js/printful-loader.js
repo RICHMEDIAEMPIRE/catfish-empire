@@ -4,10 +4,9 @@
   const ENDPOINT = `${BACKEND_URL}/api/printful-products`; // Use cache for speed
 
   const grid = document.getElementById("printful-grid");
-  if (!grid) {
-    console.warn("[printful] #printful-grid not found; skipping render");
-    return;
-  }
+  // This file is now deprecated on the homepage (we render into #products-grid there).
+  // If #printful-grid is not present, do nothing.
+  if (!grid) return;
 
   function normalizeOne(raw) {
     const priceCents =

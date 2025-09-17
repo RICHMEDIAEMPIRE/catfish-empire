@@ -523,9 +523,6 @@
         <!-- All products will be loaded here dynamically -->
       </div>
     </section>
-    <div class="section mt-10">
-      <div id="printful-grid" class="product-grid products-grid"></div>
-    </div>
   </div>
 
   <!-- Product Zoom Overlay -->
@@ -549,7 +546,6 @@
   <script>
     window.BACKEND_URL = window.BACKEND_URL || "https://catfish-stripe-backend.onrender.com";
   </script>
-  <script src="/js/printful-loader.js" defer></script>
   <script src="/js/index-prefetch.js" defer></script>
   <script type="module" src="/js/cart-state.js"></script>
   <script type="module" src="/js/toolbar.js"></script>
@@ -758,24 +754,34 @@
       }
       
       const gridEl = document.getElementById('products-grid');
-      
-      // More aggressive duplicate removal - remove ALL cards except sunglasses
-      const allCards = gridEl.querySelectorAll('.product-card');
-      const sunglassesCard = gridEl.querySelector('.product-card.clickable-card');
-      
-      console.log(`🗑️ Found ${allCards.length} total cards, keeping sunglasses card`);
-      
-      // Remove all cards except the sunglasses one
-      allCards.forEach(card => {
-        if (!card.classList.contains('clickable-card')) {
-          console.log(`🗑️ Removing card: ${card.querySelector('h3, .product-title')?.textContent || 'unknown'}`);
-          card.remove();
+      // Remove any legacy Printful-rendered cards outside our grid
+      try {
+        const legacyGrid = document.getElementById('printful-grid');
+        if (legacyGrid) {
+          console.log('🧹 Clearing legacy #printful-grid container to prevent duplicate cards');
+          legacyGrid.innerHTML = '';
+          legacyGrid.style.display = 'none';
         }
-      });
+        const legacyCards = document.querySelectorAll('.product-card--printful');
+        if (legacyCards.length) {
+          console.log(`🧹 Removing ${legacyCards.length} legacy .product-card--printful cards`);
+          legacyCards.forEach(el => el.remove());
+        }
+      } catch (_e) {}
       
-      // Now add the Printful products
+      // Strong clear: remove all existing product entries by data-product-id (keeps sunglasses card)
+      const existingProductNodes = gridEl.querySelectorAll('[data-product-id]');
+      if (existingProductNodes.length) {
+        console.log(`🧽 Clearing ${existingProductNodes.length} existing product nodes by id`);
+        existingProductNodes.forEach(n => n.remove());
+      }
+      
+      // Deduplicate by product id before rendering (guard against any double callers)
+      const existingIds = new Set(Array.from(gridEl.querySelectorAll('[data-product-id]')).map(el => el.getAttribute('data-product-id')));
       products.forEach(product => {
+        if (existingIds.has(String(product.id))) return;
         const card = createPrintfulCard(product);
+        card.setAttribute('data-product-id', String(product.id));
         gridEl.appendChild(card);
       });
       
@@ -804,6 +810,7 @@
       
       const card = document.createElement('a');
       card.className = 'product-card card-link';
+      // data-product-id is also set by caller; set here for safety too
       card.setAttribute('data-product-id', String(product.id));
       card.href = `product.html?id=${encodeURIComponent(product.id)}`;
       
