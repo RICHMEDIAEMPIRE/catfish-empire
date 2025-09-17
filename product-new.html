@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Product – Catfish Empire™</title>
+  <style>
+    body { margin: 0; background: #000; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    .nav { background: linear-gradient(45deg, gold, #ffd700); color: #000; padding: 1rem; display:flex; justify-content:space-between; align-items:center; }
+    .nav a { color:#000; text-decoration:none; font-weight:bold; margin-left:1rem; }
+    .topbar.centered { display:flex; justify-content:center; align-items:center; gap:12px; }
+    .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; display:grid; grid-template-columns: 1fr 1fr; gap:2rem; }
+    .gallery { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 1rem; }
+    .main-img { width: 100%; height: 520px; object-fit: contain; background:#111; border-radius:10px; }
+    .thumbs { display:flex; gap:.5rem; margin-top:.75rem; flex-wrap:wrap; }
+    .thumbs img { width:80px; height:80px; object-fit:cover; border-radius:8px; cursor:pointer; border:2px solid transparent; }
+    .thumbs img.active, .thumbs img:hover { border-color: gold; }
+    /* Angle UI */
+    .angle-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+    .angle-tab { padding:6px 10px; border:1px solid #ddd; background:#fff; color:#000; border-radius:8px; cursor:pointer; }
+    .angle-tab.active { border-color:#111; font-weight:600; outline: 2px solid currentColor; }
+    .angle-tab.disabled { opacity:.45; cursor:not-allowed; }
+    .main-image-wrap { text-align:center; margin-bottom:12px; }
+    #mainImage { max-width:520px; width:100%; border-radius:12px; background:#111; }
+    .thumb-strip { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+    .thumb-strip .thumb { width:76px; height:76px; object-fit:cover; border-radius:8px; border:1px solid #e6e6e6; cursor:pointer; }
+    .details { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 1.25rem; }
+    h1 { color: gold; margin: .25rem 0 1rem; font-size:1.8rem; }
+    .desc { color:#ccc; line-height:1.6; margin-bottom:1rem; }
+    .row { display:flex; gap:.75rem; margin: .5rem 0; align-items:center; }
+    select { background:#111; color:#fff; border:1px solid #444; padding:.6rem .8rem; border-radius:8px; min-width: 160px; }
+    .price { font-size:1.6rem; font-weight:bold; margin: 1rem 0; }
+    .btn { background: linear-gradient(45deg, #28a745, #34ce57); color:#fff; border:none; padding: .9rem 1.5rem; font-weight:bold; border-radius:10px; cursor:pointer; }
+    .btn:disabled { opacity:.5; cursor:not-allowed; }
+    @media (max-width: 900px) { .container { grid-template-columns: 1fr; } .main-img { height: 380px; } }
+  </style>
+</head>
+<body>
+  <div class="nav topbar centered">
+    <a href="index.html" class="btn">Home</a>
+    <a href="cart.html" class="btn" data-role="cart-badge">Cart (0 – $0.00)</a>
+  </div>
+
+  <div class="container">
+    <div class="gallery">
+      <div class="angle-tabs" id="angleTabs"></div>
+      <div class="main-image-wrap"><img id="mainImage" alt="product view" /></div>
+      <div class="thumb-strip" id="thumbStrip"></div>
+    </div>
+    <div class="details">
+      <h1 id="p-title">Loading…</h1>
+      <div id="p-desc" class="desc"></div>
+      <div class="row">
+        <label for="sel-color">Primary color</label>
+        <select id="sel-color"><option value="">Select color</option></select>
+      </div>
+      <div class="row">
+        <label for="sel-size">Size</label>
+        <select id="sel-size"><option value="">Select size</option></select>
+      </div>
+      <div class="row">
+        <label for="sel-qty">Qty</label>
+        <input id="sel-qty" type="number" min="1" value="1" />
+      </div>
+      <div id="p-price" class="price">Select options</div>
+      <button id="btn-add" class="btn" disabled>Add to Cart</button>
+    </div>
+  </div>
+
+  <script type="module" src="/js/cart-state.js"></script>
+  <script type="module" src="/js/toolbar.js"></script>
+  <script>
+    window.BACKEND_URL = window.BACKEND_URL || "https://catfish-stripe-backend.onrender.com";
+  </script>
+  <script type="module" src="/js/product.js"></script>
+</body>
+</html>

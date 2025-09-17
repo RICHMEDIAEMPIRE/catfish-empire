@@ -661,8 +661,16 @@
       }
     }
 
+    let isLoadingPrintful = false; // Prevent duplicate calls
+    
     async function fetchAndDisplayPrintfulProducts() {
+      if (isLoadingPrintful) {
+        console.log('⏸️ Already loading Printful products, skipping...');
+        return;
+      }
+      
       try {
+        isLoadingPrintful = true;
         console.log('🔍 Fetching Catfish Empire products from enhanced endpoint...');
         
         // Check cache first
@@ -711,6 +719,8 @@
           console.log('🔄 Using cached Catfish Empire data as fallback');
           displayPrintfulProducts(printfulCache.products);
         }
+      } finally {
+        isLoadingPrintful = false; // Reset flag
       }
     }
 

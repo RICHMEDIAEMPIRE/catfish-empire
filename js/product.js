@@ -144,9 +144,18 @@ function paintGallery() {
 
   // pick the best available source
   const src = g.views?.[CURRENT.angle] || g.views?.front || CURRENT.data.coverImage || CURRENT.data.images?.[0] || "";
+  console.log(`🖼️ Setting main image for angle '${CURRENT.angle}': ${src?.substring(0, 80)}...`);
+  
   if (main && src) {
     main.loading = "lazy";
-    if (main.src !== src) main.src = src;
+    if (main.src !== src) {
+      console.log(`🔄 Image changed from: ${main.src?.substring(0, 50)}... to: ${src?.substring(0, 50)}...`);
+      main.src = src;
+    } else {
+      console.log(`⚪ Same image for this angle (expected with fallback system)`);
+    }
+  } else {
+    console.log(`❌ No main image element or src found`);
   }
 
   // update tab active state
