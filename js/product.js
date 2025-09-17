@@ -38,8 +38,14 @@ function buildAngleTabs() {
   if (!tabs) return;
   tabs.innerHTML = "";
 
+  console.log("🔧 buildAngleTabs - colorKey:", CURRENT.colorKey);
+  console.log("🔧 buildAngleTabs - availableAnglesByColor:", CURRENT.data.availableAnglesByColor);
+  
   const avail = CURRENT.data.availableAnglesByColor[CURRENT.colorKey] || [];
+  console.log("🔧 buildAngleTabs - available for this color:", avail);
+  
   const ordered = ["front","back","left","right"].filter(a => avail.includes(a));
+  console.log("🔧 buildAngleTabs - ordered angles:", ordered);
 
   for (const a of ordered) {
     const btn = document.createElement("button");
@@ -237,8 +243,13 @@ async function initProduct() {
 
     // choose starting color
     CURRENT.colorKey = data.defaultColor || data.colors?.[0]?.key || Object.keys(data.galleryByColor)[0] || "";
+    console.log("🎯 Initial colorKey set to:", CURRENT.colorKey);
+    console.log("🎯 Available colors:", Object.keys(data.galleryByColor || {}));
+    console.log("🎯 data.colors:", data.colors);
+    
     // choose best starting angle
     const avail = data.availableAnglesByColor[CURRENT.colorKey] || [];
+    console.log("🎯 Available angles for initial color:", avail);
     CURRENT.angle = avail[0] || "front";
 
     // Update page content
