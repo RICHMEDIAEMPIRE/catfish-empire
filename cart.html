@@ -223,66 +223,7 @@
     function normalizeColor(v){ return String(v||'').trim().toLowerCase(); }
     function normalizeSizeLower(v){ return String(v||'').trim().toLowerCase(); }
 
-    // Heal legacy/missing priceCents and variantId using backend product detail
-    async function hydratePrintfulItem(item){
-      if (Number.isFinite(item.priceCents) && item.variantId) return item;
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/printful-product/${item.productId}`);
-        if (!res.ok) return item;
-        const data = await res.json();
-        const key = `${normalizeColor(item.color)}|${normalizeSizeLower(item.size)}`;
-        const variantId = data.variantMatrix?.[key];
-        const priceCents = data.priceByKey?.[key];
-        if (variantId) item.variantId = variantId;
-        if (Number.isFinite(priceCents)) item.priceCents = Number(priceCents);
-      } catch {}
-      return item;
-    }
-
-    function loadCart(){
-      let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-      cart = cart.map(it => {
-        if (it.type === 'printful') {
-          if (!Number.isFinite(it.priceCents) && Number.isFinite(it.price)) {
-            it.priceCents = Math.round(Number(it.price) * 100);
-          }
-          if (!Number.isFinite(it.priceCents)) it.priceCents = 0;
-        }
-        it.qty = Math.max(1, n(it.qty || 1));
-        return it;
-      });
-      return cart;
-    }
-
-    function saveCart(cart){ localStorage.setItem('cart', JSON.stringify(cart)); }
-
-    function keyFor(it){
-      if (it.type === 'printful') return `pf|${it.productId}|${it.variantId||''}|${normalizeColor(it.color)}|${normalizeSizeLower(it.size)}`;
-      return `sg|${normalizeColor(it.color)}`;
-    }
-
-    function mergeDuplicates(items){
-      const map = new Map();
-      for (const it of items){
-        const k = keyFor(it);
-        if (!map.has(k)) map.set(k, { ...it });
-        else map.get(k).qty += it.qty;
-      }
-      return Array.from(map.values());
-    }
-
-    function sortByVariant(items){
-      return items.slice().sort((a,b)=>{
-        if (a.type !== b.type) return a.type.localeCompare(b.type);
-        const an = (a.name||'').localeCompare(b.name||''); if (an) return an;
-        const ac = normalizeColor(a.color).localeCompare(normalizeColor(b.color)); if (ac) return ac;
-        return normalizeSizeLower(a.size).localeCompare(normalizeSizeLower(b.size));
-      });
-    }
-
-    function subtotalCents(items){
-      return items.reduce((sum, it) => sum + ((it.type==='printful'? n(it.priceCents):1499) * (it.qty||1)), 0);
-    }
+    // Remove duplicate functions - use shared state only
 
     function renderLines(cart){
       const root = qSel('[data-role="cart-lines"]');
@@ -383,69 +324,12 @@
       }
     }
 
-    // Promo helpers via backend
-    function dollarsLabel(cents){ return `$${(n(cents)/100).toFixed(2)}`; }
-    async function recalcTotalsPreview(override){
-      const items = loadCart();
-      let subtotal = 0;
-      for(const it of items){
-        const unit = it.type==='printful' ? n(it.priceCents) : 1499;
-        const qty = n(it.qty||1);
-        subtotal += unit * qty;
-      }
-      let pct = 0, promoObj = null;
-      if (override && typeof override.percent === 'number') {
-        pct = override.percent; promoObj = { code: override.code||'', percent: pct };
-      } else {
-        try {
-          const r = await fetch(`${BACKEND_URL}/api/promo/active`, { credentials:'include' });
-          const pj = await r.json();
-          pct = pj?.promo?.percent || 0;
-          promoObj = pj?.promo || null;
-        } catch (_) { pct = 0; }
-      }
-      const discounted = Math.max(0, Math.round(subtotal * (100 - pct) / 100));
-      const discount = Math.max(0, subtotal - discounted);
-      const shipping = 599;
-      return { subtotal, discount, shipping, estimated: discounted + shipping, promo: promoObj };
-    }
-    async function renderTotalsPreview(override){
-      const els = {
-        sub: document.getElementById('subtotalAmount'),
-        disc: document.getElementById('discountAmount'),
-        ship: document.getElementById('shippingAmount'),
-        tot: document.getElementById('estimatedTotalAmount'),
-        hint: document.getElementById('promoHint'),
-        input: document.getElementById('promoCode')
-      };
-      const t = await recalcTotalsPreview(override);
-      if(els.sub) els.sub.textContent = dollarsLabel(t.subtotal);
-      if(els.disc) els.disc.textContent = `- ${dollarsLabel(t.discount)}`;
-      if(els.ship) els.ship.textContent = dollarsLabel(t.shipping);
-      if(els.tot) els.tot.textContent = dollarsLabel(t.estimated);
-      if(els.hint){
-        if(t.promo){ els.hint.textContent = `Promo applied: ${t.promo.code.toUpperCase()} (${t.promo.percent}%). One promo per checkout.`; els.hint.style.color = '#2bb24c'; }
-        else { els.hint.textContent=''; els.hint.style.color = '#aaa'; }
-      }
-    }
-
-    async function healCart(cart){
-      await Promise.all(cart.map(async (it, idx) => {
-        if (it.type === 'printful' && (!Number.isFinite(it.priceCents) || !it.variantId)) {
-          cart[idx] = await hydratePrintfulItem({ ...it });
-        }
-      }));
-      return cart;
-    }
+    // Remove old legacy functions - using shared state only
 
     async function renderCart(){
-      let cart = getCart();
-      cart = await healCart(cart);
-      cart = mergeDuplicates(cart);
-      cart = sortByVariant(cart);
-      setCart(cart);
+      const cart = getCart();
       renderLines(cart);
-      bindLineEvents(cart);
+      bindLineEvents();
       renderSummary();
       renderToolbarTotals();
       const updateBtn = qSel('[data-role="update-cart"]');
@@ -453,26 +337,20 @@
         updateBtn.onclick = () => {
           let current = getCart();
           readQuantitiesInto(current);
-          current = mergeDuplicates(current);
-          current = sortByVariant(current);
           setCart(current);
           renderCart();
-          renderToolbarTotals();
         };
       }
       const checkoutBtn = qSel('[data-role="checkout"]');
       if (checkoutBtn){
         checkoutBtn.onclick = async () => {
-          let current = getCart();
+          const current = getCart();
           readQuantitiesInto(current);
-          current = await healCart(current);
-          current = mergeDuplicates(current);
-          current = sortByVariant(current);
           setCart(current);
           if (!current.length){ alert('Your cart is empty.'); return; }
           const shippingState = localStorage.getItem('shippingState') || 'Unknown';
           const curPromo = getPromo();
-          const promoCode = curPromo?.code || (document.getElementById('promoCode')?.value || '').trim();
+          const promoCode = curPromo?.code || '';
           const items = current.map(item => item.type === 'printful' ? ({
             type: 'printful',
             productId: item.productId,
