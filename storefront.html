@@ -353,7 +353,7 @@
     </div>
     <div class="nav-links">
       <a href="index.html">Home</a>
-      <a href="cart.html" class="cart-link">Cart (0)</a>
+      <a href="cart.html" class="cart-link" data-role="cart-badge">Cart (0 – $0.00)</a>
       <a href="showcase.html">Gallery</a>
       <a href="https://youtube.com/@catfishempire" target="_blank">YouTube</a>
       <a href="https://x.com/CATFISH_EMPIRE" target="_blank">X (Twitter)</a>
@@ -407,26 +407,19 @@
     let currentIndex = 0;
     const blockedStates = ['CO', 'PA', 'CA'];
 
-    // Cart Management
+    // Cart Management - use shared state
     function updateLocalCart() {
-      localStorage.setItem("cart", JSON.stringify(cart));
+      if (window.CFECart && window.CFECart.setCart) {
+        window.CFECart.setCart(cart);
+      } else {
+        localStorage.setItem("cart", JSON.stringify(cart));
+        try { window.dispatchEvent(new CustomEvent('cart:changed')); } catch {}
+      }
     }
 
     function updateCartCount() {
-      const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
-      const totalPrice = cart.reduce((sum, item) => {
-        const price = item.type === 'printful' ? item.price : 14.99;
-        return sum + (price * item.qty);
-      }, 0);
-      
-      const cartLink = document.querySelector(".cart-link");
-      if (cartLink) {
-        if (totalItems > 0) {
-          cartLink.textContent = `Cart (${totalItems} - $${totalPrice.toFixed(2)})`;
-        } else {
-          cartLink.textContent = `Cart (0)`;
-        }
-      }
+      // Toolbar handles this via shared state now
+      try { if (window.renderToolbarTotals) window.renderToolbarTotals(); } catch {}
     }
 
     // State Management
@@ -535,7 +528,7 @@
         }
         existingItem.qty += qty;
       } else {
-        cart.push({ color, qty });
+        cart.push({ type: 'sunglasses', color, qty, priceCents: 1499, name: `${color} Sunglasses` });
       }
 
       updateLocalCart();
@@ -636,6 +629,9 @@
     updateCartCount();
     updateStateBanner();
   </script>
+  <script type="module" src="/js/cart-state.js"></script>
+  <script type="module" src="/js/toolbar.js"></script>
+  <script src="/js/donate.js" defer></script>
 
 </body>
 </html>
