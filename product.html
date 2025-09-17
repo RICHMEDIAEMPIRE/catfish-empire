@@ -15,13 +15,10 @@
     .thumbs { display:flex; gap:.5rem; margin-top:.75rem; flex-wrap:wrap; }
     .thumbs img { width:80px; height:80px; object-fit:cover; border-radius:8px; cursor:pointer; border:2px solid transparent; }
     .thumbs img.active, .thumbs img:hover { border-color: gold; }
-    /* Minimal additions for requested hooks */
-    .gallery-main img { width:100%; max-width:560px; border-radius:12px; }
-    .gallery-main, #g-thumbs { display:none; }
     /* Angle UI */
     .angle-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
     .angle-tab { padding:6px 10px; border:1px solid #ddd; background:#fff; color:#000; border-radius:8px; cursor:pointer; }
-    .angle-tab.active { border-color:#111; font-weight:600; }
+    .angle-tab.active { border-color:#111; font-weight:600; outline: 2px solid currentColor; }
     .angle-tab.disabled { opacity:.45; cursor:not-allowed; }
     .main-image-wrap { text-align:center; margin-bottom:12px; }
     #mainImage { max-width:520px; width:100%; border-radius:12px; background:#111; }
@@ -49,8 +46,6 @@
       <div class="angle-tabs" id="angleTabs"></div>
       <div class="main-image-wrap"><img id="mainImage" alt="product view" /></div>
       <div class="thumb-strip" id="thumbStrip"></div>
-      <div class="gallery-main"><img id="g-main" class="main-img" src="TM.png" alt="Product image" /></div>
-      <div id="g-thumbs" class="thumbs"></div>
     </div>
     <div class="details">
       <h1 id="p-title">Loading…</h1>
@@ -75,204 +70,8 @@
   <script type="module" src="/js/cart-state.js"></script>
   <script type="module" src="/js/toolbar.js"></script>
   <script>
-    const BACKEND_URL = window.BACKEND_URL || "https://catfish-stripe-backend.onrender.com";
-    const $ = (id) => document.getElementById(id);
-    const SIZE_ORDER = ["XS","S","M","L","XL","2XL","3XL","4XL","5XL"];
-    const qs = new URLSearchParams(location.search);
-    const productId = qs.get("id");
-
-    let productData = null;
-    let currentColor = null;
-    let currentSize = null;
-    let currentVariantId = null;
-    let currentPriceCents = null;
-    let currentMainImg = null;
-
-    function titleCase(s){ return (s||"").replace(/\b\w/g,c=>c.toUpperCase()); }
-    function unique(arr){ const seen=new Set(), out=[]; for (const u of arr){ if(u && !seen.has(u)){ seen.add(u); out.push(u); } } return out; }
-
-    function setMain(src){
-      $("g-main").src = src || "";
-      currentMainImg = src || "";
-      Array.from($("g-thumbs").querySelectorAll("img")).forEach(img=>{
-        img.classList.toggle("active", img.dataset.src === src);
-      });
-    }
-
-    const HIDDEN_URLS = new Set([
-      'https://files.cdn.printful.com/files/913/913bbbe9ca436bd693757d21dce528c2_preview.png',
-      'https://files.cdn.printful.com/files/b87/b87af5e750905c48adce2f19a3096443_preview.png',
-      'https://files.cdn.printful.com/files/f63/f6377c84da44db6dc356547e9066da18_preview.png'
-    ]);
-    const isDesign = (u='') => {
-      const s = String(u).toLowerCase();
-      return s.includes('printfile') || s.includes('design');
-    };
-    function filterImgs(arr){
-      return (arr||[]).filter(u => u && !HIDDEN_URLS.has(String(u)) && !isDesign(u));
-    }
-
-    function buildGalleryForColor(colorLower){
-      const byColor = productData.galleryByColor?.[colorLower];
-      const wrap = $("g-thumbs");
-      wrap.innerHTML = "";
-
-      // Build ordered list of views first (for consistent UX), then append any remaining images
-      const orderedKeys = ['front','left-front','right-front','left','right','back'];
-      const fromViews = [];
-      if (byColor?.views) {
-        for (const k of orderedKeys) {
-          const u = byColor.views[k];
-          if (u) fromViews.push(u);
-        }
-      }
-      let imgs = filterImgs(unique(fromViews));
-      const imagesSet = new Set(imgs);
-      const flatImages = filterImgs(byColor?.images?.slice(0) || []);
-      for (const u of flatImages) { if (!imagesSet.has(u)) imgs.push(u); }
-      // If still only one unique image, try to infer more from any string containing color token
-      if (imgs.length < 2) {
-        const colorToken = String(colorLower||'').replace(/\s+/g,'').toLowerCase();
-        const extras = (byColor?.images||[]).filter(u => String(u).toLowerCase().replace(/\s+/g,'').includes(colorToken));
-        for (const u of filterImgs(extras)) { if (!imagesSet.has(u)) { imgs.push(u); imagesSet.add(u); } }
-      }
-      if (!imgs.length && Array.isArray(productData.images)) imgs = filterImgs(productData.images.slice(0));
-
-      // Fallback: only if this color has no images at all, borrow ordered views from defaultColor
-      if (imgs.length === 0 && productData.defaultColor) {
-        const defKey = String(productData.defaultColor||'').toLowerCase();
-        if (defKey && defKey !== colorLower) {
-          const def = productData.galleryByColor?.[defKey];
-          if (def?.views) {
-            for (const k of orderedKeys) {
-              const u = def.views[k];
-              if (u && !imagesSet.has(u)) { imgs.push(u); imagesSet.add(u); }
-            }
-          }
-        }
-      }
-
-      imgs.forEach(url=>{
-        const t = document.createElement("img");
-        t.loading = "lazy"; t.decoding = "async"; t.src = url; t.dataset.src = url; t.onclick = () => setMain(url);
-        wrap.appendChild(t);
-      });
-      const candidate = filterImgs([byColor?.views?.front, imgs[0]]).find(Boolean) || "";
-      setMain(candidate);
-    }
-
-    // Angle Tabs + Thumbs using galleryByColor
-    function renderAnglesUI(){
-      const tabs = document.getElementById('angleTabs');
-      if (!tabs || !productData) return;
-      const cKey = String(currentColor||'').toLowerCase();
-      const g = productData.galleryByColor?.[cKey] || {};
-      const views = g.views || {};
-      
-      console.log('Current color:', cKey);
-      console.log('Gallery for color:', g);
-      console.log('Available views:', views);
-      
-      tabs.innerHTML = '';
-      const angles = [
-        { key:'front', label:'Front', has: !!views.front },
-        { key:'back',  label:'Back',  has: !!views.back  },
-        { key:'left',  label:'Left',  has: !!views.left  },
-        { key:'right', label:'Right', has: !!views.right }
-      ];
-      
-      let currentAngle = 'front';
-      angles.forEach(a=>{
-        const b = document.createElement('button'); 
-        b.type='button';
-        b.className = 'angle-tab' + (a.key===currentAngle?' active':'') + (a.has?'':' disabled');
-        b.textContent = a.label; 
-        if (a.has){ 
-          b.onclick = ()=>{ 
-            currentAngle = a.key;
-            const src = views[a.key] || g.cover || (g.images||[])[0] || '';
-            setMain(src);
-            // Update active states
-            angles.forEach(angle => {
-              const btn = tabs.querySelector(`button:nth-child(${angles.indexOf(angle) + 1})`);
-              if (btn) btn.className = 'angle-tab' + (angle.key===currentAngle?' active':'') + (angle.has?'':' disabled');
-            });
-          }; 
-        }
-        tabs.appendChild(b);
-      });
-      
-      const firstSrc = views[currentAngle] || views.front || g.cover || (g.images||[])[0] || '';
-      const main = document.getElementById('mainImage'); 
-      if (main && firstSrc) main.src = firstSrc;
-    }
-    function renderThumbsUI(){
-      const strip = document.getElementById('thumbStrip'); if (!strip || !productData) return; strip.innerHTML='';
-      const cKey = String(currentColor||'').toLowerCase(); const g = productData.galleryByColor?.[cKey] || {};
-      (g.images||[]).forEach(u=>{ const t=document.createElement('img'); t.src=u; t.loading='lazy'; t.className='thumb'; t.onclick=()=> setMain(u); strip.appendChild(t); });
-    }
-
-    function buildColorSelect(){
-      const colors = Object.keys(productData.galleryByColor || {}).sort((a,b)=>a.localeCompare(b));
-      const def = (productData.defaultColor || "").toLowerCase();
-      const sel = $("sel-color"); sel.innerHTML = "";
-      colors.forEach(c=>{ const opt=document.createElement("option"); opt.value=c; opt.textContent=titleCase(c); if (c===def) opt.selected=true; sel.appendChild(opt); });
-      currentColor = sel.value || def || colors[0] || null;
-      sel.onchange = ()=>{ currentColor = sel.value; renderAnglesUI(); renderThumbsUI(); buildSizeSelect(currentColor); refreshPriceAndVariant(); };
-    }
-
-    function buildSizeSelect(colorLower){
-      const keys = productData.priceByKey || {}; const sizes = new Set();
-      Object.keys(keys).forEach(k=>{ const [c,s]=k.split("|"); if (c===colorLower && s) sizes.add(s); });
-      const ordered = Array.from(sizes).sort((a,b)=>{
-        const ia = SIZE_ORDER.indexOf(a.toUpperCase()); const ib = SIZE_ORDER.indexOf(b.toUpperCase());
-        if (ia===-1 && ib===-1) return a.localeCompare(b); if (ia===-1) return 1; if (ib===-1) return -1; return ia-ib;
-      });
-      const sel = $("sel-size"); sel.innerHTML = "";
-      ordered.forEach(s=>{ const opt=document.createElement("option"); opt.value=s; opt.textContent=s.toUpperCase(); sel.appendChild(opt); });
-      currentSize = sel.value || ordered[0] || null;
-      sel.onchange = ()=>{ currentSize = sel.value; refreshPriceAndVariant(); };
-    }
-
-    function refreshPriceAndVariant(){
-      if (!currentColor || !currentSize){ $("p-price").textContent = "$—"; $("btn-add").disabled = true; return; }
-      const key = `${currentColor}|${currentSize}`.toLowerCase();
-      currentPriceCents = productData.priceByKey?.[key] ?? null;
-      currentVariantId   = productData.variantMatrix?.[key] ?? null;
-      if (Number.isFinite(currentPriceCents) && currentVariantId){ $("p-price").textContent = `$${(currentPriceCents/100).toFixed(2)}`; $("btn-add").disabled = false; }
-      else { $("p-price").textContent = "$—"; $("btn-add").disabled = true; }
-    }
-
-    function addToCart(){
-      const qty = Math.max(1, parseInt(($("sel-qty").value||"1"),10));
-      if (!currentVariantId || !currentPriceCents){ alert("Please choose a color and size."); return; }
-      const { setCart, getCart } = window.CFECart || {};
-      if (setCart && getCart){
-        const next = getCart();
-        next.push({ type:"printful", productId: productData.id, name: productData.name, color: currentColor, size: currentSize, variantId: currentVariantId, priceCents: currentPriceCents, currency:"USD", image: currentMainImg || productData.coverImage || null, qty });
-        setCart(next);
-      } else {
-        const cart = JSON.parse(localStorage.getItem("cart") || "[]");
-        cart.push({ type:"printful", productId: productData.id, name: productData.name, color: currentColor, size: currentSize, variantId: currentVariantId, priceCents: currentPriceCents, currency:"USD", image: currentMainImg || productData.coverImage || null, qty });
-        localStorage.setItem("cart", JSON.stringify(cart));
-        try { window.dispatchEvent(new CustomEvent('cart:changed')); } catch(_){}
-      }
-      try { if (window.renderToolbarTotals) window.renderToolbarTotals(); } catch(_){ }
-      $("btn-add").textContent = "Added!"; setTimeout(()=>($("btn-add").textContent = "Add to Cart"), 900);
-    }
-
-    async function boot(){
-      if (!productId){ $("p-title").textContent = "Missing product id"; $("btn-add").disabled = true; return; }
-      const r = await fetch(`${BACKEND_URL}/api/printful-product/${encodeURIComponent(productId)}?nocache=1`);
-      const data = await r.json(); if (!r.ok || data.error){ $("p-title").textContent = "Product not found"; $("btn-add").disabled = true; return; }
-      productData = data;
-      $("p-title").textContent = productData.name || "Catfish Empire Product";
-      $("p-desc").innerHTML = (productData.description || "").replace(/\n/g,"<br>");
-      buildColorSelect(); renderAnglesUI(); renderThumbsUI(); buildSizeSelect(currentColor); refreshPriceAndVariant();
-      $("btn-add").onclick = addToCart;
-    }
-
-    document.addEventListener('DOMContentLoaded', boot);
+    window.BACKEND_URL = window.BACKEND_URL || "https://catfish-stripe-backend.onrender.com";
   </script>
+  <script type="module" src="/js/product.js"></script>
 </body>
 </html>
