@@ -1,7 +1,7 @@
 (() => {
   const BACKEND_URL = (window.BACKEND_URL || "https://catfish-stripe-backend.onrender.com").replace(/\/+$/,"");
 
-  const ENDPOINT = `${BACKEND_URL}/api/printful-products?nocache=1`;
+  const ENDPOINT = `${BACKEND_URL}/api/printful-products`; // Use cache for speed
 
   const grid = document.getElementById("printful-grid");
   if (!grid) {

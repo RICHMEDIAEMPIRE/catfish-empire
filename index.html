@@ -623,17 +623,9 @@
     // Backend API Configuration
     const BACKEND_URL = "https://catfish-stripe-backend.onrender.com";
 
-    // Feature flag for Printful UI
+    // Feature flag for Printful UI - auto-enable for faster loading
     function isPrintfulEnabled() {
-      // Check URL parameter first
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('printful') === '1') {
-        localStorage.setItem('enablePrintfulUI', 'true');
-        return true;
-      }
-      
-      // Check localStorage
-      return localStorage.getItem('enablePrintfulUI') === 'true';
+      return true; // Always enabled for better UX
     }
 
     let printfulCache = {
