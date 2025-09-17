@@ -749,17 +749,27 @@
       
       const gridEl = document.getElementById('products-grid');
       
-      // Remove existing Printful products (keep sunglasses)
-      const existingPrintfulCards = gridEl.querySelectorAll('.product-card.card-link');
-      if (existingPrintfulCards.length > 0) {
-        console.log(`🗑️ Removing ${existingPrintfulCards.length} existing Printful cards to prevent duplicates`);
-        existingPrintfulCards.forEach(card => card.remove());
-      }
+      // More aggressive duplicate removal - remove ALL cards except sunglasses
+      const allCards = gridEl.querySelectorAll('.product-card');
+      const sunglassesCard = gridEl.querySelector('.product-card.clickable-card');
       
+      console.log(`🗑️ Found ${allCards.length} total cards, keeping sunglasses card`);
+      
+      // Remove all cards except the sunglasses one
+      allCards.forEach(card => {
+        if (!card.classList.contains('clickable-card')) {
+          console.log(`🗑️ Removing card: ${card.querySelector('h3, .product-title')?.textContent || 'unknown'}`);
+          card.remove();
+        }
+      });
+      
+      // Now add the Printful products
       products.forEach(product => {
         const card = createPrintfulCard(product);
         gridEl.appendChild(card);
       });
+      
+      console.log(`✅ Added ${products.length} Printful products to grid`);
     }
 
     // Simple in-memory cache for variant data by external_id
