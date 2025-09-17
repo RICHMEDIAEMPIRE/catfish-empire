@@ -46,7 +46,7 @@ function buildAngleTabs() {
     btn.type = "button";
     btn.dataset.angle = a;
     btn.textContent = a[0].toUpperCase() + a.slice(1);
-    btn.className = "angle-tab px-3 py-2 rounded-md border border-gray-300 mr-2";
+    btn.className = "angle-tab";
     btn.addEventListener("click", () => {
       CURRENT.angle = a;
       paintGallery();
@@ -201,24 +201,36 @@ function addToCart() {
 }
 
 async function initProduct() {
+  console.log("🚀 Product page initializing...");
+  
   const params = new URLSearchParams(location.search);
   const id = params.get("id");
   
+  console.log("📋 Product ID:", id);
+  
   if (!id) {
+    console.error("❌ Missing product ID");
     document.getElementById("p-title").textContent = "Missing product ID";
     return;
   }
   
   try {
-    const response = await fetch(`${window.BACKEND_URL || ''}/api/printful-product/${id}`);
+    const url = `${window.BACKEND_URL || ''}/api/printful-product/${id}`;
+    console.log("🌐 Fetching:", url);
+    
+    const response = await fetch(url);
     const data = await response.json();
     
+    console.log("📦 API Response:", { ok: response.ok, status: response.status, data });
+    
     if (!response.ok || data.error) {
+      console.error("❌ Product fetch failed:", data);
       document.getElementById("p-title").textContent = "Product not found";
       return;
     }
     
     CURRENT.data = data;
+    console.log("✅ Product data loaded:", data);
 
     // choose starting color
     CURRENT.colorKey = data.defaultColor || data.colors?.[0]?.key || Object.keys(data.galleryByColor)[0] || "";
