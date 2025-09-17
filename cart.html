@@ -369,7 +369,11 @@
       if (pillWrap){
         if (promo && promo.code){
           pillWrap.style.display = 'inline-flex';
-          pillWrap.innerHTML = `${promo.code.toUpperCase()} – ${promo.percent}% <button aria-label="Remove" id="remove-promo">×</button>`;
+          let pillText = `${promo.code.toUpperCase()}`;
+          if (promo.mode === 'oneDollar') pillText += ' – $1 test';
+          else if (promo.mode === 'flat50') pillText += ' – $0.50/item';
+          else pillText += ` – ${promo.percent}%`;
+          pillWrap.innerHTML = `${pillText} <button aria-label="Remove" id="remove-promo">×</button>`;
           const btn = pillWrap.querySelector('#remove-promo');
           btn.addEventListener('click', () => { setPromo(null); renderSummary(); renderToolbarTotals(); });
         } else {
