@@ -17,8 +17,17 @@
   <a href="index.html" style="color: #FFD700;">← Back to Store</a>
   <script>
     try {
-      localStorage.removeItem('cart');
-      window.dispatchEvent(new CustomEvent('cart:changed'));
+      // Prefer shared cart-state API if present
+      if (window.CFECart && typeof window.CFECart.setCart === 'function') {
+        window.CFECart.setCart([]);
+        if (typeof window.CFECart.setPromo === 'function') window.CFECart.setPromo(null);
+      } else {
+        localStorage.removeItem('cfe_cart_v2');
+        localStorage.removeItem('cart');
+        localStorage.removeItem('cfe_promo_v1');
+        try { window.dispatchEvent(new CustomEvent('cart:changed')); } catch(_) {}
+        try { window.dispatchEvent(new CustomEvent('promo:changed')); } catch(_) {}
+      }
     } catch(_) {}
   </script>
 </body>
