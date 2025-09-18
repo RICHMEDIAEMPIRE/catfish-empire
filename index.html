@@ -821,7 +821,7 @@
       card.href = `product.html?id=${encodeURIComponent(product.id)}`;
       
       const priceCents = (typeof product.priceCents === 'number' && product.priceCents > 0) ? product.priceCents : null;
-      let formattedPrice = priceCents != null ? `$${(priceCents / 100).toFixed(2)}` : 'View options';
+      let formattedPrice = priceCents != null ? `$${(priceCents / 100).toFixed(2)}` : 'View colors and sizes';
       
       let description = product.description || '';
       if (description.length > 100) {
